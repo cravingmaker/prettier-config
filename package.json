@@ -1,0 +1,31 @@
+{
+	"name": "@cravingmaker/prettier-config",
+	"version": "0.1.0",
+	"description": "Craving Maker's Prettier configuration",
+	"keywords": [
+		"cravingmaker",
+		"prettier",
+		"prettier-config",
+		"style",
+		"code-style",
+		"format"
+	],
+	"homepage": "https://github.com/cravingmaker/prettier-config#readme",
+	"bugs": {
+		"url": "https://github.com/cravingmaker/prettier-config/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/cravingmaker/prettier-config.git"
+	},
+	"license": "MIT",
+	"author": "cravingmaker (https://github.com/cravingmaker)",
+	"type": "module",
+	"exports": "./index.js",
+	"peerDependencies": {
+		"prettier": ">=3.0.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}
