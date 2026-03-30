@@ -18,7 +18,7 @@ const config = {
 	printWidth: 120,
 	singleAttributePerLine: true,
 	singleQuote: true,
-	tabWidth: 4,
+	tabWidth: 2,
 	useTabs: true,
 };
 
