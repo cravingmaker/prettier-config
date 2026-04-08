@@ -1,3 +1,6 @@
+import prettierPluginOxc from '@prettier/plugin-oxc';
+
+/** @type {import("prettier").Config} */
 const config = {
 	// Defaults
 	arrowParens: 'always',
@@ -20,6 +23,19 @@ const config = {
 	singleQuote: true,
 	tabWidth: 2,
 	useTabs: true,
+
+	// OXC plugin
+	plugins: [prettierPluginOxc],
+	overrides: [
+		{
+			files: ['**/*.{js,cjs,mjs,jsx}'],
+			options: { parser: 'oxc' },
+		},
+		{
+			files: ['**/*.{ts,cts,mts,tsx}'],
+			options: { parser: 'oxc-ts' },
+		},
+	],
 };
 
 export default config;
