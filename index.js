@@ -24,9 +24,17 @@ const config = {
 	tabWidth: 2,
 	useTabs: true,
 
-	// OXC plugin
 	plugins: [prettierPluginOxc],
+
 	overrides: [
+		{
+			files: ['**/*.html'],
+			options: { useTabs: false },
+		},
+		{
+			files: ['**/*.{css,scss,less}'],
+			options: { useTabs: false },
+		},
 		{
 			files: ['**/*.{js,cjs,mjs,jsx}'],
 			options: { parser: 'oxc' },
