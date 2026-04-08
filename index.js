@@ -7,7 +7,7 @@ const config = {
 	endOfLine: 'lf',
 	htmlWhitespaceSensitivity: 'css',
 	objectWrap: 'preserve',
-	proseWrap: 'always',
+	proseWrap: 'preserve',
 	quoteProps: 'as-needed',
 	semi: true,
 	trailingComma: 'all',
