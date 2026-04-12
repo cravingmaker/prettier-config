@@ -24,16 +24,31 @@ const config = {
 	tabWidth: 2,
 	useTabs: true,
 
-	plugins: [prettierPluginOxc],
+	plugins: [prettierPluginOxc, 'prettier-plugin-packagejson'],
 
 	overrides: [
 		{
+			files: ['package.json', 'package-lock.json'],
+			options: {
+				printWidth: 80,
+				singleQuote: false,
+				trailingComma: 'none',
+				useTabs: false,
+			},
+		},
+		{
 			files: ['**/*.html'],
-			options: { useTabs: false },
+			options: {
+				singleQuote: false,
+				useTabs: false,
+			},
 		},
 		{
 			files: ['**/*.{css,scss,less}'],
-			options: { useTabs: false },
+			options: {
+				singleQuote: false,
+				useTabs: false,
+			},
 		},
 		{
 			files: ['**/*.{js,cjs,mjs,jsx}'],
