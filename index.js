@@ -28,11 +28,17 @@ const config = {
 
 	overrides: [
 		{
-			files: ['package.json', 'package-lock.json'],
+			files: ['**/*.{ts,cts,mts,tsx}'],
+			options: { parser: 'oxc-ts' },
+		},
+		{
+			files: ['**/*.{js,cjs,mjs,jsx}'],
+			options: { parser: 'oxc' },
+		},
+		{
+			files: ['**/*.{css,scss,less}'],
 			options: {
-				printWidth: 80,
 				singleQuote: false,
-				trailingComma: 'none',
 				useTabs: false,
 			},
 		},
@@ -44,19 +50,21 @@ const config = {
 			},
 		},
 		{
-			files: ['**/*.{css,scss,less}'],
+			files: ['**/*.md'],
 			options: {
+				printWidth: 80,
 				singleQuote: false,
 				useTabs: false,
 			},
 		},
 		{
-			files: ['**/*.{js,cjs,mjs,jsx}'],
-			options: { parser: 'oxc' },
-		},
-		{
-			files: ['**/*.{ts,cts,mts,tsx}'],
-			options: { parser: 'oxc-ts' },
+			files: ['package.json', 'package-lock.json'],
+			options: {
+				printWidth: 80,
+				singleQuote: false,
+				trailingComma: 'none',
+				useTabs: false,
+			},
 		},
 	],
 };
