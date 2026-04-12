@@ -1,38 +1,43 @@
 {
-	"name": "@cravingmaker/prettier-config",
-	"version": "0.1.6",
-	"description": "Craving Maker's Prettier configuration",
-	"keywords": [
-		"cravingmaker",
-		"prettier",
-		"prettier-config",
-		"style",
-		"code-style",
-		"format"
-	],
-	"homepage": "https://github.com/cravingmaker/prettier-config#readme",
-	"bugs": {
-		"url": "https://github.com/cravingmaker/prettier-config/issues"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/cravingmaker/prettier-config.git"
-	},
-	"license": "MIT",
-	"author": "cravingmaker (https://github.com/cravingmaker)",
-	"type": "module",
-	"exports": "./index.js",
-	"engines": {
-		"node": ">=22"
-	},
-	"dependencies": {
-		"@prettier/plugin-oxc": "^0.1.3",
-		"prettier-plugin-packagejson": "^3.0.2"
-	},
-	"peerDependencies": {
-		"prettier": ">=3.6.0"
-	},
-	"publishConfig": {
-		"access": "public"
-	}
+  "name": "@cravingmaker/prettier-config",
+  "version": "0.1.6",
+  "description": "Craving Maker's Prettier configuration",
+  "keywords": [
+    "cravingmaker",
+    "prettier",
+    "prettier-config",
+    "style",
+    "code-style",
+    "format"
+  ],
+  "homepage": "https://github.com/cravingmaker/prettier-config#readme",
+  "bugs": {
+    "url": "https://github.com/cravingmaker/prettier-config/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cravingmaker/prettier-config.git"
+  },
+  "license": "MIT",
+  "author": "cravingmaker (https://github.com/cravingmaker)",
+  "type": "module",
+  "exports": "./index.js",
+  "prettier": "@cravingmaker/prettier-config",
+  "dependencies": {
+    "@prettier/plugin-oxc": "^0.1.3",
+    "prettier-plugin-packagejson": "^3.0.2"
+  },
+  "devDependencies": {
+    "@cravingmaker/prettier-config": "^0.1.6",
+    "prettier": "^3.8.2"
+  },
+  "peerDependencies": {
+    "prettier": ">=3.6.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

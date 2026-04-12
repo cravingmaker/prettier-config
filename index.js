@@ -54,6 +54,7 @@ const config = {
 			options: {
 				printWidth: 80,
 				singleQuote: false,
+				trailingComma: 'none',
 				useTabs: false,
 			},
 		},
