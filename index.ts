@@ -1,22 +1,7 @@
 import prettierPluginOxc from '@prettier/plugin-oxc';
+import type { Config } from 'prettier';
 
-/** @type {import("prettier").Config} */
-const config = {
-	// Defaults
-	arrowParens: 'always',
-	bracketSameLine: false,
-	bracketSpacing: true,
-	embeddedLanguageFormatting: 'auto',
-	endOfLine: 'lf',
-	htmlWhitespaceSensitivity: 'css',
-	objectWrap: 'preserve',
-	proseWrap: 'preserve',
-	quoteProps: 'as-needed',
-	semi: true,
-	trailingComma: 'all',
-	vueIndentScriptAndStyle: false,
-
-	// Overrides
+const config: Config = {
 	jsxSingleQuote: true,
 	printWidth: 120,
 	singleAttributePerLine: true,
