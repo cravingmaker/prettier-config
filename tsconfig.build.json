@@ -6,7 +6,6 @@
 		"resolveJsonModule": false,
 		"removeComments": true,
 		"declaration": true,
-		"types": [],
 		"outDir": "dist",
 		"rootDir": "."
 	},

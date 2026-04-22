@@ -1,5 +1,32 @@
+import { createRequire } from 'node:module';
 import prettierPluginOxc from '@prettier/plugin-oxc';
 import type { Config } from 'prettier';
+
+const require = createRequire(import.meta.url);
+
+const isInstalled = (name: string) => {
+	try {
+		require.resolve(name);
+		return true;
+	} catch {
+		return false;
+	}
+};
+
+const plugins = [prettierPluginOxc, 'prettier-plugin-packagejson'];
+
+if (isInstalled('astro')) {
+	plugins.push('prettier-plugin-astro');
+}
+
+if (isInstalled('svelte')) {
+	plugins.push('prettier-plugin-svelte');
+}
+
+// Tailwind plugin should always be last
+if (isInstalled('tailwindcss')) {
+	plugins.push('prettier-plugin-tailwindcss');
+}
 
 const config: Config = {
 	jsxSingleQuote: true,
@@ -9,7 +36,7 @@ const config: Config = {
 	tabWidth: 2,
 	useTabs: true,
 
-	plugins: [prettierPluginOxc, 'prettier-plugin-packagejson', 'prettier-plugin-astro', 'prettier-plugin-svelte'],
+	plugins,
 
 	overrides: [
 		{

@@ -43,9 +43,7 @@
   "prettier": "@cravingmaker/prettier-config",
   "dependencies": {
     "@prettier/plugin-oxc": "^0.1.3",
-    "prettier-plugin-astro": "^0.14.1",
-    "prettier-plugin-packagejson": "^3.0.2",
-    "prettier-plugin-svelte": "^3.5.1"
+    "prettier-plugin-packagejson": "^3.0.2"
   },
   "devDependencies": {
     "@cravingmaker/eslint-config": "^0.0.3",
@@ -56,7 +54,21 @@
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "prettier": ">=3.6.0"
+    "prettier": ">=3.6.0",
+    "prettier-plugin-astro": ">=0.14.0",
+    "prettier-plugin-svelte": ">=3.5.0",
+    "prettier-plugin-tailwindcss": ">=0.6.0"
+  },
+  "peerDependenciesMeta": {
+    "prettier-plugin-astro": {
+      "optional": true
+    },
+    "prettier-plugin-svelte": {
+      "optional": true
+    },
+    "prettier-plugin-tailwindcss": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=22"
