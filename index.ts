@@ -9,7 +9,7 @@ const config: Config = {
 	tabWidth: 2,
 	useTabs: true,
 
-	plugins: [prettierPluginOxc, 'prettier-plugin-packagejson'],
+	plugins: [prettierPluginOxc, 'prettier-plugin-packagejson', 'prettier-plugin-astro', 'prettier-plugin-svelte'],
 
 	overrides: [
 		{
@@ -19,6 +19,17 @@ const config: Config = {
 		{
 			files: ['**/*.{js,cjs,mjs,jsx}'],
 			options: { parser: 'oxc' },
+		},
+		{
+			files: '**/*.astro',
+			options: { parser: 'astro' },
+		},
+		{
+			files: '**/*.svelte',
+			options: {
+				parser: 'svelte',
+				svelteAllowShorthand: false,
+			},
 		},
 		{
 			files: ['**/*.{css,scss,less}'],
