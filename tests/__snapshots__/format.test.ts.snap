@@ -1,0 +1,130 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Format Integration > 01. formats TypeScript correctly 1`] = `
+"export const greet = (name: string) => {
+	const message = \`Hello, \${name}!\`;
+	console.log(message);
+	return message;
+};
+"
+`;
+
+exports[`Format Integration > 02. formats JavaScript correctly 1`] = `
+"export const greet = (name) => {
+	const message = \`Hello, \${name}!\`;
+	console.log(message);
+	return message;
+};
+"
+`;
+
+exports[`Format Integration > 03. formats TSX correctly 1`] = `
+"interface Props {
+	name: string;
+}
+
+export const Greeting = ({ name }: Props) => {
+	return (
+		<div className='greeting'>
+			<h1>Hello, {name}!</h1>
+		</div>
+	);
+};
+"
+`;
+
+exports[`Format Integration > 04. formats JSX correctly 1`] = `
+"export const Greeting = ({ name }) => (
+	<div className='greeting'>
+		<h1>Hello, {name}!</h1>
+	</div>
+);
+"
+`;
+
+exports[`Format Integration > 05. formats Astro correctly 1`] = `
+"---
+const { name = 'World' } = Astro.props;
+---
+
+<div class='greeting flex items-center'>
+	<h1>Hello, {name}!</h1>
+</div>
+"
+`;
+
+exports[`Format Integration > 06. formats Svelte correctly 1`] = `
+"<script>
+	export let name = 'World';
+</script>
+
+<div class="greeting">
+	<h1>Hello, {name}!</h1>
+</div>
+
+<style>
+	.greeting {
+		color: red;
+	}
+</style>
+"
+`;
+
+exports[`Format Integration > 07. formats HTML correctly 1`] = `
+"<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Greeting Page</title>
+  </head>
+  <body>
+    <div class="greeting">
+      <h1>Hello, World!</h1>
+    </div>
+  </body>
+</html>
+"
+`;
+
+exports[`Format Integration > 08. formats CSS correctly 1`] = `
+".greeting {
+  color: "red";
+  font-family: "Inter", sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 20px 10px;
+}
+"
+`;
+
+exports[`Format Integration > 09. formats Markdown correctly 1`] = `
+"# Greeting Component
+
+This component displays a friendly greeting.
+
+## Usage
+
+\`\`\`tsx
+<Greeting name='World' />
+\`\`\`
+
+- Support **custom names**
+- Easy to _style_
+"
+`;
+
+exports[`Format Integration > 10. formats package.json correctly 1`] = `
+"{
+  "name": "greeting-lib",
+  "version": "1.0.0",
+  "description": "A library for greetings",
+  "scripts": {
+    "test": "vitest"
+  },
+  "dependencies": {
+    "a-lib": "1.0.0",
+    "z-lib": "1.0.0"
+  }
+}
+"
+`;

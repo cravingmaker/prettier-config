@@ -23,8 +23,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "main": "dist/index.js",
@@ -37,7 +37,9 @@
     "clean": "rm -rf dist",
     "format": "prettier --write .",
     "lint": "eslint .",
+    "prepare": "husky",
     "prepublishOnly": "npm run clean && npm run build",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@cravingmaker/prettier-config",
@@ -47,17 +49,28 @@
   },
   "devDependencies": {
     "@cravingmaker/eslint-config": "^0.0.3",
-    "@cravingmaker/prettier-config": "^0.1.8",
+    "@cravingmaker/prettier-config": "^0.1.10",
     "@types/node": "^25.6.0",
+    "@types/react": "^19.2.14",
+    "astro": "^6.2.2",
     "eslint": "^10.2.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
-    "typescript": "^6.0.3"
+    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-svelte": "^3.5.1",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "react": "^19.2.5",
+    "svelte": "^5.55.5",
+    "tailwindcss": "^4.2.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   },
   "peerDependencies": {
     "prettier": ">=3.6.0",
     "prettier-plugin-astro": ">=0.14.0",
     "prettier-plugin-svelte": ">=3.5.0",
-    "prettier-plugin-tailwindcss": ">=0.6.0"
+    "prettier-plugin-tailwindcss": ">=0.8.0"
   },
   "peerDependenciesMeta": {
     "prettier-plugin-astro": {

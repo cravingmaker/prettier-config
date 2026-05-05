@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "a-lib": "1.0.0",
+    "z-lib": "1.0.0"
+  },
+  "description": "A library for greetings",
+  "name": "greeting-lib",
+  "scripts": {
+    "test": "vitest"
+  },
+  "version": "1.0.0"
+}

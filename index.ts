@@ -1,6 +1,7 @@
+import type { Config } from 'prettier';
+
 import { createRequire } from 'node:module';
 import prettierPluginOxc from '@prettier/plugin-oxc';
-import type { Config } from 'prettier';
 
 const require = createRequire(import.meta.url);
 
@@ -30,14 +31,6 @@ if (isInstalled('tailwindcss')) {
 
 const config: Config = {
 	jsxSingleQuote: true,
-	printWidth: 120,
-	singleAttributePerLine: true,
-	singleQuote: true,
-	tabWidth: 2,
-	useTabs: true,
-
-	plugins,
-
 	overrides: [
 		{
 			files: ['**/*.{ts,cts,mts,tsx}'],
@@ -91,6 +84,13 @@ const config: Config = {
 			},
 		},
 	],
+	plugins,
+	printWidth: 120,
+	singleAttributePerLine: true,
+	singleQuote: true,
+	tabWidth: 2,
+	useTabs: true,
 };
 
+// eslint-disable-next-line import-x/no-default-export -- Prettier configuration is typically exported as a default export
 export default config;

@@ -1,4 +1,13 @@
-import cravingmakerConfig from '@cravingmaker/eslint-config';
+import { createConfig } from '@cravingmaker/eslint-config';
 
-// eslint-disable-next-line import-x/no-anonymous-default-export, import-x/no-default-export
-export default [...cravingmakerConfig];
+// eslint-disable-next-line import-x/no-default-export -- ESLint configuration requires a default export
+export default createConfig({
+	ignores: ['tests/fixtures/**/*'],
+	jsonRules: {
+		'json/sort-keys': 'off',
+	},
+	tsRules: {
+		'import-x/extensions': 'off',
+		'require-unicode-regexp': 'off',
+	},
+});

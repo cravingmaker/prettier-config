@@ -1,13 +1,13 @@
 {
-	"extends": "./tsconfig.json",
 	"compilerOptions": {
-		"noEmit": false,
 		"allowImportingTsExtensions": false,
-		"resolveJsonModule": false,
-		"removeComments": true,
 		"declaration": true,
+		"noEmit": false,
 		"outDir": "dist",
+		"removeComments": true,
+		"resolveJsonModule": false,
 		"rootDir": "."
 	},
+	"extends": "./tsconfig.json",
 	"include": ["index.ts"]
 }
