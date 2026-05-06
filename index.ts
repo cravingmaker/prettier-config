@@ -16,16 +16,16 @@ const isInstalled = (name: string) => {
 
 const plugins = [prettierPluginOxc, 'prettier-plugin-packagejson'];
 
-if (isInstalled('astro')) {
+if (isInstalled('astro') && isInstalled('prettier-plugin-astro')) {
 	plugins.push('prettier-plugin-astro');
 }
 
-if (isInstalled('svelte')) {
+if (isInstalled('svelte') && isInstalled('prettier-plugin-svelte')) {
 	plugins.push('prettier-plugin-svelte');
 }
 
 // Tailwind plugin should always be last
-if (isInstalled('tailwindcss')) {
+if (isInstalled('tailwindcss') && isInstalled('prettier-plugin-tailwindcss')) {
 	plugins.push('prettier-plugin-tailwindcss');
 }
 

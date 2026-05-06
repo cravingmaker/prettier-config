@@ -22,6 +22,7 @@ describe('Prettier Config', () => {
 			createRequire: () => ({
 				resolve(name: string) {
 					if (name === 'astro') return true;
+					if (name === 'prettier-plugin-astro') return true;
 					throw new Error('Not found');
 				},
 			}),
@@ -38,6 +39,7 @@ describe('Prettier Config', () => {
 			createRequire: () => ({
 				resolve(name: string) {
 					if (name === 'svelte') return true;
+					if (name === 'prettier-plugin-svelte') return true;
 					throw new Error('Not found');
 				},
 			}),
@@ -54,7 +56,9 @@ describe('Prettier Config', () => {
 			createRequire: () => ({
 				resolve(name: string) {
 					if (name === 'tailwindcss') return true;
+					if (name === 'prettier-plugin-tailwindcss') return true;
 					if (name === 'astro') return true;
+					if (name === 'prettier-plugin-astro') return true;
 					throw new Error('Not found');
 				},
 			}),
