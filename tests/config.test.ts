@@ -11,7 +11,7 @@ describe('Prettier Config', () => {
 
 	it('should include basic plugins by default', async () => {
 		// @ts-expect-error - cache busting query string
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, import-x/extensions -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config; the ?query suffix is intentional for Vitest module cache-busting
 		const { default: config } = (await import('../index.ts?default')) as { default: Config };
 		expect(config.plugins).toContain(prettierPluginOxc);
 		expect(config.plugins).toContain('prettier-plugin-packagejson');
@@ -29,7 +29,7 @@ describe('Prettier Config', () => {
 		}));
 
 		// @ts-expect-error - cache busting query string
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, import-x/extensions -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config; the ?query suffix is intentional for Vitest module cache-busting
 		const { default: config } = (await import('../index.ts?astro')) as { default: Config };
 		expect(config.plugins).toContain('prettier-plugin-astro');
 	});
@@ -46,7 +46,7 @@ describe('Prettier Config', () => {
 		}));
 
 		// @ts-expect-error - cache busting query string
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, import-x/extensions -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config; the ?query suffix is intentional for Vitest module cache-busting
 		const { default: config } = (await import('../index.ts?svelte')) as { default: Config };
 		expect(config.plugins).toContain('prettier-plugin-svelte');
 	});
@@ -65,10 +65,10 @@ describe('Prettier Config', () => {
 		}));
 
 		// @ts-expect-error - cache busting query string
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, import-x/extensions -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config; the ?query suffix is intentional for Vitest module cache-busting
 		const { default: config } = (await import('../index.ts?tailwind')) as { default: Config };
 		const plugins = config.plugins ?? [];
-		const lastPlugin = plugins[plugins.length - 1];
+		const lastPlugin = plugins.at(-1);
 		expect(lastPlugin).toBe('prettier-plugin-tailwindcss');
 	});
 });

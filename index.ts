@@ -1,6 +1,7 @@
 import type { Config } from 'prettier';
 
 import { createRequire } from 'node:module';
+
 import prettierPluginOxc from '@prettier/plugin-oxc';
 
 const require = createRequire(import.meta.url);
@@ -14,20 +15,14 @@ const isInstalled = (name: string) => {
 	}
 };
 
-const plugins = [prettierPluginOxc, 'prettier-plugin-packagejson'];
-
-if (isInstalled('astro') && isInstalled('prettier-plugin-astro')) {
-	plugins.push('prettier-plugin-astro');
-}
-
-if (isInstalled('svelte') && isInstalled('prettier-plugin-svelte')) {
-	plugins.push('prettier-plugin-svelte');
-}
-
-// Tailwind plugin should always be last
-if (isInstalled('tailwindcss') && isInstalled('prettier-plugin-tailwindcss')) {
-	plugins.push('prettier-plugin-tailwindcss');
-}
+const plugins = [
+	prettierPluginOxc,
+	'prettier-plugin-packagejson',
+	...(isInstalled('astro') && isInstalled('prettier-plugin-astro') ? ['prettier-plugin-astro'] : []),
+	...(isInstalled('svelte') && isInstalled('prettier-plugin-svelte') ? ['prettier-plugin-svelte'] : []),
+	// Tailwind plugin should always be last
+	...(isInstalled('tailwindcss') && isInstalled('prettier-plugin-tailwindcss') ? ['prettier-plugin-tailwindcss'] : []),
+];
 
 const config: Config = {
 	jsxSingleQuote: true,
