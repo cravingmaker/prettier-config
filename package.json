@@ -44,6 +44,10 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
+  "lint-staged": {
+    "*": "prettier --ignore-unknown --write",
+    "**/*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": "eslint --fix"
+  },
   "prettier": "@cravingmaker/prettier-config",
   "dependencies": {
     "@prettier/plugin-oxc": "0.1.4",
