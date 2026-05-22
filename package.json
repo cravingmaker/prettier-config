@@ -54,7 +54,7 @@
     "prettier-plugin-packagejson": "3.0.2"
   },
   "devDependencies": {
-    "@cravingmaker/eslint-config": "0.0.9",
+    "@cravingmaker/eslint-config": "0.0.10",
     "@cravingmaker/prettier-config": "0.1.11",
     "@types/node": "25.7.0",
     "@types/react": "19.2.14",
