@@ -18,10 +18,10 @@ const isInstalled = (name: string) => {
 const plugins = [
 	prettierPluginOxc,
 	'prettier-plugin-packagejson',
-	...(isInstalled('astro') && isInstalled('prettier-plugin-astro') ? ['prettier-plugin-astro'] : []),
-	...(isInstalled('svelte') && isInstalled('prettier-plugin-svelte') ? ['prettier-plugin-svelte'] : []),
+	...(isInstalled('prettier-plugin-astro') ? ['prettier-plugin-astro'] : []),
+	...(isInstalled('prettier-plugin-svelte') ? ['prettier-plugin-svelte'] : []),
 	// Tailwind plugin should always be last
-	...(isInstalled('tailwindcss') && isInstalled('prettier-plugin-tailwindcss') ? ['prettier-plugin-tailwindcss'] : []),
+	...(isInstalled('prettier-plugin-tailwindcss') ? ['prettier-plugin-tailwindcss'] : []),
 ];
 
 const config: Config = {

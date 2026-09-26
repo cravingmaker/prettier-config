@@ -17,11 +17,10 @@ describe('Prettier Config', () => {
 		expect(config.plugins).toContain('prettier-plugin-packagejson');
 	});
 
-	it('should include astro plugin if astro is installed', async () => {
+	it('should include astro plugin if prettier-plugin-astro is installed', async () => {
 		vi.doMock('node:module', () => ({
 			createRequire: () => ({
 				resolve(name: string) {
-					if (name === 'astro') return true;
 					if (name === 'prettier-plugin-astro') return true;
 					throw new Error('Not found');
 				},
@@ -34,11 +33,10 @@ describe('Prettier Config', () => {
 		expect(config.plugins).toContain('prettier-plugin-astro');
 	});
 
-	it('should include svelte plugin if svelte is installed', async () => {
+	it('should include svelte plugin if prettier-plugin-svelte is installed', async () => {
 		vi.doMock('node:module', () => ({
 			createRequire: () => ({
 				resolve(name: string) {
-					if (name === 'svelte') return true;
 					if (name === 'prettier-plugin-svelte') return true;
 					throw new Error('Not found');
 				},
@@ -55,10 +53,9 @@ describe('Prettier Config', () => {
 		vi.doMock('node:module', () => ({
 			createRequire: () => ({
 				resolve(name: string) {
-					if (name === 'tailwindcss') return true;
-					if (name === 'prettier-plugin-tailwindcss') return true;
-					if (name === 'astro') return true;
 					if (name === 'prettier-plugin-astro') return true;
+					if (name === 'prettier-plugin-svelte') return true;
+					if (name === 'prettier-plugin-tailwindcss') return true;
 					throw new Error('Not found');
 				},
 			}),
@@ -66,9 +63,34 @@ describe('Prettier Config', () => {
 
 		// @ts-expect-error - cache busting query string
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, import-x/extensions -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config; the ?query suffix is intentional for Vitest module cache-busting
-		const { default: config } = (await import('../index.ts?tailwind')) as { default: Config };
+		const { default: config } = (await import('../index.ts?tailwind')) as {
+			default: Config;
+		};
+
 		const plugins = config.plugins ?? [];
-		const lastPlugin = plugins.at(-1);
-		expect(lastPlugin).toBe('prettier-plugin-tailwindcss');
+
+		expect(plugins).toContain('prettier-plugin-astro');
+		expect(plugins).toContain('prettier-plugin-svelte');
+		expect(plugins.at(-1)).toBe('prettier-plugin-tailwindcss');
+	});
+
+	it('should not include optional plugins when they are not installed', async () => {
+		vi.doMock('node:module', () => ({
+			createRequire: () => ({
+				resolve() {
+					throw new Error('Not found');
+				},
+			}),
+		}));
+
+		// @ts-expect-error - cache busting query string
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion, import-x/extensions -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config; the ?query suffix is intentional for Vitest module cache-busting
+		const { default: config } = (await import('../index.ts?no-optional')) as {
+			default: Config;
+		};
+
+		expect(config.plugins).not.toContain('prettier-plugin-astro');
+		expect(config.plugins).not.toContain('prettier-plugin-svelte');
+		expect(config.plugins).not.toContain('prettier-plugin-tailwindcss');
 	});
 });
