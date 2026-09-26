@@ -48,6 +48,14 @@ export default {
 };
 ```
 
+## Optional plugin compatibility
+
+For Astro files, use `prettier-plugin-astro@0.14.1`. This package supports
+the `0.14.x` series alongside `prettier-plugin-tailwindcss@0.8.1`.
+Astro plugin `1.x` uses a different AST that Tailwind plugin `0.8.1` does
+not support for class sorting. The Astro peer range excludes `1.x` until
+a compatible combination is verified.
+
 ## File-specific behavior
 
 The base configuration uses tabs for indentation. Common data, markup, and

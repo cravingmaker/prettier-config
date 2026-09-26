@@ -145,7 +145,13 @@ describe('Published Package', () => {
 					const resolved = await prettier.resolveConfig(filePath);
 					if (!resolved) throw new Error('Shared config was not resolved');
 
-					return prettier.format(source, Object.assign({}, resolved, { filepath: filePath }));
+					const options = Object.assign({}, resolved, { filepath: filePath });
+					const formatted = await prettier.format(source, options);
+					if (await prettier.format(formatted, options) !== formatted) {
+						throw new Error('Formatting is not idempotent for ' + filename);
+					}
+
+					return formatted;
 				};
 
 				const javascript = await format('src/example.js', 'const greeting = "hello";');
@@ -217,7 +223,13 @@ describe('Published Package', () => {
 					const resolved = await prettier.resolveConfig(filePath);
 					if (!resolved) throw new Error('Shared config was not resolved');
 
-					return prettier.format(source, Object.assign({}, resolved, { filepath: filePath }));
+					const options = Object.assign({}, resolved, { filepath: filePath });
+					const formatted = await prettier.format(source, options);
+					if (await prettier.format(formatted, options) !== formatted) {
+						throw new Error('Formatting is not idempotent for ' + filename);
+					}
+
+					return formatted;
 				};
 
 				const astro = await format(
@@ -249,6 +261,14 @@ describe('Published Package', () => {
 
 				if (!svelte.includes("let name = 'World';")) {
 					throw new Error('Svelte parser did not format the script');
+				}
+
+				if (!/class=['"]flex p-4['"]/.test(svelte)) {
+					throw new Error('Tailwind did not sort Svelte classes: ' + svelte);
+				}
+
+				if (!/class=['"]flex p-4['"]/.test(astro)) {
+					throw new Error('Tailwind did not sort Astro classes: ' + astro);
 				}
 
 				process.stdout.write('ok');
