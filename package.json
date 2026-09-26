@@ -25,41 +25,34 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./index.d.ts",
+      "import": "./index.mjs"
     }
   },
-  "types": "./dist/index.d.ts",
+  "types": "./index.d.ts",
   "files": [
-    "dist"
+    "index.mjs",
+    "index.d.ts"
   ],
   "scripts": {
-    "build": "npm run clean && tsc -p tsconfig.build.json",
-    "check:commit": "npm run build && npm run lint:staged && npm run build && npm run typecheck && npm run test:built",
-    "clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
-    "format": "npm run build && prettier --write . && npm run build",
-    "format:check": "npm run build && npm run format:check:built",
-    "format:check:built": "prettier --check .",
+    "check:commit": "npm run lint:staged && npm run typecheck && npm run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
-    "lint:package": "npm run build && npm run lint:package:built",
-    "lint:package:built": "publint --strict",
+    "lint:package": "publint --strict",
     "lint:staged": "lint-staged",
     "prepare": "husky",
     "prepublishOnly": "npm run validate",
-    "test": "npm run build && npm run test:built",
-    "test:built": "vitest run --exclude tests/package.smoke.test.ts",
-    "test:package": "npm run build && npm run test:package:built",
-    "test:package:built": "vitest run tests/package.smoke.test.ts",
+    "test": "vitest run --exclude tests/package.smoke.test.ts",
+    "test:package": "vitest run tests/package.smoke.test.ts",
     "typecheck": "tsc --noEmit",
-    "typecheck:package": "npm run build && npm run typecheck:package:built",
-    "typecheck:package:built": "attw --pack . --profile esm-only",
-    "validate": "npm run build && npm run typecheck && npm run lint && npm run format:check:built && npm run test:built && npm run test:package:built && npm run lint:package:built && npm run typecheck:package:built"
+    "typecheck:package": "attw --pack . --profile esm-only",
+    "validate": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run test:package && npm run lint:package && npm run typecheck:package"
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write",
     "**/*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": "eslint --fix"
   },
-  "prettier": "@cravingmaker/prettier-config",
   "dependencies": {
     "@prettier/plugin-oxc": "0.2.3",
     "prettier-plugin-packagejson": "3.0.2"
@@ -67,7 +60,6 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@cravingmaker/eslint-config": "0.0.10",
-    "@cravingmaker/prettier-config": "0.1.11",
     "@types/node": "22.20.3",
     "eslint": "10.10.0",
     "husky": "9.1.7",

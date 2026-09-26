@@ -98,6 +98,15 @@ describe('Published Package', () => {
 		});
 	});
 
+	it('ships the runtime and public types without build artifacts', () => {
+		const entries = execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' }).trim().split('\n');
+
+		expect(entries).toHaveLength(4);
+		expect(entries).toEqual(
+			expect.arrayContaining(['package/README.md', 'package/index.d.ts', 'package/index.mjs', 'package/package.json']),
+		);
+	});
+
 	it('works from the packed tarball without optional plugins', async () => {
 		const consumerDirectory = await createConsumer('base-consumer', requiredDependencies);
 
