@@ -7,7 +7,12 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 const projectDirectory = path.resolve(__dirname, '..');
 
-const requiredDependencies = ['prettier', 'prettier-plugin-packagejson', 'prettier-plugin-toml', '@prettier/plugin-oxc'] as const;
+const requiredDependencies = [
+	'prettier',
+	'prettier-plugin-packagejson',
+	'prettier-plugin-toml',
+	'@prettier/plugin-oxc',
+] as const;
 
 const optionalDependencies = [
 	'prettier-plugin-astro',
