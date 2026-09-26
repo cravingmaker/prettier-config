@@ -11,6 +11,28 @@ const distributionConfig = path.resolve(__dirname, '..', 'dist', 'index.js');
 const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-format-'));
 const configPath = path.join(temporaryDirectory, 'prettier.config.mjs');
 
+const testFixture = async (filename: string, directory: string, prettierConfigPath: string) => {
+	const sourcePath = path.join(fixturesDirectory, filename);
+	const filePath = path.join(directory, filename);
+	const content = await fs.readFile(sourcePath, 'utf8');
+
+	await fs.writeFile(filePath, content, 'utf8');
+
+	const resolvedConfig = await prettier.resolveConfig(filePath, {
+		config: prettierConfigPath,
+		editorconfig: false,
+	});
+
+	expect(resolvedConfig).not.toBeNull();
+
+	const formatted = await prettier.format(content, {
+		...resolvedConfig,
+		filepath: filePath,
+	});
+
+	expect(formatted).toMatchSnapshot();
+};
+
 await fs.writeFile(
 	configPath,
 	`export { default } from ${JSON.stringify(pathToFileURL(distributionConfig).href)};\n`,
@@ -25,65 +47,44 @@ describe('Format Integration', () => {
 		});
 	});
 
-	const testFixture = async (filename: string) => {
-		const sourcePath = path.join(fixturesDirectory, filename);
-		const filePath = path.join(temporaryDirectory, filename);
-		const content = await fs.readFile(sourcePath, 'utf8');
-
-		await fs.writeFile(filePath, content, 'utf8');
-
-		const resolvedConfig = await prettier.resolveConfig(filePath, {
-			config: configPath,
-			editorconfig: false,
-		});
-
-		expect(resolvedConfig).not.toBeNull();
-
-		const formatted = await prettier.format(content, {
-			...(resolvedConfig ?? {}),
-			filepath: filePath,
-		});
-
-		expect(formatted).toMatchSnapshot();
-	};
 
 	it('01. formats TypeScript correctly', async () => {
-		await testFixture('sample.ts');
+		await testFixture('sample.ts', temporaryDirectory, configPath);
 	});
 
 	it('02. formats JavaScript correctly', async () => {
-		await testFixture('sample.js');
+		await testFixture('sample.js', temporaryDirectory, configPath);
 	});
 
 	it('03. formats TSX correctly', async () => {
-		await testFixture('sample.tsx');
+		await testFixture('sample.tsx', temporaryDirectory, configPath);
 	});
 
 	it('04. formats JSX correctly', async () => {
-		await testFixture('sample.jsx');
+		await testFixture('sample.jsx', temporaryDirectory, configPath);
 	});
 
 	it('05. formats Astro correctly', async () => {
-		await testFixture('sample.astro');
+		await testFixture('sample.astro', temporaryDirectory, configPath);
 	});
 
 	it('06. formats Svelte correctly', async () => {
-		await testFixture('sample.svelte');
+		await testFixture('sample.svelte', temporaryDirectory, configPath);
 	});
 
 	it('07. formats HTML correctly', async () => {
-		await testFixture('sample.html');
+		await testFixture('sample.html', temporaryDirectory, configPath);
 	});
 
 	it('08. formats CSS correctly', async () => {
-		await testFixture('sample.css');
+		await testFixture('sample.css', temporaryDirectory, configPath);
 	});
 
 	it('09. formats Markdown correctly', async () => {
-		await testFixture('sample.md');
+		await testFixture('sample.md', temporaryDirectory, configPath);
 	});
 
 	it('10. formats package.json correctly', async () => {
-		await testFixture('package.json');
+		await testFixture('package.json', temporaryDirectory, configPath);
 	});
 });
