@@ -69,7 +69,6 @@
     "prettier-plugin-tailwindcss": "0.8.1",
     "publint": "0.3.24",
     "svelte": "5.57.0",
-    "tailwindcss": "4.3.3",
     "typescript": "6.0.3",
     "vitest": "4.1.6"
   },
