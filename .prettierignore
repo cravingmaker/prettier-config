@@ -1,3 +1,5 @@
-node_modules
-dist
-tests/fixtures
+node_modules/
+dist/
+coverage/
+tests/fixtures/
+package-lock.json

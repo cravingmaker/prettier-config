@@ -8,8 +8,7 @@ const require = createRequire(import.meta.url);
 
 const isInstalled = (name: string) => {
 	try {
-		require.resolve(name);
-		return true;
+		return Boolean(require.resolve(name));
 	} catch {
 		return false;
 	}
