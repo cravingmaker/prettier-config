@@ -128,3 +128,64 @@ exports[`Format Integration > 10. formats package.json correctly 1`] = `
 }
 "
 `;
+
+exports[`Format Integration > 11. applies space-based JSON options to JSON 1`] = `
+"{
+  "name": "greeting",
+  "nested": {
+    "enabled": true
+  }
+}
+"
+`;
+
+exports[`Format Integration > 12. applies space-based JSON options to JSONC 1`] = `
+"{
+  // Configuration comment
+  "name": "greeting",
+  "nested": {
+    "enabled": true
+  }
+}
+"
+`;
+
+exports[`Format Integration > 13. applies space-based JSON options to JSON5 1`] = `
+"{
+  name: "greeting",
+  nested: {
+    enabled: true
+  }
+}
+"
+`;
+
+exports[`Format Integration > 14. applies space-based YAML options to YAML 1`] = `
+"name: greeting
+nested:
+  enabled: true
+  items:
+    - one
+    - two
+"
+`;
+
+exports[`Format Integration > 15. applies space-based YAML options to YML 1`] = `
+"name: greeting
+nested:
+  enabled: true
+  items:
+    - one
+    - two
+"
+`;
+
+exports[`Format Integration > 16. applies Markdown options to MDX 1`] = `
+"# Greeting
+
+<Component
+  title='Hello'
+  items={[1, 2, 3]}
+/>
+"
+`;

@@ -32,12 +32,11 @@ const testFixture = async (filename: string, directory: string, prettierConfigPa
 
 	expect(resolvedConfig).not.toBeNull();
 
-	const formatted = await prettier.format(content, {
-		...resolvedConfig,
-		filepath: filePath,
-	});
+	const options = { ...resolvedConfig, filepath: filePath };
+	const formatted = await prettier.format(content, options);
 
 	expect(formatted).toMatchSnapshot();
+	expect(await prettier.format(formatted, options)).toBe(formatted);
 };
 
 const expectResolvedOptions = async (
@@ -111,6 +110,7 @@ describe('Format Integration', () => {
 	});
 
 	it('11. applies space-based JSON options to JSON', async () => {
+		await testFixture('sample.json', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.json', temporaryDirectory, configPath, {
 			singleQuote: false,
 			trailingComma: 'none',
@@ -119,6 +119,7 @@ describe('Format Integration', () => {
 	});
 
 	it('12. applies space-based JSON options to JSONC', async () => {
+		await testFixture('sample.jsonc', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.jsonc', temporaryDirectory, configPath, {
 			singleQuote: false,
 			trailingComma: 'none',
@@ -127,6 +128,7 @@ describe('Format Integration', () => {
 	});
 
 	it('13. applies space-based JSON options to JSON5', async () => {
+		await testFixture('sample.json5', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.json5', temporaryDirectory, configPath, {
 			singleQuote: false,
 			trailingComma: 'none',
@@ -135,18 +137,21 @@ describe('Format Integration', () => {
 	});
 
 	it('14. applies space-based YAML options to YAML', async () => {
+		await testFixture('sample.yaml', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.yaml', temporaryDirectory, configPath, {
 			useTabs: false,
 		});
 	});
 
 	it('15. applies space-based YAML options to YML', async () => {
+		await testFixture('sample.yml', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.yml', temporaryDirectory, configPath, {
 			useTabs: false,
 		});
 	});
 
 	it('16. applies Markdown options to MDX', async () => {
+		await testFixture('sample.mdx', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.mdx', temporaryDirectory, configPath, {
 			printWidth: 80,
 			singleQuote: false,
