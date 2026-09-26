@@ -41,6 +41,12 @@ const config = [
 		},
 	},
 	{
+		files: ['tests/format.test.ts'],
+		rules: {
+			'security/detect-non-literal-fs-filename': 'off',
+		},
+	},
+	{
 		files: ['tests/package.smoke.test.ts'],
 		rules: {
 			'functional/no-promise-reject': 'off',

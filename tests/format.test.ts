@@ -1,83 +1,89 @@
 import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import prettier from 'prettier';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
-// eslint-disable-next-line import-x/extensions -- importing the TypeScript source directly is required for Vitest to resolve the module without a build step
-import config from '../index.ts';
+const fixturesDirectory = path.join(__dirname, 'fixtures');
+const distributionConfig = path.resolve(__dirname, '..', 'dist', 'index.js');
+const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-format-'));
+const configPath = path.join(temporaryDirectory, 'prettier.config.mjs');
+
+const testFixture = async (filename: string, directory: string, prettierConfigPath: string) => {
+	const sourcePath = path.join(fixturesDirectory, filename);
+	const filePath = path.join(directory, filename);
+	const content = await fs.readFile(sourcePath, 'utf8');
+
+	await fs.writeFile(filePath, content, 'utf8');
+
+	const resolvedConfig = await prettier.resolveConfig(filePath, {
+		config: prettierConfigPath,
+		editorconfig: false,
+	});
+
+	expect(resolvedConfig).not.toBeNull();
+
+	const formatted = await prettier.format(content, {
+		...resolvedConfig,
+		filepath: filePath,
+	});
+
+	expect(formatted).toMatchSnapshot();
+};
+
+await fs.writeFile(
+	configPath,
+	`export { default } from ${JSON.stringify(pathToFileURL(distributionConfig).href)};\n`,
+	'utf8',
+);
 
 describe('Format Integration', () => {
-	const fixturesDirectory = path.join(__dirname, 'fixtures');
-
-	const testFixture = async (filename: string) => {
-		const filePath = path.join(fixturesDirectory, filename);
-		// eslint-disable-next-line security/detect-non-literal-fs-filename -- filePath is constructed from a trusted fixtures directory and a test-controlled filename
-		const content = await fs.readFile(filePath, 'utf8');
-
-		// Resolve options by manually applying overrides
-		// eslint-disable-next-line functional/no-let -- options must be mutated across loop iterations as overrides are applied sequentially; refactoring to reduce would trigger unicorn/no-array-reduce
-		let options = { ...config };
-		if (config.overrides) {
-			// eslint-disable-next-line functional/no-loop-statements -- sequential override application requires stateful iteration; map/reduce would not correctly accumulate merged options
-			for (const override of config.overrides) {
-				const patterns = Array.isArray(override.files) ? override.files : [override.files];
-				const isMatch = patterns.some((pattern: string) => {
-					// Handle brace expansion: {css,scss,less} -> (css|scss|less)
-					const regexSource = pattern
-						.replaceAll('.', String.raw`\.`)
-						.replaceAll('**/*', '.*')
-						.replaceAll('*', '[^/]*')
-						// eslint-disable-next-line regexp/no-super-linear-move -- \{ is a literal brace, not a quantifier; no ReDoS risk
-						.replaceAll(/\{(?<inner>[^}]+)\}/g, (_: string, p1: string) => `(${p1.replaceAll(',', '|')})`);
-
-					// eslint-disable-next-line security/detect-non-literal-regexp -- regexSource is built from a trusted config pattern string, not user input
-					const regex = new RegExp(`${regexSource}$`);
-					return regex.test(filePath);
-				});
-
-				if (isMatch) {
-					options = { ...options, ...override.options };
-				}
-			}
-		}
-
-		const formatted = await prettier.format(content, {
-			...options,
-			filepath: filePath,
+	afterAll(async () => {
+		await fs.rm(temporaryDirectory, {
+			force: true,
+			recursive: true,
 		});
-
-		expect(formatted).toMatchSnapshot();
-	};
+	});
 
 	it('01. formats TypeScript correctly', async () => {
-		await testFixture('sample.ts');
+		await testFixture('sample.ts', temporaryDirectory, configPath);
 	});
+
 	it('02. formats JavaScript correctly', async () => {
-		await testFixture('sample.js');
+		await testFixture('sample.js', temporaryDirectory, configPath);
 	});
+
 	it('03. formats TSX correctly', async () => {
-		await testFixture('sample.tsx');
+		await testFixture('sample.tsx', temporaryDirectory, configPath);
 	});
+
 	it('04. formats JSX correctly', async () => {
-		await testFixture('sample.jsx');
+		await testFixture('sample.jsx', temporaryDirectory, configPath);
 	});
+
 	it('05. formats Astro correctly', async () => {
-		await testFixture('sample.astro');
+		await testFixture('sample.astro', temporaryDirectory, configPath);
 	});
+
 	it('06. formats Svelte correctly', async () => {
-		await testFixture('sample.svelte');
+		await testFixture('sample.svelte', temporaryDirectory, configPath);
 	});
+
 	it('07. formats HTML correctly', async () => {
-		await testFixture('sample.html');
+		await testFixture('sample.html', temporaryDirectory, configPath);
 	});
+
 	it('08. formats CSS correctly', async () => {
-		await testFixture('sample.css');
+		await testFixture('sample.css', temporaryDirectory, configPath);
 	});
+
 	it('09. formats Markdown correctly', async () => {
-		await testFixture('sample.md');
+		await testFixture('sample.md', temporaryDirectory, configPath);
 	});
+
 	it('10. formats package.json correctly', async () => {
-		await testFixture('package.json');
+		await testFixture('package.json', temporaryDirectory, configPath);
 	});
 });

@@ -35,7 +35,7 @@
   ],
   "scripts": {
     "build": "npm run clean && tsc -p tsconfig.build.json",
-    "check:commit": "npm run build && npm run lint:staged && npm run typecheck && npm test",
+    "check:commit": "npm run build && npm run lint:staged && npm run build && npm run typecheck && npm run test:built",
     "clean": "node --input-type=module --eval \"import { rmSync } from 'node:fs'; rmSync('dist', { recursive: true, force: true })\"",
     "format": "npm run build && prettier --write . && npm run build",
     "format:check": "npm run build && npm run format:check:built",
@@ -46,13 +46,14 @@
     "lint:staged": "lint-staged",
     "prepare": "husky",
     "prepublishOnly": "npm run validate",
-    "test": "vitest run --exclude tests/package.smoke.test.ts",
+    "test": "npm run build && npm run test:built",
+    "test:built": "vitest run --exclude tests/package.smoke.test.ts",
     "test:package": "npm run build && npm run test:package:built",
     "test:package:built": "vitest run tests/package.smoke.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:package": "npm run build && npm run typecheck:package:built",
     "typecheck:package:built": "attw --pack . --profile esm-only",
-    "validate": "npm run build && npm run typecheck && npm run lint && npm run format:check:built && npm test && npm run test:package:built && npm run lint:package:built && npm run typecheck:package:built"
+    "validate": "npm run build && npm run typecheck && npm run lint && npm run format:check:built && npm run test:built && npm run test:package:built && npm run lint:package:built && npm run typecheck:package:built"
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write",
