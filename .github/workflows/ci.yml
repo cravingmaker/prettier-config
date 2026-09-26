@@ -52,3 +52,35 @@ jobs:
 
       - name: Verify package contents
         run: npm pack --dry-run
+
+  minimum-runtime:
+    name: Minimum Node.js 22.12.0
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      HUSKY: 0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Development tools require newer Node.js versions than the runtime config.
+      - name: Setup development Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Setup minimum runtime
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 22.12.0
+
+      - name: Test packed package on minimum runtime
+        run: npm run test:package
