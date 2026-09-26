@@ -1,24 +1,24 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/"
+  - package-ecosystem: npm
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly
     cooldown:
       default-days: 7
       semver-major-days: 21
       semver-minor-days: 14
       semver-patch-days: 7
     ignore:
-      - dependency-name: "@cravingmaker/prettier-config"
-      - dependency-name: "@types/node"
+      - dependency-name: '@cravingmaker/prettier-config'
+      - dependency-name: '@types/node'
         update-types:
-          - "version-update:semver-major"
-      - dependency-name: "typescript"
+          - version-update:semver-major
+      - dependency-name: typescript
         update-types:
-          - "version-update:semver-major"
+          - version-update:semver-major
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "weekly"
+      interval: weekly
