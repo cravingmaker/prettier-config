@@ -167,4 +167,22 @@ describe('Format Integration', () => {
 			useTabs: false,
 		});
 	});
+
+	it('19. applies package.json options', async () => {
+		await expectResolvedOptions('package.json', temporaryDirectory, configPath, {
+			printWidth: 100,
+			singleQuote: false,
+			trailingComma: 'none',
+			useTabs: false,
+		});
+	});
+
+	it('20. applies package-lock.json options', async () => {
+		await expectResolvedOptions('package-lock.json', temporaryDirectory, configPath, {
+			printWidth: 100,
+			singleQuote: false,
+			trailingComma: 'none',
+			useTabs: false,
+		});
+	});
 });
