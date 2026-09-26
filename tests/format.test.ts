@@ -47,7 +47,6 @@ describe('Format Integration', () => {
 		});
 	});
 
-
 	it('01. formats TypeScript correctly', async () => {
 		await testFixture('sample.ts', temporaryDirectory, configPath);
 	});
