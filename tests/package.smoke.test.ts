@@ -6,6 +6,8 @@ import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 
 const projectDirectory = path.resolve(__dirname, '..');
+// eslint-disable-next-line n/no-process-env -- CI selects the consumer runtime independently of the test runner
+const consumerNode = process.env.PRETTIER_CONFIG_CONSUMER_NODE ?? process.execPath;
 
 const requiredDependencies = [
 	'prettier',
@@ -23,7 +25,7 @@ const optionalDependencies = [
 
 const runConsumer = (consumerDirectory: string, script: string, externalCwd: boolean) =>
 	execFileSync(
-		process.env['PRETTIER_CONFIG_CONSUMER_NODE'] ?? process.execPath,
+		consumerNode,
 		[
 			'--input-type=module',
 			'--eval',
