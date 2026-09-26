@@ -25,12 +25,10 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
@@ -39,11 +37,13 @@
     "clean": "rm -rf dist",
     "format": "prettier --write .",
     "lint": "eslint .",
+    "lint:package": "npm run build && publint --strict",
     "prepare": "husky",
     "prepublishOnly": "npm run clean && npm run build",
     "test": "vitest run --exclude tests/package.smoke.test.ts",
     "test:package": "npm run build && vitest run tests/package.smoke.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typecheck:package": "npm run build && attw --pack . --profile esm-only"
   },
   "lint-staged": {
     "*": "prettier --ignore-unknown --write",
@@ -55,6 +55,7 @@
     "prettier-plugin-packagejson": "3.0.2"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
     "@cravingmaker/eslint-config": "0.0.9",
     "@cravingmaker/prettier-config": "0.1.11",
     "@types/node": "25.7.0",
@@ -67,6 +68,7 @@
     "prettier-plugin-astro": "0.14.1",
     "prettier-plugin-svelte": "3.5.2",
     "prettier-plugin-tailwindcss": "0.8.0",
+    "publint": "0.3.24",
     "react": "19.2.6",
     "svelte": "5.55.5",
     "tailwindcss": "4.3.0",
