@@ -154,4 +154,17 @@ describe('Format Integration', () => {
 			useTabs: false,
 		});
 	});
+
+	it('17. formats TOML correctly', async () => {
+		await testFixture('sample.toml', temporaryDirectory, configPath);
+	});
+
+	it('18. applies TOML options', async () => {
+		await expectResolvedOptions('sample.toml', temporaryDirectory, configPath, {
+			parser: 'toml',
+			printWidth: 100,
+			tabWidth: 2,
+			useTabs: false,
+		});
+	});
 });

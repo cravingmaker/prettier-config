@@ -8,7 +8,7 @@ A highly opinionated, modern, and elegant Prettier configuration crafted by
 Requires Node.js 22.12.0 or newer.
 
 Install the configuration along with Prettier using your favorite package
-manager:
+manager. TOML support is included automatically:
 
 ```bash
 npm install --save-dev --save-exact prettier @cravingmaker/prettier-config
@@ -56,6 +56,8 @@ documentation formats use spaces where tabs are undesirable or unsupported.
 - JSON, JSONC, and JSON5 use two-space indentation, double quotes, and no
   trailing commas.
 - YAML and YML use two-space indentation.
+- TOML uses two-space indentation and a 100-character print width. TOML key
+  ordering is preserved.
 - Markdown and MDX use two-space indentation with an 80-character print width.
 - `package.json` and `package-lock.json` keep their dedicated 80-character
   print-width override.

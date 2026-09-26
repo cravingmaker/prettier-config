@@ -7,7 +7,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 const projectDirectory = path.resolve(__dirname, '..');
 
-const requiredDependencies = ['prettier', 'prettier-plugin-packagejson', '@prettier/plugin-oxc'] as const;
+const requiredDependencies = ['prettier', 'prettier-plugin-packagejson', 'prettier-plugin-toml', '@prettier/plugin-oxc'] as const;
 
 const optionalDependencies = [
 	'prettier-plugin-astro',
@@ -149,6 +149,10 @@ describe('Published Package', () => {
 					'nested/package.json',
 					JSON.stringify({ version: '1.0.0', name: 'fixture' }),
 				);
+				const toml = await format(
+					'pyproject.toml',
+					'[project]\nname="fixture"\nversion="1.0.0"\ndependencies=["alpha","beta"]\n',
+				);
 
 				const configuredPlugins = config.plugins ?? [];
 				const detectedOptionalPlugins = optionalPlugins.filter((plugin) =>
@@ -165,6 +169,13 @@ describe('Published Package', () => {
 
 				if (packageJson !== '{\n  "name": "fixture",\n  "version": "1.0.0"\n}\n') {
 					throw new Error('package.json formatting did not use the package.json plugin');
+				}
+
+				if (
+					toml !==
+					'[project]\nname = "fixture"\nversion = "1.0.0"\ndependencies = ["alpha", "beta"]\n'
+				) {
+					throw new Error('TOML formatting did not use the TOML plugin');
 				}
 
 				if (detectedOptionalPlugins.length !== 0) {

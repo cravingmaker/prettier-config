@@ -128,3 +128,14 @@ exports[`Format Integration > 10. formats package.json correctly 1`] = `
 }
 "
 `;
+
+exports[`Format Integration > 17. formats TOML correctly 1`] = `
+"[package]
+name = \"example\"
+version = \"1.0.0\"
+
+[tool.example]
+enabled = true
+features = [\"alpha\", \"beta\", \"gamma\"]
+"
+`;
