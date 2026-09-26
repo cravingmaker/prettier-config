@@ -11,12 +11,19 @@ const distributionConfig = path.resolve(__dirname, '..', 'dist', 'index.js');
 const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-format-'));
 const configPath = path.join(temporaryDirectory, 'prettier.config.mjs');
 
-const testFixture = async (filename: string, directory: string, prettierConfigPath: string) => {
+const prepareFixture = async (filename: string, directory: string) => {
 	const sourcePath = path.join(fixturesDirectory, filename);
 	const filePath = path.join(directory, filename);
 	const content = await fs.readFile(sourcePath, 'utf8');
 
 	await fs.writeFile(filePath, content, 'utf8');
+
+	return filePath;
+};
+
+const testFixture = async (filename: string, directory: string, prettierConfigPath: string) => {
+	const filePath = await prepareFixture(filename, directory);
+	const content = await fs.readFile(filePath, 'utf8');
 
 	const resolvedConfig = await prettier.resolveConfig(filePath, {
 		config: prettierConfigPath,
@@ -31,6 +38,22 @@ const testFixture = async (filename: string, directory: string, prettierConfigPa
 	});
 
 	expect(formatted).toMatchSnapshot();
+};
+
+const expectResolvedOptions = async (
+	filename: string,
+	directory: string,
+	prettierConfigPath: string,
+	expectedOptions: Readonly<Record<string, unknown>>,
+) => {
+	const filePath = await prepareFixture(filename, directory);
+
+	const resolvedConfig = await prettier.resolveConfig(filePath, {
+		config: prettierConfigPath,
+		editorconfig: false,
+	});
+
+	expect(resolvedConfig).toMatchObject(expectedOptions);
 };
 
 await fs.writeFile(
@@ -85,5 +108,50 @@ describe('Format Integration', () => {
 
 	it('10. formats package.json correctly', async () => {
 		await testFixture('package.json', temporaryDirectory, configPath);
+	});
+
+	it('11. applies space-based JSON options to JSON', async () => {
+		await expectResolvedOptions('sample.json', temporaryDirectory, configPath, {
+			singleQuote: false,
+			trailingComma: 'none',
+			useTabs: false,
+		});
+	});
+
+	it('12. applies space-based JSON options to JSONC', async () => {
+		await expectResolvedOptions('sample.jsonc', temporaryDirectory, configPath, {
+			singleQuote: false,
+			trailingComma: 'none',
+			useTabs: false,
+		});
+	});
+
+	it('13. applies space-based JSON options to JSON5', async () => {
+		await expectResolvedOptions('sample.json5', temporaryDirectory, configPath, {
+			singleQuote: false,
+			trailingComma: 'none',
+			useTabs: false,
+		});
+	});
+
+	it('14. applies space-based YAML options to YAML', async () => {
+		await expectResolvedOptions('sample.yaml', temporaryDirectory, configPath, {
+			useTabs: false,
+		});
+	});
+
+	it('15. applies space-based YAML options to YML', async () => {
+		await expectResolvedOptions('sample.yml', temporaryDirectory, configPath, {
+			useTabs: false,
+		});
+	});
+
+	it('16. applies Markdown options to MDX', async () => {
+		await expectResolvedOptions('sample.mdx', temporaryDirectory, configPath, {
+			printWidth: 80,
+			singleQuote: false,
+			trailingComma: 'none',
+			useTabs: false,
+		});
 	});
 });
