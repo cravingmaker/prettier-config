@@ -28,11 +28,13 @@ describe('Published Package', () => {
 
 			const tarballs = packedFiles.filter((file) => file.endsWith('.tgz'));
 
-			if (tarballs.length !== 1) {
+			const [tarballFilename] = tarballs;
+
+			if (tarballs.length !== 1 || tarballFilename === undefined) {
 				throw new Error(`Expected exactly one packed tarball, found ${tarballs.length}`);
 			}
 
-			const tarball = path.join(temporaryDirectory, tarballs[0]);
+			const tarball = path.join(temporaryDirectory, tarballFilename);
 
 			const packageDirectory = path.join(nodeModulesDirectory, '@cravingmaker', 'prettier-config');
 
