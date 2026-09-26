@@ -1,12 +1,14 @@
-import type { Config } from 'prettier';
+// @ts-check
 
 import { createRequire } from 'node:module';
 
+// eslint-disable-next-line import-x/no-rename-default -- Use the plugin name instead of the bundled export identifier
 import prettierPluginOxc from '@prettier/plugin-oxc';
 
 const require = createRequire(import.meta.url);
 
-const isInstalled = (name: string) => {
+/** @param {string} name */
+const isInstalled = (name) => {
 	try {
 		return Boolean(require.resolve(name));
 	} catch {
@@ -23,7 +25,8 @@ const plugins = [
 	...(isInstalled('prettier-plugin-tailwindcss') ? ['prettier-plugin-tailwindcss'] : []),
 ];
 
-const config: Config = {
+/** @satisfies {import('prettier').Config} */
+const config = {
 	jsxSingleQuote: true,
 	overrides: [
 		{

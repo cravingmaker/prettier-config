@@ -1,6 +1,8 @@
 {
   "compilerOptions": {
     "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "checkJs": true,
     "esModuleInterop": true,
     "exactOptionalPropertyTypes": true,
     "forceConsistentCasingInFileNames": true,
@@ -20,5 +22,5 @@
     "verbatimModuleSyntax": true
   },
   "exclude": ["node_modules", "dist", "tests/fixtures"],
-  "include": ["index.ts", "tests/**/*.ts"]
+  "include": ["index.mjs", "index.d.ts", "prettier.config.mjs", "tests/**/*.ts"]
 }

@@ -7,7 +7,7 @@ import prettier from 'prettier';
 import { afterAll, describe, expect, it } from 'vitest';
 
 const fixturesDirectory = path.join(__dirname, 'fixtures');
-const distributionConfig = path.resolve(__dirname, '..', 'dist', 'index.js');
+const runtimeConfig = path.resolve(__dirname, '..', 'index.mjs');
 const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-format-'));
 const configPath = path.join(temporaryDirectory, 'prettier.config.mjs');
 
@@ -58,7 +58,7 @@ const expectResolvedOptions = async (
 
 await fs.writeFile(
 	configPath,
-	`export { default } from ${JSON.stringify(pathToFileURL(distributionConfig).href)};\n`,
+	`export { default } from ${JSON.stringify(pathToFileURL(runtimeConfig).href)};\n`,
 	'utf8',
 );
 

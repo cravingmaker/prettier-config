@@ -58,6 +58,15 @@ documentation formats use spaces where tabs are undesirable or unsupported.
 - `package.json` and `package-lock.json` keep their dedicated 80-character
   print-width override.
 
+## Development
+
+`index.mjs` is the runtime configuration and is published directly alongside
+`index.d.ts`. The repository uses it through `prettier.config.mjs`; no build
+step is required. TypeScript checks the JavaScript configuration via JSDoc
+and the TypeScript tests with `npm run typecheck`.
+
+Run `npm ci` to install dependencies and `npm run validate` to run all checks.
+
 ## License
 
 MIT © [cravingmaker](https://github.com/cravingmaker)
