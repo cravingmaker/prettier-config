@@ -3,120 +3,220 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+const requiredDependencies = ['prettier', 'prettier-plugin-packagejson', '@prettier/plugin-oxc'];
+
+const optionalDependencies = [
+	'prettier-plugin-astro',
+	'prettier-plugin-svelte',
+	'prettier-plugin-tailwindcss',
+	'svelte',
+];
 
 describe('Published Package', () => {
-	it('should work when consumed from the packed tarball', async () => {
-		const projectDirectory = path.resolve(__dirname, '..');
-		const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-'));
+	const projectDirectory = path.resolve(__dirname, '..');
 
-		try {
-			const consumerDirectory = path.join(temporaryDirectory, 'consumer');
+	let temporaryDirectory: string;
+	let tarball: string;
 
-			const nodeModulesDirectory = path.join(consumerDirectory, 'node_modules');
+	beforeAll(async () => {
+		temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-package-'));
 
-			await fs.mkdir(nodeModulesDirectory, {
-				recursive: true,
-			});
+		execFileSync('npm', ['pack', '--ignore-scripts', '--pack-destination', temporaryDirectory], {
+			cwd: projectDirectory,
+			encoding: 'utf8',
+		});
 
-			execFileSync('npm', ['pack', '--ignore-scripts', '--pack-destination', temporaryDirectory], {
-				cwd: projectDirectory,
-				encoding: 'utf8',
-			});
+		const packedFiles = await fs.readdir(temporaryDirectory);
+		const tarballs = packedFiles.filter((file) => file.endsWith('.tgz'));
+		const [tarballFilename] = tarballs;
 
-			const packedFiles = await fs.readdir(temporaryDirectory);
+		if (tarballs.length !== 1 || tarballFilename === undefined) {
+			throw new Error(`Expected exactly one packed tarball, found ${tarballs.length}`);
+		}
 
-			const tarballs = packedFiles.filter((file) => file.endsWith('.tgz'));
+		tarball = path.join(temporaryDirectory, tarballFilename);
+	});
 
-			const [tarballFilename] = tarballs;
+	afterAll(async () => {
+		await fs.rm(temporaryDirectory, {
+			force: true,
+			recursive: true,
+		});
+	});
 
-			if (tarballs.length !== 1 || tarballFilename === undefined) {
-				throw new Error(`Expected exactly one packed tarball, found ${tarballs.length}`);
-			}
+	const linkDependency = async (nodeModulesDirectory: string, dependency: string) => {
+		const source = path.join(projectDirectory, 'node_modules', dependency);
+		const destination = path.join(nodeModulesDirectory, dependency);
 
-			const tarball = path.join(temporaryDirectory, tarballFilename);
+		await fs.mkdir(path.dirname(destination), {
+			recursive: true,
+		});
 
-			const packageDirectory = path.join(nodeModulesDirectory, '@cravingmaker', 'prettier-config');
+		await fs.symlink(source, destination, 'junction');
+	};
 
-			await fs.mkdir(packageDirectory, {
-				recursive: true,
-			});
+	const createConsumer = async (name: string, dependencies: string[]) => {
+		const consumerDirectory = path.join(temporaryDirectory, name);
+		const nodeModulesDirectory = path.join(consumerDirectory, 'node_modules');
+		const packageDirectory = path.join(nodeModulesDirectory, '@cravingmaker', 'prettier-config');
 
-			execFileSync('tar', ['-xzf', tarball, '--strip-components=1', '-C', packageDirectory], {
-				cwd: temporaryDirectory,
-			});
+		await fs.mkdir(packageDirectory, {
+			recursive: true,
+		});
 
-			const dependencies = ['prettier', 'prettier-plugin-packagejson', '@prettier/plugin-oxc'];
+		execFileSync('tar', ['-xzf', tarball, '--strip-components=1', '-C', packageDirectory], {
+			cwd: temporaryDirectory,
+		});
 
-			await Promise.all(
-				dependencies.map(async (dependency) => {
-					const source = path.join(projectDirectory, 'node_modules', dependency);
+		await Promise.all(dependencies.map((dependency) => linkDependency(nodeModulesDirectory, dependency)));
 
-					const destination = path.join(nodeModulesDirectory, dependency);
+		await fs.writeFile(
+			path.join(consumerDirectory, 'package.json'),
+			JSON.stringify({
+				name: `prettier-config-${name}`,
+				prettier: '@cravingmaker/prettier-config',
+				private: true,
+				type: 'module',
+			}),
+			'utf8',
+		);
 
-					await fs.mkdir(path.dirname(destination), {
-						recursive: true,
-					});
+		return consumerDirectory;
+	};
 
-					await fs.symlink(source, destination, 'junction');
-				}),
-			);
+	const runConsumer = (consumerDirectory: string, script: string) =>
+		execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
+			cwd: consumerDirectory,
+			encoding: 'utf8',
+		});
 
-			await fs.writeFile(
-				path.join(consumerDirectory, 'package.json'),
-				JSON.stringify({
-					name: 'prettier-config-consumer',
-					private: true,
-					type: 'module',
-				}),
-			);
+	it('works from the packed tarball without optional plugins', async () => {
+		const consumerDirectory = await createConsumer('base-consumer', requiredDependencies);
 
-			const consumerScript = `
+		const output = runConsumer(
+			consumerDirectory,
+			`
+				import fs from 'node:fs/promises';
+				import path from 'node:path';
 				import prettier from 'prettier';
 				import config from '@cravingmaker/prettier-config';
 
-				if (!config || typeof config !== 'object') {
-					throw new Error('Invalid Prettier config export');
-				}
+				const optionalPlugins = [
+					'prettier-plugin-astro',
+					'prettier-plugin-svelte',
+					'prettier-plugin-tailwindcss',
+				];
 
-				const javascript = await prettier.format(
-					'const greeting = "hello";',
-					Object.assign({}, config, {
-						filepath: 'example.js',
-					}),
+				const format = async (filename, source) => {
+					const filePath = path.resolve(filename);
+					await fs.mkdir(path.dirname(filePath), { recursive: true });
+					await fs.writeFile(filePath, source, 'utf8');
+
+					const resolved = await prettier.resolveConfig(filePath);
+					if (!resolved) throw new Error('Shared config was not resolved');
+
+					return prettier.format(source, { ...resolved, filepath: filePath });
+				};
+
+				const javascript = await format('src/example.js', 'const greeting = "hello";');
+				const typescript = await format('src/example.ts', 'const greeting: string = "hello";');
+				const packageJson = await format(
+					'nested/package.json',
+					JSON.stringify({ version: '1.0.0', name: 'fixture' }),
 				);
 
-				const typescript = await prettier.format(
-					'const greeting: string = "hello";',
-					Object.assign({}, config, {
-						filepath: 'example.ts',
-					}),
-				);
+				const configuredPlugins = config.plugins ?? [];
 
 				process.stdout.write(
 					JSON.stringify({
 						javascript,
+						optionalPlugins: optionalPlugins.filter((plugin) => configuredPlugins.includes(plugin)),
+						packageJson,
 						typescript,
 					}),
 				);
-			`;
+			`,
+		);
 
-			const output = execFileSync(process.execPath, ['--input-type=module', '--eval', consumerScript], {
-				cwd: consumerDirectory,
-				encoding: 'utf8',
-			});
+		const result = JSON.parse(output) as {
+			javascript: string;
+			optionalPlugins: string[];
+			packageJson: string;
+			typescript: string;
+		};
 
-			expect(output).toBe(
-				JSON.stringify({
-					javascript: "const greeting = 'hello';\n",
-					typescript: "const greeting: string = 'hello';\n",
-				}),
-			);
-		} finally {
-			await fs.rm(temporaryDirectory, {
-				force: true,
-				recursive: true,
-			});
-		}
+		expect(result).toEqual({
+			javascript: "const greeting = 'hello';\n",
+			optionalPlugins: [],
+			packageJson: '{\n  "name": "fixture",\n  "version": "1.0.0"\n}\n',
+			typescript: "const greeting: string = 'hello';\n",
+		});
+	});
+
+	it('loads and uses optional Astro, Svelte, and Tailwind plugins from the consumer', async () => {
+		const consumerDirectory = await createConsumer('optional-consumer', [
+			...requiredDependencies,
+			...optionalDependencies,
+		]);
+
+		const output = runConsumer(
+			consumerDirectory,
+			`
+				import fs from 'node:fs/promises';
+				import path from 'node:path';
+				import prettier from 'prettier';
+				import config from '@cravingmaker/prettier-config';
+
+				const format = async (filename, source) => {
+					const filePath = path.resolve(filename);
+					await fs.writeFile(filePath, source, 'utf8');
+
+					const resolved = await prettier.resolveConfig(filePath);
+					if (!resolved) throw new Error('Shared config was not resolved');
+
+					return prettier.format(source, { ...resolved, filepath: filePath });
+				};
+
+				const astro = await format(
+					'example.astro',
+					'---\\nconst name="World"\\n---\\n<div class="p-4 flex">{name}</div>',
+				);
+				const svelte = await format(
+					'example.svelte',
+					'<script>let name="World"</script><div class="p-4 flex">{name}</div>',
+				);
+				const html = await format('example.html', '<div class="p-4 flex">Hello</div>');
+
+				const configuredPlugins = config.plugins ?? [];
+
+				process.stdout.write(
+					JSON.stringify({
+						astro,
+						html,
+						plugins: configuredPlugins.filter((plugin) => typeof plugin === 'string'),
+						svelte,
+					}),
+				);
+			`,
+		);
+
+		const result = JSON.parse(output) as {
+			astro: string;
+			html: string;
+			plugins: string[];
+			svelte: string;
+		};
+
+		expect(result.plugins).toContain('prettier-plugin-astro');
+		expect(result.plugins).toContain('prettier-plugin-svelte');
+		expect(result.plugins.at(-1)).toBe('prettier-plugin-tailwindcss');
+
+		expect(result.astro).toContain("const name = 'World';");
+		expect(result.astro).toContain('<div class="flex p-4">{name}</div>');
+		expect(result.svelte).toContain("let name = 'World';");
+		expect(result.svelte).toContain('<div class="flex p-4">{name}</div>');
+		expect(result.html).toBe('<div class="flex p-4">Hello</div>\n');
 	});
 });
