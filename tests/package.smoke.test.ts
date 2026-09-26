@@ -22,6 +22,17 @@ const runConsumer = (consumerDirectory: string, script: string) =>
 		encoding: 'utf8',
 	});
 
+const linkDependency = async (nodeModulesDirectory: string, dependency: string) => {
+	const source = path.join(projectDirectory, 'node_modules', dependency);
+	const destination = path.join(nodeModulesDirectory, dependency);
+
+	await fs.mkdir(path.dirname(destination), {
+		recursive: true,
+	});
+
+	await fs.symlink(source, destination, 'junction');
+};
+
 const createPackedPackage = async () => {
 	const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-package-'));
 
@@ -54,16 +65,6 @@ describe('Published Package', () => {
 		});
 	});
 
-	const linkDependency = async (nodeModulesDirectory: string, dependency: string) => {
-		const source = path.join(projectDirectory, 'node_modules', dependency);
-		const destination = path.join(nodeModulesDirectory, dependency);
-
-		await fs.mkdir(path.dirname(destination), {
-			recursive: true,
-		});
-
-		await fs.symlink(source, destination, 'junction');
-	};
 
 	const createConsumer = async (name: string, dependencies: readonly string[]) => {
 		const consumerDirectory = path.join(temporaryDirectory, name);
