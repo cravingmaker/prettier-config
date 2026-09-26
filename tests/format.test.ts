@@ -4,26 +4,20 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import prettier from 'prettier';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
+
+const fixturesDirectory = path.join(__dirname, 'fixtures');
+const distributionConfig = path.resolve(__dirname, '..', 'dist', 'index.js');
+const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-format-'));
+const configPath = path.join(temporaryDirectory, 'prettier.config.mjs');
+
+await fs.writeFile(
+	configPath,
+	`export { default } from ${JSON.stringify(pathToFileURL(distributionConfig).href)};\n`,
+	'utf8',
+);
 
 describe('Format Integration', () => {
-	const fixturesDirectory = path.join(__dirname, 'fixtures');
-	const distConfig = path.resolve(__dirname, '..', 'dist', 'index.js');
-
-	let temporaryDirectory: string;
-	let configPath: string;
-
-	beforeAll(async () => {
-		temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-format-'));
-		configPath = path.join(temporaryDirectory, 'prettier.config.mjs');
-
-		await fs.writeFile(
-			configPath,
-			`export { default } from ${JSON.stringify(pathToFileURL(distConfig).href)};\n`,
-			'utf8',
-		);
-	});
-
 	afterAll(async () => {
 		await fs.rm(temporaryDirectory, {
 			force: true,
@@ -34,7 +28,6 @@ describe('Format Integration', () => {
 	const testFixture = async (filename: string) => {
 		const sourcePath = path.join(fixturesDirectory, filename);
 		const filePath = path.join(temporaryDirectory, filename);
-
 		const content = await fs.readFile(sourcePath, 'utf8');
 
 		await fs.writeFile(filePath, content, 'utf8');
@@ -44,12 +37,10 @@ describe('Format Integration', () => {
 			editorconfig: false,
 		});
 
-		if (resolvedConfig === null) {
-			throw new Error(`Prettier did not resolve the shared config for ${filename}`);
-		}
+		expect(resolvedConfig).not.toBeNull();
 
 		const formatted = await prettier.format(content, {
-			...resolvedConfig,
+			...(resolvedConfig ?? {}),
 			filepath: filePath,
 		});
 
