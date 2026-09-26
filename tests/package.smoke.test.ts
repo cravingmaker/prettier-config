@@ -16,11 +16,19 @@ const optionalDependencies = [
 	'svelte',
 ] as const;
 
-const runConsumer = (consumerDirectory: string, script: string) =>
-	execFileSync(process.execPath, ['--input-type=module', '--eval', script], {
-		cwd: consumerDirectory,
-		encoding: 'utf8',
-	});
+const runConsumer = (consumerDirectory: string, script: string, externalCwd: boolean) =>
+	execFileSync(
+		process.execPath,
+		[
+			'--input-type=module',
+			'--eval',
+			`const consumerDirectory = process.cwd();\n${externalCwd ? `process.chdir(${JSON.stringify(path.dirname(consumerDirectory))});` : ''}\n${script}`,
+		],
+		{
+			cwd: consumerDirectory,
+			encoding: 'utf8',
+		},
+	);
 
 const linkDependency = async (nodeModulesDirectory: string, dependency: string) => {
 	const source = path.join(projectDirectory, 'node_modules', dependency);
@@ -107,8 +115,8 @@ describe('Published Package', () => {
 		);
 	});
 
-	it('works from the packed tarball without optional plugins', async () => {
-		const consumerDirectory = await createConsumer('base-consumer', requiredDependencies);
+	it.each([false, true])('works without optional plugins (external cwd: %s)', async (externalCwd) => {
+		const consumerDirectory = await createConsumer(`base-consumer-${String(externalCwd)}`, requiredDependencies);
 
 		const output = runConsumer(
 			consumerDirectory,
@@ -125,7 +133,7 @@ describe('Published Package', () => {
 				];
 
 				const format = async (filename, source) => {
-					const filePath = path.resolve(filename);
+					const filePath = path.resolve(consumerDirectory, filename);
 					await fs.mkdir(path.dirname(filePath), { recursive: true });
 					await fs.writeFile(filePath, source, 'utf8');
 
@@ -144,7 +152,7 @@ describe('Published Package', () => {
 
 				const configuredPlugins = config.plugins ?? [];
 				const detectedOptionalPlugins = optionalPlugins.filter((plugin) =>
-					configuredPlugins.includes(plugin),
+					configuredPlugins.some((entry) => typeof entry === 'string' && entry.includes(plugin)),
 				);
 
 				if (javascript !== "const greeting = 'hello';\n") {
@@ -165,13 +173,14 @@ describe('Published Package', () => {
 
 				process.stdout.write('ok');
 			`,
+			externalCwd,
 		);
 
 		expect(output).toBe('ok');
 	});
 
-	it('loads optional Astro, Svelte, and Tailwind plugins from the consumer', async () => {
-		const consumerDirectory = await createConsumer('optional-consumer', [
+	it.each([false, true])('loads optional plugins from the consumer (external cwd: %s)', async (externalCwd) => {
+		const consumerDirectory = await createConsumer(`optional-consumer-${String(externalCwd)}`, [
 			...requiredDependencies,
 			...optionalDependencies,
 		]);
@@ -181,11 +190,12 @@ describe('Published Package', () => {
 			String.raw`
 				import fs from 'node:fs/promises';
 				import path from 'node:path';
+				import { createRequire } from 'node:module';
 				import prettier from 'prettier';
 				import config from '@cravingmaker/prettier-config';
 
 				const format = async (filename, source) => {
-					const filePath = path.resolve(filename);
+					const filePath = path.resolve(consumerDirectory, filename);
 					await fs.writeFile(filePath, source, 'utf8');
 
 					const resolved = await prettier.resolveConfig(filePath);
@@ -202,17 +212,18 @@ describe('Published Package', () => {
 					'example.svelte',
 					'<script>let name="World"</script><div class="p-4 flex">{name}</div>',
 				);
+				const require = createRequire(path.join(consumerDirectory, 'package.json'));
 				const configuredPlugins = (config.plugins ?? []).filter((plugin) => typeof plugin === 'string');
 
-				if (!configuredPlugins.includes('prettier-plugin-astro')) {
+				if (!configuredPlugins.includes(require.resolve('prettier-plugin-astro'))) {
 					throw new Error('Astro plugin was not detected');
 				}
 
-				if (!configuredPlugins.includes('prettier-plugin-svelte')) {
+				if (!configuredPlugins.includes(require.resolve('prettier-plugin-svelte'))) {
 					throw new Error('Svelte plugin was not detected');
 				}
 
-				if (configuredPlugins.at(-1) !== 'prettier-plugin-tailwindcss') {
+				if (configuredPlugins.at(-1) !== require.resolve('prettier-plugin-tailwindcss')) {
 					throw new Error('Tailwind plugin was not loaded last');
 				}
 
@@ -226,6 +237,7 @@ describe('Published Package', () => {
 
 				process.stdout.write('ok');
 			`,
+			externalCwd,
 		);
 
 		expect(output).toBe('ok');

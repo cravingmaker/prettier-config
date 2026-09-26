@@ -8,21 +8,21 @@ import prettierPluginOxc from '@prettier/plugin-oxc';
 const require = createRequire(import.meta.url);
 
 /** @param {string} name */
-const isInstalled = (name) => {
+const resolveOptionalPlugin = (name) => {
 	try {
-		return Boolean(require.resolve(name));
+		return [require.resolve(name)];
 	} catch {
-		return false;
+		return [];
 	}
 };
 
 const plugins = [
 	prettierPluginOxc,
-	'prettier-plugin-packagejson',
-	...(isInstalled('prettier-plugin-astro') ? ['prettier-plugin-astro'] : []),
-	...(isInstalled('prettier-plugin-svelte') ? ['prettier-plugin-svelte'] : []),
+	require.resolve('prettier-plugin-packagejson'),
+	...resolveOptionalPlugin('prettier-plugin-astro'),
+	...resolveOptionalPlugin('prettier-plugin-svelte'),
 	// Tailwind plugin should always be last
-	...(isInstalled('prettier-plugin-tailwindcss') ? ['prettier-plugin-tailwindcss'] : []),
+	...resolveOptionalPlugin('prettier-plugin-tailwindcss'),
 ];
 
 /** @satisfies {import('prettier').Config} */

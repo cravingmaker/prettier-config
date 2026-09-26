@@ -5,6 +5,8 @@ A highly opinionated, modern, and elegant Prettier configuration crafted by
 
 ## Installation
 
+Requires Node.js 22.12.0 or newer.
+
 Install the configuration along with Prettier using your favorite package
 manager:
 
