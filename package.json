@@ -35,10 +35,10 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "check:commit": "npm run lint:staged && npm run typecheck && npm test",
+    "check:commit": "npm run build && npm run lint:staged && npm run typecheck && npm test",
     "clean": "rm -rf dist",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "npm run build && prettier --write .",
+    "format:check": "npm run build && prettier --check .",
     "lint": "eslint . --max-warnings 0",
     "lint:package": "npm run build && publint --strict",
     "lint:staged": "lint-staged",
