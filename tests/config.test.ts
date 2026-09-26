@@ -19,6 +19,7 @@ describe('Prettier Config', () => {
 		const { default: config } = (await import('../index.mjs?default')) as { default: Config };
 		expect(config.plugins).toContain(prettierPluginOxc);
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-packagejson'));
+		expect(config.plugins).toContain(require.resolve('prettier-plugin-toml'));
 	});
 
 	it('should include astro plugin if prettier-plugin-astro is installed', async () => {
@@ -26,6 +27,7 @@ describe('Prettier Config', () => {
 			createRequire: () => ({
 				resolve(name: string) {
 					if (name === 'prettier-plugin-packagejson') return '/plugins/packagejson.cjs';
+					if (name === 'prettier-plugin-toml') return '/plugins/toml.mjs';
 					if (name === 'prettier-plugin-astro') return '/plugins/astro.mjs';
 					throw new Error('Not found');
 				},
@@ -43,6 +45,7 @@ describe('Prettier Config', () => {
 			createRequire: () => ({
 				resolve(name: string) {
 					if (name === 'prettier-plugin-packagejson') return '/plugins/packagejson.cjs';
+					if (name === 'prettier-plugin-toml') return '/plugins/toml.mjs';
 					if (name === 'prettier-plugin-svelte') return '/plugins/svelte.mjs';
 					throw new Error('Not found');
 				},
@@ -60,6 +63,7 @@ describe('Prettier Config', () => {
 			createRequire: () => ({
 				resolve(name: string) {
 					if (name === 'prettier-plugin-packagejson') return '/plugins/packagejson.cjs';
+					if (name === 'prettier-plugin-toml') return '/plugins/toml.mjs';
 					if (name === 'prettier-plugin-astro') return '/plugins/astro.mjs';
 					if (name === 'prettier-plugin-svelte') return '/plugins/svelte.mjs';
 					if (name === 'prettier-plugin-tailwindcss') return '/plugins/tailwindcss.mjs';
@@ -86,6 +90,7 @@ describe('Prettier Config', () => {
 			createRequire: () => ({
 				resolve(name: string) {
 					if (name === 'prettier-plugin-packagejson') return '/plugins/packagejson.cjs';
+					if (name === 'prettier-plugin-toml') return '/plugins/toml.mjs';
 					throw new Error('Not found');
 				},
 			}),

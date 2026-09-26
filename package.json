@@ -55,7 +55,8 @@
   },
   "dependencies": {
     "@prettier/plugin-oxc": "0.2.3",
-    "prettier-plugin-packagejson": "3.0.2"
+    "prettier-plugin-packagejson": "3.0.2",
+    "prettier-plugin-toml": "2.0.6"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",

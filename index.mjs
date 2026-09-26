@@ -19,6 +19,7 @@ const resolveOptionalPlugin = (name) => {
 const plugins = [
 	prettierPluginOxc,
 	require.resolve('prettier-plugin-packagejson'),
+	require.resolve('prettier-plugin-toml'),
 	...resolveOptionalPlugin('prettier-plugin-astro'),
 	...resolveOptionalPlugin('prettier-plugin-svelte'),
 	// Tailwind plugin should always be last
@@ -77,6 +78,15 @@ const config = {
 			},
 		},
 		{
+			files: ['**/*.toml'],
+			options: {
+				parser: 'toml',
+				printWidth: 100,
+				tabWidth: 2,
+				useTabs: false,
+			},
+		},
+		{
 			files: ['**/*.{md,mdx}'],
 			options: {
 				printWidth: 80,
@@ -88,7 +98,7 @@ const config = {
 		{
 			files: ['package.json', 'package-lock.json'],
 			options: {
-				printWidth: 80,
+				printWidth: 100,
 				singleQuote: false,
 				trailingComma: 'none',
 				useTabs: false,
