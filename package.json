@@ -59,7 +59,7 @@
     "@arethetypeswrong/cli": "0.18.5",
     "@cravingmaker/eslint-config": "0.0.10",
     "@cravingmaker/prettier-config": "0.1.11",
-    "@types/node": "25.7.0",
+    "@types/node": "22.20.3",
     "eslint": "10.3.0",
     "husky": "9.1.7",
     "lint-staged": "17.0.4",
