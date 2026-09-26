@@ -23,7 +23,7 @@ const optionalDependencies = [
 
 const runConsumer = (consumerDirectory: string, script: string, externalCwd: boolean) =>
 	execFileSync(
-		process.execPath,
+		process.env['PRETTIER_CONFIG_CONSUMER_NODE'] ?? process.execPath,
 		[
 			'--input-type=module',
 			'--eval',
