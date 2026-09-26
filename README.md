@@ -69,7 +69,23 @@ documentation formats use spaces where tabs are undesirable or unsupported.
 step is required. TypeScript checks the JavaScript configuration via JSDoc
 and the TypeScript tests with `npm run typecheck`.
 
-Run `npm ci` to install dependencies and `npm run validate` to run all checks.
+Development requires Node.js 22.22.1 or newer. The published configuration
+still supports Node.js 22.12.0 or newer.
+
+Set up a local checkout with:
+
+```bash
+npm ci
+npm run prepare
+```
+
+The repository sets `ignore-scripts=true`, so installation does not run
+lifecycle scripts automatically. Run `npm run prepare` explicitly once per
+checkout to activate Husky Git hooks. CI keeps hooks disabled.
+
+Run `npm run validate` to run all checks. For staged files covered by ESLint,
+the pre-commit hook runs ESLint fixes before Prettier; other files run
+Prettier only.
 
 ## License
 

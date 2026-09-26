@@ -82,5 +82,6 @@ jobs:
         with:
           node-version: 22.12.0
 
+      # Test consumer compatibility without npm run enforcing development engines.
       - name: Test packed package on minimum runtime
-        run: npm run test:package
+        run: node node_modules/vitest/vitest.mjs run tests/package.smoke.test.ts
