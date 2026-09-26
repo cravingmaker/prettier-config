@@ -59,8 +59,8 @@ documentation formats use spaces where tabs are undesirable or unsupported.
 - TOML uses two-space indentation and a 100-character print width. TOML key
   ordering is preserved.
 - Markdown and MDX use two-space indentation with an 80-character print width.
-- `package.json` and `package-lock.json` keep their dedicated 80-character
-  print-width override.
+- `package.json` and `package-lock.json` use a dedicated 100-character print
+  width for structured package metadata.
 
 ## Development
 

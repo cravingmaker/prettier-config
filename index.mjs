@@ -98,7 +98,7 @@ const config = {
 		{
 			files: ['package.json', 'package-lock.json'],
 			options: {
-				printWidth: 80,
+				printWidth: 100,
 				singleQuote: false,
 				trailingComma: 'none',
 				useTabs: false,
