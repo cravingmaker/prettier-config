@@ -53,6 +53,14 @@ const config = [
 			'functional/no-throw-statements': 'off',
 		},
 	},
+	{
+		files: ['tests/package.smoke.test.ts'],
+		rules: {
+			'functional/no-promise-reject': 'off',
+			'n/no-sync': 'off',
+			'security/detect-non-literal-fs-filename': 'off',
+		},
+	},
 ];
 
 // eslint-disable-next-line import-x/no-default-export -- ESLint configuration requires a default export

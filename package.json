@@ -41,7 +41,8 @@
     "lint": "eslint .",
     "prepare": "husky",
     "prepublishOnly": "npm run clean && npm run build",
-    "test": "vitest run",
+    "test": "vitest run --exclude tests/package.smoke.test.ts",
+    "test:package": "npm run build && vitest run tests/package.smoke.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "lint-staged": {
