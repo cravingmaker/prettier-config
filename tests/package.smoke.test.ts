@@ -19,33 +19,20 @@ describe('Published Package', () => {
 				recursive: true,
 			});
 
-			const packOutput = execFileSync(
-				'npm',
-				['pack', '--json', '--ignore-scripts', '--pack-destination', temporaryDirectory],
-				{
-					cwd: projectDirectory,
-					encoding: 'utf8',
-				},
-			);
+			execFileSync('npm', ['pack', '--ignore-scripts', '--pack-destination', temporaryDirectory], {
+				cwd: projectDirectory,
+				encoding: 'utf8',
+			});
 
-			const packResult: unknown = JSON.parse(packOutput);
+			const packedFiles = await fs.readdir(temporaryDirectory);
 
-			if (!Array.isArray(packResult) || packResult.length === 0) {
-				throw new Error('npm pack returned no package');
+			const tarballs = packedFiles.filter((file) => file.endsWith('.tgz'));
+
+			if (tarballs.length !== 1) {
+				throw new Error(`Expected exactly one packed tarball, found ${tarballs.length}`);
 			}
 
-			const firstResult: unknown = packResult[0];
-
-			if (
-				typeof firstResult !== 'object' ||
-				firstResult === null ||
-				!('filename' in firstResult) ||
-				typeof firstResult.filename !== 'string'
-			) {
-				throw new Error('npm pack returned an invalid result');
-			}
-
-			const tarball = path.join(temporaryDirectory, firstResult.filename);
+			const tarball = path.join(temporaryDirectory, tarballs[0]);
 
 			const packageDirectory = path.join(nodeModulesDirectory, '@cravingmaker', 'prettier-config');
 
