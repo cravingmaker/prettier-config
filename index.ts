@@ -60,7 +60,21 @@ const config: Config = {
 			},
 		},
 		{
-			files: ['**/*.md'],
+			files: ['**/*.{json,jsonc,json5}'],
+			options: {
+				singleQuote: false,
+				trailingComma: 'none',
+				useTabs: false,
+			},
+		},
+		{
+			files: ['**/*.{yaml,yml}'],
+			options: {
+				useTabs: false,
+			},
+		},
+		{
+			files: ['**/*.{md,mdx}'],
 			options: {
 				printWidth: 80,
 				singleQuote: false,

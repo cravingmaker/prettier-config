@@ -1,0 +1,7 @@
+{
+	// Configuration comment
+	"name": "greeting",
+	"nested": {
+		"enabled": true,
+	},
+}
