@@ -19,7 +19,7 @@ describe('Prettier Config', () => {
 		const { default: config } = (await import('../index.mjs?default')) as { default: Config };
 		expect(config.plugins).toContain(prettierPluginOxc);
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-packagejson'));
-	expect(config.plugins).toContain(require.resolve('prettier-plugin-toml'));
+		expect(config.plugins).toContain(require.resolve('prettier-plugin-toml'));
 	});
 
 	it('should include astro plugin if prettier-plugin-astro is installed', async () => {
