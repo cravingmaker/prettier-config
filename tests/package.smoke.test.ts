@@ -57,6 +57,39 @@ const createPackedPackage = async () => {
 
 const { tarball, temporaryDirectory } = await createPackedPackage();
 
+const createConsumer = async (name: string, dependencies: readonly string[]) => {
+	const consumerDirectory = path.join(temporaryDirectory, name);
+	const nodeModulesDirectory = path.join(consumerDirectory, 'node_modules');
+	const packageDirectory = path.join(nodeModulesDirectory, '@cravingmaker', 'prettier-config');
+
+	await fs.mkdir(packageDirectory, {
+		recursive: true,
+	});
+
+	execFileSync('tar', ['-xzf', tarball, '--strip-components=1', '-C', packageDirectory], {
+		cwd: temporaryDirectory,
+	});
+
+	await Promise.all(
+		dependencies.map(async (dependency) => {
+			await linkDependency(nodeModulesDirectory, dependency);
+		}),
+	);
+
+	await fs.writeFile(
+		path.join(consumerDirectory, 'package.json'),
+		JSON.stringify({
+			name: `prettier-config-${name}`,
+			prettier: '@cravingmaker/prettier-config',
+			private: true,
+			type: 'module',
+		}),
+		'utf8',
+	);
+
+	return consumerDirectory;
+};
+
 describe('Published Package', () => {
 	afterAll(async () => {
 		await fs.rm(temporaryDirectory, {
@@ -66,38 +99,6 @@ describe('Published Package', () => {
 	});
 
 
-	const createConsumer = async (name: string, dependencies: readonly string[]) => {
-		const consumerDirectory = path.join(temporaryDirectory, name);
-		const nodeModulesDirectory = path.join(consumerDirectory, 'node_modules');
-		const packageDirectory = path.join(nodeModulesDirectory, '@cravingmaker', 'prettier-config');
-
-		await fs.mkdir(packageDirectory, {
-			recursive: true,
-		});
-
-		execFileSync('tar', ['-xzf', tarball, '--strip-components=1', '-C', packageDirectory], {
-			cwd: temporaryDirectory,
-		});
-
-		await Promise.all(
-			dependencies.map(async (dependency) => {
-				await linkDependency(nodeModulesDirectory, dependency);
-			}),
-		);
-
-		await fs.writeFile(
-			path.join(consumerDirectory, 'package.json'),
-			JSON.stringify({
-				name: `prettier-config-${name}`,
-				prettier: '@cravingmaker/prettier-config',
-				private: true,
-				type: 'module',
-			}),
-			'utf8',
-		);
-
-		return consumerDirectory;
-	};
 
 	it('works from the packed tarball without optional plugins', async () => {
 		const consumerDirectory = await createConsumer('base-consumer', requiredDependencies);
