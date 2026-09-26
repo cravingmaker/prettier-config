@@ -98,8 +98,6 @@ describe('Published Package', () => {
 		});
 	});
 
-
-
 	it('works from the packed tarball without optional plugins', async () => {
 		const consumerDirectory = await createConsumer('base-consumer', requiredDependencies);
 
