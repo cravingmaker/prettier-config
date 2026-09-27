@@ -95,6 +95,10 @@ Run `npm run validate` to run all checks. For staged files covered by ESLint,
 the pre-commit hook runs ESLint fixes before Prettier; other files run
 Prettier only.
 
+`npm run test:package` also installs the packed tarball, Prettier, and
+TypeScript into a temporary consumer project. This check needs npm registry
+access (or a populated npm cache); the temporary project is removed afterward.
+
 ## License
 
 MIT © [cravingmaker](https://github.com/cravingmaker)

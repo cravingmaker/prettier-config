@@ -5,6 +5,8 @@ import path from 'node:path';
 
 import { afterAll, describe, expect, it } from 'vitest';
 
+import packageJson from '../package.json' with { type: 'json' };
+
 const projectDirectory = path.resolve(__dirname, '..');
 // eslint-disable-next-line n/no-process-env -- CI selects the consumer runtime independently of the test runner
 const consumerNode = process.env.PRETTIER_CONFIG_CONSUMER_NODE ?? process.execPath;
@@ -121,6 +123,57 @@ describe('Published Package', () => {
 			expect.arrayContaining(['package/README.md', 'package/index.d.ts', 'package/index.mjs', 'package/package.json']),
 		);
 	});
+
+	it('installs the tarball and consumes its runtime and public types', async () => {
+		const consumerDirectory = path.join(temporaryDirectory, 'installed-consumer');
+		await fs.mkdir(consumerDirectory);
+		await fs.writeFile(
+			path.join(consumerDirectory, 'package.json'),
+			JSON.stringify({ name: 'installed-consumer', prettier: packageJson.name, private: true, type: 'module' }),
+			'utf8',
+		);
+
+		// Only install the tarball and consumer tools; runtime dependencies must come from package metadata.
+		execFileSync(
+			'npm',
+			[
+				'install',
+				'--ignore-scripts',
+				'--no-audit',
+				'--no-fund',
+				'--save-exact',
+				tarball,
+				`prettier@${packageJson.devDependencies.prettier}`,
+				`typescript@${packageJson.devDependencies.typescript}`,
+			],
+			{ cwd: consumerDirectory, encoding: 'utf8', timeout: 120_000 },
+		);
+
+		const installedPackage = await fs.lstat(path.join(consumerDirectory, 'node_modules', packageJson.name));
+		expect(installedPackage.isSymbolicLink()).toBe(false);
+		await Promise.all(
+			['check.mjs', 'typecheck.ts', 'tsconfig.json'].map(async (filename) => {
+				await fs.copyFile(
+					path.join(projectDirectory, 'tests', 'fixtures', 'installed-consumer', filename),
+					path.join(consumerDirectory, filename),
+				);
+			}),
+		);
+
+		const output = execFileSync(consumerNode, ['check.mjs'], {
+			cwd: consumerDirectory,
+			encoding: 'utf8',
+			timeout: 30_000,
+		});
+		expect(output).toBe('ok');
+
+		// TypeScript is a development tool; only the runtime check uses the minimum consumer Node in CI.
+		execFileSync(process.execPath, ['node_modules/typescript/bin/tsc', '--project', 'tsconfig.json'], {
+			cwd: consumerDirectory,
+			encoding: 'utf8',
+			timeout: 30_000,
+		});
+	}, 180_000);
 
 	it.each([false, true])('works without optional plugins (external cwd: %s)', async (externalCwd) => {
 		const consumerDirectory = await createConsumer(`base-consumer-${String(externalCwd)}`, requiredDependencies);
