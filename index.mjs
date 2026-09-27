@@ -70,6 +70,7 @@ const config = {
 		{
 			files: ['**/*.{json,jsonc,json5}'],
 			options: {
+				printWidth: 100,
 				singleQuote: false,
 				trailingComma: 'none',
 				useTabs: false,
@@ -78,6 +79,7 @@ const config = {
 		{
 			files: ['**/*.{yaml,yml}'],
 			options: {
+				printWidth: 100,
 				useTabs: false,
 			},
 		},
@@ -94,15 +96,6 @@ const config = {
 			files: ['**/*.{md,mdx}'],
 			options: {
 				printWidth: 80,
-				singleQuote: false,
-				trailingComma: 'none',
-				useTabs: false,
-			},
-		},
-		{
-			files: ['package.json', 'package-lock.json'],
-			options: {
-				printWidth: 100,
 				singleQuote: false,
 				trailingComma: 'none',
 				useTabs: false,
