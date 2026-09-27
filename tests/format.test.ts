@@ -115,6 +115,7 @@ describe('Format Integration', () => {
 	it('11. applies space-based JSON options to JSON', async () => {
 		await testFixture('sample.json', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.json', temporaryDirectory, configPath, {
+			printWidth: 100,
 			singleQuote: false,
 			trailingComma: 'none',
 			useTabs: false,
@@ -124,6 +125,7 @@ describe('Format Integration', () => {
 	it('12. applies space-based JSON options to JSONC', async () => {
 		await testFixture('sample.jsonc', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.jsonc', temporaryDirectory, configPath, {
+			printWidth: 100,
 			singleQuote: false,
 			trailingComma: 'none',
 			useTabs: false,
@@ -133,6 +135,7 @@ describe('Format Integration', () => {
 	it('13. applies space-based JSON options to JSON5', async () => {
 		await testFixture('sample.json5', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.json5', temporaryDirectory, configPath, {
+			printWidth: 100,
 			singleQuote: false,
 			trailingComma: 'none',
 			useTabs: false,
@@ -142,6 +145,7 @@ describe('Format Integration', () => {
 	it('14. applies space-based YAML options to YAML', async () => {
 		await testFixture('sample.yaml', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.yaml', temporaryDirectory, configPath, {
+			printWidth: 100,
 			useTabs: false,
 		});
 	});
@@ -149,6 +153,7 @@ describe('Format Integration', () => {
 	it('15. applies space-based YAML options to YML', async () => {
 		await testFixture('sample.yml', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.yml', temporaryDirectory, configPath, {
+			printWidth: 100,
 			useTabs: false,
 		});
 	});
@@ -187,37 +192,25 @@ describe('Format Integration', () => {
 		});
 	});
 
-	it('19. applies package.json options', async () => {
-		await expectResolvedOptions('package.json', temporaryDirectory, configPath, {
-			printWidth: 100,
-			singleQuote: false,
-			trailingComma: 'none',
-			useTabs: false,
-		});
-	});
-
-	it('20. applies package-lock.json options', async () => {
-		await expectResolvedOptions('package-lock.json', temporaryDirectory, configPath, {
-			printWidth: 100,
-			singleQuote: false,
-			trailingComma: 'none',
-			useTabs: false,
-		});
-	});
 	it.each(['package.json', 'package-lock.json', 'nested/package.json', 'nested/package-lock.json'])(
-		'preserves package formatting and the width override for %s',
+		'inherits general JSON options while preserving package formatting for %s',
 		async (filename) => {
 			const filePath = await prepareFixture(filename, temporaryDirectory, `width/${path.basename(filename)}`);
 			const source = await fs.readFile(filePath, 'utf8');
 			const resolved = await prettier.resolveConfig(filePath, { config: configPath, editorconfig: false });
-			expect(resolved).toMatchObject({ printWidth: 100, useTabs: false });
+			expect(resolved).toMatchObject({
+				printWidth: 100,
+				singleQuote: false,
+				trailingComma: 'none',
+				useTabs: false,
+			});
 
 			const options = { ...resolved, filepath: filePath };
 			const formatted = await prettier.format(source, options);
 			const narrow = await prettier.format(source, { ...options, printWidth: 80 });
 			const keywords = '["formatting-tools", "configuration", "developer-workflow", "package-metadata"]';
 
-			// Package files use json-stringify, whose expanded layout is unchanged by this width setting.
+			// The package-json plugin still selects json-stringify; only the duplicated package-specific override was removed.
 			expect(await prettier.getFileInfo(filePath)).toMatchObject({ inferredParser: 'json-stringify' });
 			expect(formatted).toMatchSnapshot();
 			expect(formatted).toBe(narrow);

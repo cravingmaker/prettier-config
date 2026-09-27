@@ -24,17 +24,20 @@ for (const name of ['prettier-plugin-astro', 'prettier-plugin-svelte', 'prettier
 
 process.chdir(path.dirname(directory));
 const examples = [
-	['example.js', 'const greeting="hello"', "const greeting = 'hello';\n"],
-	['example.ts', 'const greeting:string="hello"', "const greeting: string = 'hello';\n"],
-	['nested/package.json', '{"version":"1.0.0","name":"fixture"}', '{\n  "name": "fixture",\n  "version": "1.0.0"\n}\n'],
-	['pyproject.toml', '[project]\nname="fixture"\n', '[project]\nname = "fixture"\n'],
+	['example.js', 'const greeting="hello"', "const greeting = 'hello';\n", 120],
+	['example.ts', 'const greeting:string="hello"', "const greeting: string = 'hello';\n", 120],
+	['config.json', '{"name":"fixture","enabled":true}', '{ "name": "fixture", "enabled": true }\n', 100],
+	['config.yaml', 'name: fixture\nenabled: true\n', 'name: fixture\nenabled: true\n', 100],
+	['nested/package.json', '{"version":"1.0.0","name":"fixture"}', '{\n  "name": "fixture",\n  "version": "1.0.0"\n}\n', 100],
+	['pyproject.toml', '[project]\nname="fixture"\n', '[project]\nname = "fixture"\n', 100],
 ];
-for (const [filename, source, expected] of examples) {
+for (const [filename, source, expected, printWidth] of examples) {
 	const filepath = path.join(directory, filename);
 	await fs.mkdir(path.dirname(filepath), { recursive: true });
 	await fs.writeFile(filepath, source);
 	const resolved = await prettier.resolveConfig(filepath);
 	assert.ok(resolved, 'The installed config must resolve through package.json');
+	assert.equal(resolved.printWidth, printWidth, filename);
 	const options = { ...resolved, filepath };
 	const formatted = await prettier.format(source, options);
 	assert.equal(formatted, expected, filename);
