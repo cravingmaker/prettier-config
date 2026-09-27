@@ -184,7 +184,7 @@ describe('Format Integration', () => {
 		expect(formatted).toContain('targets = [\n  "production-region-primary",');
 	});
 
-	it('18. applies TOML options', async () => {
+	it('18. applies TOML options while inheriting the base tab width', async () => {
 		await expectResolvedOptions('sample.toml', temporaryDirectory, configPath, {
 			keyQuoteStyle: 'double',
 			parser: 'toml',
