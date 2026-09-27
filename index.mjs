@@ -90,7 +90,6 @@ const config = {
 				parser: 'toml',
 				printWidth: 100,
 				stringQuoteStyle: 'double',
-				tabWidth: 2,
 				useTabs: false,
 			},
 		},
