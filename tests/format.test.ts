@@ -158,12 +158,11 @@ describe('Format Integration', () => {
 		});
 	});
 
-	it('16. applies Markdown options to MDX', async () => {
+	it('16. applies Markdown-specific options to MDX while inheriting base quote behavior', async () => {
 		await testFixture('sample.mdx', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.mdx', temporaryDirectory, configPath, {
 			printWidth: 80,
-			singleQuote: false,
-			trailingComma: 'none',
+			singleQuote: true,
 			useTabs: false,
 		});
 	});
