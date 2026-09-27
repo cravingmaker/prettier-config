@@ -40,10 +40,10 @@ Or, export it from a `.prettierrc.{js,mjs,ts,mts}` or
 `prettier.config.{js,mjs,ts,mts}` file:
 
 ```javascript
-import config from "@cravingmaker/prettier-config";
+import config from '@cravingmaker/prettier-config';
 
 export default {
-  ...config
+  ...config,
   // Add your own overrides here
 };
 ```
