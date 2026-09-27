@@ -21,6 +21,12 @@ describe('Prettier Config', () => {
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-packagejson'));
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-toml'));
 		expect(config.jsxSingleQuote).toBeUndefined();
+		expect(config.tabWidth).toBe(2);
+
+		const tomlOverride = config.overrides?.find(
+			(override) => Array.isArray(override.files) && override.files.includes('**/*.toml'),
+		);
+		expect(tomlOverride?.options).not.toHaveProperty('tabWidth');
 	});
 
 	it('should include astro plugin if prettier-plugin-astro is installed', async () => {
