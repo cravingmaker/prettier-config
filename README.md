@@ -67,8 +67,8 @@ documentation formats use spaces where tabs are undesirable or unsupported.
   commas, and a 100-character print width.
 - YAML and YML use two-space indentation, prefer double quotes, and use a
   100-character print width.
-- TOML uses two-space indentation and a 100-character print width. TOML key
-  ordering is preserved.
+- TOML uses two-space indentation, double-quoted keys and strings, and a
+  100-character print width. TOML key ordering is preserved.
 - Markdown and MDX use two-space indentation with an 80-character print width;
   quote and trailing-comma behavior inherit the base Prettier configuration.
 - `package.json` and `package-lock.json` inherit the general JSON formatting
