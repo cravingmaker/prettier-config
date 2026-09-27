@@ -63,6 +63,10 @@ describe('Prettier Config', () => {
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- The dynamic import return type is 'any' due to the query string, but we know it's our Prettier config; the ?query suffix is intentional for Vitest module cache-busting
 		const { default: config } = (await import('../index.mjs?svelte')) as { default: Config };
 		expect(config.plugins).toContain('/plugins/svelte.mjs');
+
+		const svelteOverride = config.overrides?.find((override) => override.files === '**/*.svelte');
+		expect(svelteOverride?.options).toEqual({ parser: 'svelte' });
+		expect(svelteOverride?.options).not.toHaveProperty('svelteAllowShorthand');
 	});
 
 	it('should include tailwind plugin last if installed', async () => {
