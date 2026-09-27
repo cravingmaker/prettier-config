@@ -11,8 +11,12 @@ const require = createRequire(import.meta.url);
 const resolveOptionalPlugin = (name) => {
 	try {
 		return [require.resolve(name)];
-	} catch {
-		return [];
+	} catch (error) {
+		// Missing entry points also use MODULE_NOT_FOUND, but Node attaches the installed package path.
+		if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND' && !('path' in error)) {
+			return [];
+		}
+		throw error;
 	}
 };
 
