@@ -61,14 +61,15 @@ a compatible combination is verified.
 The base configuration uses tabs for indentation. Common data, markup, and
 documentation formats use spaces where tabs are undesirable or unsupported.
 
-- JSON, JSONC, and JSON5 use two-space indentation, double quotes, and no
-  trailing commas.
-- YAML and YML use two-space indentation.
+- JSON, JSONC, and JSON5 use two-space indentation, double quotes, no trailing
+  commas, and a 100-character print width.
+- YAML and YML use two-space indentation and a 100-character print width.
 - TOML uses two-space indentation and a 100-character print width. TOML key
   ordering is preserved.
 - Markdown and MDX use two-space indentation with an 80-character print width.
-- `package.json` and `package-lock.json` use a dedicated 100-character print
-  width for structured package metadata.
+- `package.json` and `package-lock.json` inherit the general JSON formatting
+  options while retaining package-specific ordering from
+  `prettier-plugin-packagejson`.
 
 ## Development
 
