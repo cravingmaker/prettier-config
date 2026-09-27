@@ -180,7 +180,7 @@ nested:
 "
 `;
 
-exports[`Format Integration > 16. applies Markdown options to MDX 1`] = `
+exports[`Format Integration > 16. applies Markdown-specific options to MDX while inheriting base quote behavior 1`] = `
 "# Greeting
 
 <Component
