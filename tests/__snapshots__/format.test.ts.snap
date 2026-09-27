@@ -223,7 +223,7 @@ C:\\work\\project
 "
 `;
 
-exports[`Format Integration > preserves package formatting and the width override for nested/package.json 1`] = `
+exports[`Format Integration > inherits general JSON options while preserving package formatting for nested/package.json 1`] = `
 "{
   "name": "width-fixture",
   "version": "1.0.0",
@@ -237,7 +237,7 @@ exports[`Format Integration > preserves package formatting and the width overrid
 "
 `;
 
-exports[`Format Integration > preserves package formatting and the width override for nested/package-lock.json 1`] = `
+exports[`Format Integration > inherits general JSON options while preserving package formatting for nested/package-lock.json 1`] = `
 "{
   "name": "width-fixture",
   "lockfileVersion": 3,
@@ -257,7 +257,7 @@ exports[`Format Integration > preserves package formatting and the width overrid
 "
 `;
 
-exports[`Format Integration > preserves package formatting and the width override for package.json 1`] = `
+exports[`Format Integration > inherits general JSON options while preserving package formatting for package.json 1`] = `
 "{
   "name": "width-fixture",
   "version": "1.0.0",
@@ -271,7 +271,7 @@ exports[`Format Integration > preserves package formatting and the width overrid
 "
 `;
 
-exports[`Format Integration > preserves package formatting and the width override for package-lock.json 1`] = `
+exports[`Format Integration > inherits general JSON options while preserving package formatting for package-lock.json 1`] = `
 "{
   "name": "width-fixture",
   "lockfileVersion": 3,
