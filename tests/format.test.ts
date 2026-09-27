@@ -146,6 +146,7 @@ describe('Format Integration', () => {
 		await testFixture('sample.yaml', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.yaml', temporaryDirectory, configPath, {
 			printWidth: 100,
+			singleQuote: false,
 			useTabs: false,
 		});
 	});
@@ -154,6 +155,7 @@ describe('Format Integration', () => {
 		await testFixture('sample.yml', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.yml', temporaryDirectory, configPath, {
 			printWidth: 100,
+			singleQuote: false,
 			useTabs: false,
 		});
 	});
