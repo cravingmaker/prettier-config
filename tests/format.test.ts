@@ -11,11 +11,12 @@ const runtimeConfig = path.resolve(__dirname, '..', 'index.mjs');
 const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'prettier-config-format-'));
 const configPath = path.join(temporaryDirectory, 'prettier.config.mjs');
 
-const prepareFixture = async (filename: string, directory: string) => {
-	const sourcePath = path.join(fixturesDirectory, filename);
+const prepareFixture = async (filename: string, directory: string, fixtureFilename = filename) => {
+	const sourcePath = path.join(fixturesDirectory, fixtureFilename);
 	const filePath = path.join(directory, filename);
 	const content = await fs.readFile(sourcePath, 'utf8');
 
+	await fs.mkdir(path.dirname(filePath), { recursive: true });
 	await fs.writeFile(filePath, content, 'utf8');
 
 	return filePath;
@@ -37,6 +38,8 @@ const testFixture = async (filename: string, directory: string, prettierConfigPa
 
 	expect(formatted).toMatchSnapshot();
 	expect(await prettier.format(formatted, options)).toBe(formatted);
+
+	return formatted;
 };
 
 const expectResolvedOptions = async (
@@ -164,6 +167,17 @@ describe('Format Integration', () => {
 		await testFixture('sample.toml', temporaryDirectory, configPath);
 	});
 
+	it('preserves TOML key order, comments, and multiline string contents', async () => {
+		const formatted = await testFixture('complex.toml', temporaryDirectory, configPath);
+
+		expect(formatted.indexOf('zulu =')).toBeLessThan(formatted.indexOf('alpha ='));
+		expect(formatted).toContain('# Keep the deployment order');
+		expect(formatted).toContain('# Primary target');
+		expect(formatted).toContain('message = """\nFirst line\n  Indented second line\nLast line\n"""');
+		expect(formatted).toContain("literal = '''\nC:\\work\\project\n  Keep these spaces\n'''");
+		expect(formatted).toContain('targets = [\n  "production-region-primary",');
+	});
+
 	it('18. applies TOML options', async () => {
 		await expectResolvedOptions('sample.toml', temporaryDirectory, configPath, {
 			parser: 'toml',
@@ -190,4 +204,31 @@ describe('Format Integration', () => {
 			useTabs: false,
 		});
 	});
+	it.each(['package.json', 'package-lock.json', 'nested/package.json', 'nested/package-lock.json'])(
+		'preserves package formatting and the width override for %s',
+		async (filename) => {
+			const filePath = await prepareFixture(filename, temporaryDirectory, `width/${path.basename(filename)}`);
+			const source = await fs.readFile(filePath, 'utf8');
+			const resolved = await prettier.resolveConfig(filePath, { config: configPath, editorconfig: false });
+			expect(resolved).toMatchObject({ printWidth: 100, useTabs: false });
+
+			const options = { ...resolved, filepath: filePath };
+			const formatted = await prettier.format(source, options);
+			const narrow = await prettier.format(source, { ...options, printWidth: 80 });
+			const keywords = '["formatting-tools", "configuration", "developer-workflow", "package-metadata"]';
+
+			// Package files use json-stringify, whose expanded layout is unchanged by this width setting.
+			expect(await prettier.getFileInfo(filePath)).toMatchObject({ inferredParser: 'json-stringify' });
+			expect(formatted).toMatchSnapshot();
+			expect(formatted).toBe(narrow);
+
+			// The same fixture distinguishes 80 from 100 with the regular JSON parser.
+			const jsonWide = await prettier.format(source, { ...options, parser: 'json', printWidth: 100 });
+			const jsonNarrow = await prettier.format(source, { ...options, parser: 'json', printWidth: 80 });
+			expect(jsonWide).toContain(keywords);
+			expect(jsonNarrow).not.toContain(keywords);
+			expect(JSON.parse(formatted)).toEqual(JSON.parse(source));
+			expect(await prettier.format(formatted, options)).toBe(formatted);
+		},
+	);
 });
