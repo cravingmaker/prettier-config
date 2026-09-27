@@ -25,7 +25,7 @@ exports[`Format Integration > 03. formats TSX correctly 1`] = `
 
 export const Greeting = ({ name }: Props) => {
 	return (
-		<div className='greeting'>
+		<div className="greeting">
 			<h1>Hello, {name}!</h1>
 		</div>
 	);
@@ -35,7 +35,7 @@ export const Greeting = ({ name }: Props) => {
 
 exports[`Format Integration > 04. formats JSX correctly 1`] = `
 "export const Greeting = ({ name }) => (
-	<div className='greeting'>
+	<div className="greeting">
 		<h1>Hello, {name}!</h1>
 	</div>
 );
@@ -184,7 +184,7 @@ exports[`Format Integration > 16. applies Markdown options to MDX 1`] = `
 "# Greeting
 
 <Component
-  title='Hello'
+  title="Hello"
   items={[1, 2, 3]}
 />
 "
