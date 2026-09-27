@@ -32,7 +32,6 @@ const plugins = [
 
 /** @satisfies {import('prettier').Config} */
 const config = {
-	jsxSingleQuote: true,
 	overrides: [
 		{
 			files: ['**/*.{ts,cts,mts,tsx}'],

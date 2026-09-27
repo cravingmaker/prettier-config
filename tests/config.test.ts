@@ -20,6 +20,7 @@ describe('Prettier Config', () => {
 		expect(config.plugins).toContain(prettierPluginOxc);
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-packagejson'));
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-toml'));
+		expect(config.jsxSingleQuote).toBeUndefined();
 	});
 
 	it('should include astro plugin if prettier-plugin-astro is installed', async () => {

@@ -61,6 +61,8 @@ a compatible combination is verified.
 The base configuration uses tabs for indentation. Common data, markup, and
 documentation formats use spaces where tabs are undesirable or unsupported.
 
+- JSX and TSX attributes use Prettier's default double quotes, matching HTML
+  attribute quoting, while JavaScript and TypeScript string literals remain single-quoted.
 - JSON, JSONC, and JSON5 use two-space indentation, double quotes, no trailing
   commas, and a 100-character print width.
 - YAML and YML use two-space indentation and a 100-character print width.

@@ -26,6 +26,12 @@ process.chdir(path.dirname(directory));
 const examples = [
 	['example.js', 'const greeting="hello"', "const greeting = 'hello';\n", 120],
 	['example.ts', 'const greeting:string="hello"', "const greeting: string = 'hello';\n", 120],
+	[
+		'example.tsx',
+		'const element=<div className="greeting">Hello</div>',
+		'const element = <div className="greeting">Hello</div>;\n',
+		120,
+	],
 	['config.json', '{"name":"fixture","enabled":true}', '{ "name": "fixture", "enabled": true }\n', 100],
 	['config.yaml', 'name: fixture\nenabled: true\n', 'name: fixture\nenabled: true\n', 100],
 	['nested/package.json', '{"version":"1.0.0","name":"fixture"}', '{\n  "name": "fixture",\n  "version": "1.0.0"\n}\n', 100],
