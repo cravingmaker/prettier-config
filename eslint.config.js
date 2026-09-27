@@ -1,7 +1,7 @@
 /**
  * Test-only rule overrides
  *
- * tests/**/*.ts
+ * All TypeScript files under tests/
  *
  * functional/functional-parameters — disabled because vi.doMock() factory functions must match
  * the exact shape of the mocked module's API. Adding dummy parameters solely to satisfy the rule
