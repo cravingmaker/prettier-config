@@ -203,13 +203,13 @@ features = ["alpha", "beta", "gamma"]
 
 exports[`Format Integration > preserves TOML key order, comments, and multiline string contents 1`] = `
 "# Keep the deployment order
-zulu = "last alphabetically" # Primary target
+zulu = "last alphabetically"  # Primary target
 alpha = "first alphabetically"
 targets = [
   "production-region-primary",
   "production-region-secondary",
   "development-region-primary",
-  "development-region-secondary",
+  "development-region-secondary"
 ]
 message = """
 First line
