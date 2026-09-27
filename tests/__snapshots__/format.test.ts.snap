@@ -200,3 +200,93 @@ enabled = true
 features = ["alpha", "beta", "gamma"]
 "
 `;
+
+exports[`Format Integration > preserves TOML key order, comments, and multiline string contents 1`] = `
+"# Keep the deployment order
+zulu = "last alphabetically" # Primary target
+alpha = "first alphabetically"
+targets = [
+  "production-region-primary",
+  "production-region-secondary",
+  "development-region-primary",
+  "development-region-secondary",
+]
+message = """
+First line
+  Indented second line
+Last line
+"""
+literal = '''
+C:\\work\\project
+  Keep these spaces
+'''
+"
+`;
+
+exports[`Format Integration > preserves package formatting and the width override for nested/package.json 1`] = `
+"{
+  "name": "width-fixture",
+  "version": "1.0.0",
+  "keywords": [
+    "formatting-tools",
+    "configuration",
+    "developer-workflow",
+    "package-metadata"
+  ]
+}
+"
+`;
+
+exports[`Format Integration > preserves package formatting and the width override for nested/package-lock.json 1`] = `
+"{
+  "name": "width-fixture",
+  "lockfileVersion": 3,
+  "packages": {
+    "": {
+      "name": "width-fixture",
+      "version": "1.0.0",
+      "keywords": [
+        "formatting-tools",
+        "configuration",
+        "developer-workflow",
+        "package-metadata"
+      ]
+    }
+  }
+}
+"
+`;
+
+exports[`Format Integration > preserves package formatting and the width override for package.json 1`] = `
+"{
+  "name": "width-fixture",
+  "version": "1.0.0",
+  "keywords": [
+    "formatting-tools",
+    "configuration",
+    "developer-workflow",
+    "package-metadata"
+  ]
+}
+"
+`;
+
+exports[`Format Integration > preserves package formatting and the width override for package-lock.json 1`] = `
+"{
+  "name": "width-fixture",
+  "lockfileVersion": 3,
+  "packages": {
+    "": {
+      "name": "width-fixture",
+      "version": "1.0.0",
+      "keywords": [
+        "formatting-tools",
+        "configuration",
+        "developer-workflow",
+        "package-metadata"
+      ]
+    }
+  }
+}
+"
+`;
