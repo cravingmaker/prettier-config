@@ -10,8 +10,8 @@ updates:
       semver-minor-days: 14
       semver-patch-days: 7
     ignore:
-      - dependency-name: '@cravingmaker/prettier-config'
-      - dependency-name: '@types/node'
+      - dependency-name: "@cravingmaker/prettier-config"
+      - dependency-name: "@types/node"
         update-types:
           - version-update:semver-major
       - dependency-name: typescript
