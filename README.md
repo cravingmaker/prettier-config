@@ -65,7 +65,8 @@ documentation formats use spaces where tabs are undesirable or unsupported.
   attribute quoting, while JavaScript and TypeScript string literals remain single-quoted.
 - JSON, JSONC, and JSON5 use two-space indentation, double quotes, no trailing
   commas, and a 100-character print width.
-- YAML and YML use two-space indentation and a 100-character print width.
+- YAML and YML use two-space indentation, prefer double quotes, and use a
+  100-character print width.
 - TOML uses two-space indentation and a 100-character print width. TOML key
   ordering is preserved.
 - Markdown and MDX use two-space indentation with an 80-character print width;

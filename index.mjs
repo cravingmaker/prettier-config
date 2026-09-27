@@ -79,6 +79,7 @@ const config = {
 			files: ['**/*.{yaml,yml}'],
 			options: {
 				printWidth: 100,
+				singleQuote: false,
 				useTabs: false,
 			},
 		},
