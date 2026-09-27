@@ -47,7 +47,7 @@ exports[`Format Integration > 05. formats Astro correctly 1`] = `
 const { name = 'World' } = Astro.props;
 ---
 
-<div class='greeting flex items-center'>
+<div class="greeting flex items-center">
 	<h1>Hello, {name}!</h1>
 </div>
 "
@@ -105,7 +105,7 @@ This component displays a friendly greeting.
 ## Usage
 
 \`\`\`tsx
-<Greeting name='World' />
+<Greeting name="World" />
 \`\`\`
 
 - Support **custom names**
