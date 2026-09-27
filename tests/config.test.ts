@@ -29,7 +29,7 @@ describe('Prettier Config', () => {
 					if (name === 'prettier-plugin-packagejson') return '/plugins/packagejson.cjs';
 					if (name === 'prettier-plugin-toml') return '/plugins/toml.mjs';
 					if (name === 'prettier-plugin-astro') return '/plugins/astro.mjs';
-					throw new Error('Not found');
+					throw Object.assign(new Error('Not found'), { code: 'MODULE_NOT_FOUND' });
 				},
 			}),
 		}));
@@ -47,7 +47,7 @@ describe('Prettier Config', () => {
 					if (name === 'prettier-plugin-packagejson') return '/plugins/packagejson.cjs';
 					if (name === 'prettier-plugin-toml') return '/plugins/toml.mjs';
 					if (name === 'prettier-plugin-svelte') return '/plugins/svelte.mjs';
-					throw new Error('Not found');
+					throw Object.assign(new Error('Not found'), { code: 'MODULE_NOT_FOUND' });
 				},
 			}),
 		}));
@@ -67,7 +67,7 @@ describe('Prettier Config', () => {
 					if (name === 'prettier-plugin-astro') return '/plugins/astro.mjs';
 					if (name === 'prettier-plugin-svelte') return '/plugins/svelte.mjs';
 					if (name === 'prettier-plugin-tailwindcss') return '/plugins/tailwindcss.mjs';
-					throw new Error('Not found');
+					throw Object.assign(new Error('Not found'), { code: 'MODULE_NOT_FOUND' });
 				},
 			}),
 		}));
@@ -91,7 +91,7 @@ describe('Prettier Config', () => {
 				resolve(name: string) {
 					if (name === 'prettier-plugin-packagejson') return '/plugins/packagejson.cjs';
 					if (name === 'prettier-plugin-toml') return '/plugins/toml.mjs';
-					throw new Error('Not found');
+					throw Object.assign(new Error('Not found'), { code: 'MODULE_NOT_FOUND' });
 				},
 			}),
 		}));
@@ -106,4 +106,42 @@ describe('Prettier Config', () => {
 		expect(config.plugins).not.toContain('/plugins/svelte.mjs');
 		expect(config.plugins).not.toContain('/plugins/tailwindcss.mjs');
 	});
+	it.each([
+		{ code: 'ERR_INVALID_PACKAGE_CONFIG', label: 'invalid package metadata' },
+		{ code: 'ERR_PACKAGE_PATH_NOT_EXPORTED', label: 'inaccessible package exports' },
+		{ code: 'EACCES', label: 'filesystem permission failures' },
+		{ code: undefined, label: 'unexpected resolver errors' },
+	])('preserves the original error for $label', async ({ code }) => {
+		const failure = Object.assign(new Error('Cannot resolve optional plugin'), { code });
+		vi.doMock('node:module', () => ({
+			createRequire: () => ({
+				resolve(name: string) {
+					if (name === 'prettier-plugin-astro') throw failure;
+					return `/plugins/${name}.mjs`;
+				},
+			}),
+		}));
+
+		await expect(import('../index.mjs')).rejects.toBe(failure);
+	});
+
+	it.each(['prettier-plugin-astro', 'prettier-plugin-svelte', 'prettier-plugin-tailwindcss'])(
+		'preserves MODULE_NOT_FOUND when %s has a broken entry point',
+		async (plugin) => {
+			const failure = Object.assign(new Error('Cannot find the installed plugin entry point'), {
+				code: 'MODULE_NOT_FOUND',
+				path: `/plugins/${plugin}/package.json`,
+			});
+			vi.doMock('node:module', () => ({
+				createRequire: () => ({
+					resolve(name: string) {
+						if (name === plugin) throw failure;
+						return `/plugins/${name}.mjs`;
+					},
+				}),
+			}));
+
+			await expect(import('../index.mjs')).rejects.toBe(failure);
+		},
+	);
 });
