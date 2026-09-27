@@ -47,10 +47,7 @@ const config = {
 		},
 		{
 			files: '**/*.svelte',
-			options: {
-				parser: 'svelte',
-				svelteAllowShorthand: false,
-			},
+			options: { parser: 'svelte' },
 		},
 		{
 			files: ['**/*.{css,scss,less}'],
