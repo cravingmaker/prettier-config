@@ -47,11 +47,6 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Format README for PR 67
-        run: |
-          npx prettier --write README.md
-          git diff -- README.md
-
       - name: Validate
         run: npm run validate
 
