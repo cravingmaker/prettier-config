@@ -195,6 +195,38 @@ describe('Format Integration', () => {
 		});
 	});
 
+	it('uses Svelte shorthand only when the attribute matches its expression', async () => {
+		const formatted = await testFixture('shorthand.svelte', temporaryDirectory, configPath);
+
+		expect(formatted).toContain('{title}');
+		expect(formatted).not.toContain('title={title}');
+		expect(formatted).toContain('disabled={enabled}');
+	});
+
+	it.each(['embedded.md', 'embedded.mdx'])(
+		'inherits JavaScript quotes and trailing commas inside %s',
+		async (filename) => {
+			const formatted = await testFixture(filename, temporaryDirectory, configPath);
+
+			expect(formatted).toContain("  first: 'one',\n");
+			expect(formatted).toContain("  sixth: 'six',\n};");
+		},
+	);
+
+	it.each(['quotes.yaml', 'quotes.yml'])('uses double quotes for quoted YAML values in %s', async (filename) => {
+		const formatted = await testFixture(filename, temporaryDirectory, configPath);
+
+		expect(formatted).toContain('message: "status: ready"');
+		expect(formatted).toContain('boolean_text: "true"');
+	});
+
+	it('prefers double quotes in TOML while preserving literal backslashes', async () => {
+		const formatted = await testFixture('quotes.toml', temporaryDirectory, configPath);
+
+		expect(formatted).toContain('"quoted key" = "hello"');
+		expect(formatted).toContain(String.raw`path = 'C:\work\project'`);
+	});
+
 	it.each(['package.json', 'package-lock.json', 'nested/package.json', 'nested/package-lock.json'])(
 		'inherits general JSON options while preserving package formatting for %s',
 		async (filename) => {

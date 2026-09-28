@@ -201,25 +201,35 @@ features = ["alpha", "beta", "gamma"]
 "
 `;
 
-exports[`Format Integration > preserves TOML key order, comments, and multiline string contents 1`] = `
-"# Keep the deployment order
-zulu = "last alphabetically"  # Primary target
-alpha = "first alphabetically"
-targets = [
-  "production-region-primary",
-  "production-region-secondary",
-  "development-region-primary",
-  "development-region-secondary"
-]
-message = """
-First line
-  Indented second line
-Last line
-"""
-literal = '''
-C:\\work\\project
-  Keep these spaces
-'''
+exports[`Format Integration > inherits JavaScript quotes and trailing commas inside embedded.md 1`] = `
+"# Embedded JavaScript
+
+\`\`\`js
+const options = {
+  first: 'one',
+  second: 'two',
+  third: 'three',
+  fourth: 'four',
+  fifth: 'five',
+  sixth: 'six',
+};
+\`\`\`
+"
+`;
+
+exports[`Format Integration > inherits JavaScript quotes and trailing commas inside embedded.mdx 1`] = `
+"# Embedded JavaScript
+
+\`\`\`js
+const options = {
+  first: 'one',
+  second: 'two',
+  third: 'three',
+  fourth: 'four',
+  fifth: 'five',
+  sixth: 'six',
+};
+\`\`\`
 "
 `;
 
@@ -288,5 +298,60 @@ exports[`Format Integration > inherits general JSON options while preserving pac
     }
   }
 }
+"
+`;
+
+exports[`Format Integration > prefers double quotes in TOML while preserving literal backslashes 1`] = `
+""quoted key" = "hello"
+path = 'C:\\work\\project'
+"
+`;
+
+exports[`Format Integration > preserves TOML key order, comments, and multiline string contents 1`] = `
+"# Keep the deployment order
+zulu = "last alphabetically"  # Primary target
+alpha = "first alphabetically"
+targets = [
+  "production-region-primary",
+  "production-region-secondary",
+  "development-region-primary",
+  "development-region-secondary"
+]
+message = """
+First line
+  Indented second line
+Last line
+"""
+literal = '''
+C:\\work\\project
+  Keep these spaces
+'''
+"
+`;
+
+exports[`Format Integration > uses Svelte shorthand only when the attribute matches its expression 1`] = `
+"<script>
+	let title = 'Hello';
+	let enabled = true;
+</script>
+
+<input
+	{title}
+	disabled={enabled}
+/>
+"
+`;
+
+exports[`Format Integration > uses double quotes for quoted YAML values in quotes.yaml 1`] = `
+"message: "status: ready"
+boolean_text: "true"
+path: 'C:\\work\\project'
+"
+`;
+
+exports[`Format Integration > uses double quotes for quoted YAML values in quotes.yml 1`] = `
+"message: "status: ready"
+boolean_text: "true"
+path: 'C:\\work\\project'
 "
 `;
