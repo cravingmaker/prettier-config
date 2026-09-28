@@ -48,6 +48,18 @@ export default {
 };
 ```
 
+## TOML validation
+
+TOML formatting is not a complete syntax or semantic validation step.
+`prettier --check` (and this repository's `npm run format:check`) checks
+whether files match the formatting rules; passing does not guarantee valid
+TOML. For example, the bundled `prettier-plugin-toml@3.0.2` can format a
+document containing duplicate keys without rejecting it.
+
+If your project needs TOML validation, run a dedicated TOML validator or
+parser in CI alongside the formatting check. Validate application-specific
+schema requirements separately where applicable.
+
 ## Optional plugin compatibility
 
 For Astro files, use `prettier-plugin-astro@0.14.1`. This package supports
