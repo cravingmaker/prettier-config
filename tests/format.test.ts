@@ -227,6 +227,55 @@ describe('Format Integration', () => {
 		expect(formatted).toContain(String.raw`path = 'C:\work\project'`);
 	});
 
+	it('formats XML structure, attributes, namespaces, and comments', async () => {
+		const formatted = await testFixture('sample.xml', temporaryDirectory, configPath);
+
+		expect(formatted).toContain('  <app:item');
+		expect(formatted).toContain('title="say &quot;hello&quot;"');
+		expect(formatted).toContain('xmlns:app="urn:example"');
+		expect(formatted.indexOf('z="last"')).toBeLessThan(formatted.indexOf('a="first"'));
+		// eslint-disable-next-line unicorn/string-content -- XML comment delimiters must remain literal
+		expect(formatted).toContain('<!-- keep this comment -->');
+		expect(formatted).toContain('<empty />');
+		await expectResolvedOptions('sample.xml', temporaryDirectory, configPath, {
+			parser: 'xml',
+			printWidth: 100,
+			singleAttributePerLine: true,
+			tabWidth: 2,
+			useTabs: false,
+			xmlQuoteAttributes: 'double',
+			xmlWhitespaceSensitivity: 'preserve',
+		});
+	});
+
+	it('preserves XML mixed text, entities, CDATA, and explicit whitespace', async () => {
+		const formatted = await testFixture('mixed.xml', temporaryDirectory, configPath);
+
+		expect(formatted).toContain('<p>Hello <b>world</b> ! &amp; goodbye.</p>');
+		expect(formatted).toContain('<raw xml:space="preserve">  keep  this\n  text </raw>');
+		expect(formatted).toContain('<![CDATA[if (a < b) { value = "x & y"; }]]>');
+	});
+
+	it('applies the XML width override in nested directories', async () => {
+		const filePath = await prepareFixture('nested/width.xml', temporaryDirectory, 'width.xml');
+		const source = await fs.readFile(filePath, 'utf8');
+		const resolved = await prettier.resolveConfig(filePath, { config: configPath, editorconfig: false });
+		const options = { ...resolved, filepath: filePath };
+		const formatted = await prettier.format(source, options);
+
+		expect(resolved).toMatchObject({ parser: 'xml', printWidth: 100, useTabs: false });
+		expect(formatted.trim()).not.toContain('\n');
+		expect(formatted).not.toBe(await prettier.format(source, { ...options, printWidth: 80 }));
+		expect(await prettier.format(formatted, options)).toBe(formatted);
+	});
+
+	it('reports incomplete XML markup', async () => {
+		const filePath = await prepareFixture('sample.xml', temporaryDirectory);
+		const resolved = await prettier.resolveConfig(filePath, { config: configPath, editorconfig: false });
+
+		await expect(prettier.format('<root', { ...resolved, filepath: filePath })).rejects.toThrow();
+	});
+
 	it.each(['package.json', 'package-lock.json', 'nested/package.json', 'nested/package-lock.json'])(
 		'inherits general JSON options while preserving package formatting for %s',
 		async (filename) => {

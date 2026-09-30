@@ -201,6 +201,23 @@ features = ["alpha", "beta", "gamma"]
 "
 `;
 
+exports[`Format Integration > formats XML structure, attributes, namespaces, and comments 1`] = `
+"<?xml version="1.0" ?>
+<catalog
+  xmlns:app="urn:example"
+  z="last"
+  a="first"
+>
+  <app:item
+    title="say &quot;hello&quot;"
+    enabled="true"
+  />
+  <!-- keep this comment -->
+  <empty />
+</catalog>
+"
+`;
+
 exports[`Format Integration > inherits JavaScript quotes and trailing commas inside embedded.md 1`] = `
 "# Embedded JavaScript
 
@@ -326,6 +343,16 @@ literal = '''
 C:\\work\\project
   Keep these spaces
 '''
+"
+`;
+
+exports[`Format Integration > preserves XML mixed text, entities, CDATA, and explicit whitespace 1`] = `
+"<document>
+  <p>Hello <b>world</b> ! &amp; goodbye.</p>
+  <raw xml:space="preserve">  keep  this
+  text </raw>
+  <script><![CDATA[if (a < b) { value = "x & y"; }]]></script>
+</document>
 "
 `;
 

@@ -1,0 +1,2 @@
+<document><p>Hello <b>world</b> ! &amp; goodbye.</p><raw xml:space='preserve'>  keep  this
+  text </raw><script><![CDATA[if (a < b) { value = "x & y"; }]]></script></document>

@@ -24,6 +24,7 @@ const plugins = [
 	prettierPluginOxc,
 	require.resolve('prettier-plugin-packagejson'),
 	require.resolve('prettier-plugin-toml'),
+	require.resolve('@prettier/plugin-xml'),
 	...resolveOptionalPlugin('prettier-plugin-astro'),
 	...resolveOptionalPlugin('prettier-plugin-svelte'),
 	// Tailwind plugin should always be last
@@ -88,6 +89,16 @@ const config = {
 				printWidth: 100,
 				stringQuoteStyle: 'double',
 				useTabs: false,
+			},
+		},
+		{
+			files: ['**/*.xml'],
+			options: {
+				parser: 'xml',
+				printWidth: 100,
+				useTabs: false,
+				xmlQuoteAttributes: 'double',
+				xmlWhitespaceSensitivity: 'preserve',
 			},
 		},
 		{

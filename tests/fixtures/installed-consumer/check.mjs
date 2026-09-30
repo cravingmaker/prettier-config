@@ -24,6 +24,7 @@ for (const name of ['prettier-plugin-astro', 'prettier-plugin-svelte', 'prettier
 
 process.chdir(path.dirname(directory));
 const examples = [
+	['nested/config.xml', "<config><item name='fixture'/></config>", '<config>\n  <item name="fixture" />\n</config>\n', 100],
 	['example.js', 'const greeting="hello"', "const greeting = 'hello';\n", 120],
 	['example.ts', 'const greeting:string="hello"', "const greeting: string = 'hello';\n", 120],
 	[

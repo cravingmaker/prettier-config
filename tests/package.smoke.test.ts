@@ -16,6 +16,7 @@ const requiredDependencies = [
 	'prettier-plugin-packagejson',
 	'prettier-plugin-toml',
 	'@prettier/plugin-oxc',
+	'@prettier/plugin-xml',
 ] as const;
 
 const optionalDependencies = [
@@ -219,6 +220,11 @@ describe('Published Package', () => {
 					'pyproject.toml',
 					'[project]\nname="fixture"\nversion="1.0.0"\ndependencies=["alpha","beta"]\n',
 				);
+
+				const xml = await format('nested/config.xml', "<config><item name='fixture'/></config>");
+				if (xml !== '<config>\n  <item name="fixture" />\n</config>\n') {
+					throw new Error('XML formatting did not use the XML plugin');
+				}
 
 				const configuredPlugins = config.plugins ?? [];
 				const detectedOptionalPlugins = optionalPlugins.filter((plugin) =>

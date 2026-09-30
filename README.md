@@ -8,7 +8,7 @@ A highly opinionated, modern, and elegant Prettier configuration crafted by
 Requires Node.js 22.12.0 or newer.
 
 Install the configuration along with Prettier using your favorite package
-manager. TOML support is included automatically:
+manager. TOML and XML support are included automatically:
 
 ```bash
 npm install --save-dev --save-exact prettier @cravingmaker/prettier-config
@@ -47,6 +47,17 @@ export default {
   // Add your own overrides here
 };
 ```
+
+## XML formatting
+
+XML support is bundled through [`@prettier/plugin-xml`](https://github.com/prettier/plugin-xml).
+For `.xml` files, the configuration uses a 100-column print width, two-space
+indentation, and double-quoted attributes. It inherits one attribute per line
+from the base configuration and preserves attribute order.
+
+The `preserve` whitespace mode formats structural markup while retaining text
+whitespace. Use `xmlWhitespaceSensitivity: 'strict'` in your XML override if
+all inter-element whitespace is significant to your application.
 
 ## TOML validation
 

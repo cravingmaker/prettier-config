@@ -1,0 +1,2 @@
+<?xml version='1.0'?>
+<catalog xmlns:app='urn:example' z='last' a='first'><app:item title='say "hello"' enabled='true'/><!-- keep this comment --><empty/></catalog>
