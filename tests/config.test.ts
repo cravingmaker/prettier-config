@@ -16,6 +16,7 @@ describe('Prettier Config', () => {
 		expect(config.plugins).toContain(prettierPluginOxc);
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-packagejson'));
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-toml'));
+		expect(config.plugins).toContain(require.resolve('@prettier/plugin-xml'));
 		expect(config).not.toHaveProperty('jsxSingleQuote');
 		expect(config.tabWidth).toBe(2);
 
@@ -44,6 +45,7 @@ describe('Prettier Config', () => {
 				resolve(name: string) {
 					if (name === 'prettier-plugin-packagejson') return '/plugins/packagejson.cjs';
 					if (name === 'prettier-plugin-toml') return '/plugins/toml.mjs';
+					if (name === '@prettier/plugin-xml') return '/plugins/xml.mjs';
 					if (installed.some((plugin) => name === `prettier-plugin-${plugin}`)) {
 						return `/plugins/${name}.mjs`;
 					}
@@ -58,6 +60,7 @@ describe('Prettier Config', () => {
 			prettierPluginOxc,
 			'/plugins/packagejson.cjs',
 			'/plugins/toml.mjs',
+			'/plugins/xml.mjs',
 			...installed.map((plugin) => `/plugins/prettier-plugin-${plugin}.mjs`),
 		]);
 	});
