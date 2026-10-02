@@ -48,29 +48,6 @@ export default {
 };
 ```
 
-## XML formatting
-
-XML support is bundled through [`@prettier/plugin-xml`](https://github.com/prettier/plugin-xml).
-For `.xml` files, the configuration uses a 100-column print width, two-space
-indentation, and double-quoted attributes. It inherits one attribute per line
-from the base configuration and preserves attribute order.
-
-The `preserve` whitespace mode formats structural markup while retaining text
-whitespace. Use `xmlWhitespaceSensitivity: 'strict'` in your XML override if
-all inter-element whitespace is significant to your application.
-
-## TOML validation
-
-TOML formatting is not a complete syntax or semantic validation step.
-`prettier --check` (and this repository's `npm run format:check`) checks
-whether files match the formatting rules; passing does not guarantee valid
-TOML. For example, the bundled `prettier-plugin-toml@3.0.2` can format a
-document containing duplicate keys without rejecting it.
-
-If your project needs TOML validation, run a dedicated TOML validator or
-parser in CI alongside the formatting check. Validate application-specific
-schema requirements separately where applicable.
-
 ## Optional plugin compatibility
 
 For Astro files, use `prettier-plugin-astro@0.14.1`. This package supports
