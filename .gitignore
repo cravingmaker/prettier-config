@@ -1,8 +1,7 @@
 # Dependencies
 node_modules/
 
-# Build and test output
-dist/
+# Test output
 coverage/
 .nyc_output/
 

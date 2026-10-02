@@ -21,6 +21,6 @@
     "types": ["node"],
     "verbatimModuleSyntax": true
   },
-  "exclude": ["node_modules", "dist", "tests/fixtures"],
+  "exclude": ["node_modules", "tests/fixtures"],
   "include": ["index.mjs", "index.d.ts", "prettier.config.mjs", "tests/**/*.ts"]
 }
