@@ -119,9 +119,15 @@ describe('Published Package', () => {
 	it('ships the runtime and public types without build artifacts', () => {
 		const entries = execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' }).trim().split('\n');
 
-		expect(entries).toHaveLength(4);
+		expect(entries).toHaveLength(5);
 		expect(entries).toEqual(
-			expect.arrayContaining(['package/README.md', 'package/index.d.ts', 'package/index.mjs', 'package/package.json']),
+			expect.arrayContaining([
+				'package/LICENSE',
+				'package/README.md',
+				'package/index.d.ts',
+				'package/index.mjs',
+				'package/package.json',
+			]),
 		);
 	});
 
