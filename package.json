@@ -76,7 +76,7 @@
     "publint": "0.3.24",
     "svelte": "5.57.0",
     "typescript": "6.0.3",
-    "vitest": "5.0.1"
+    "vitest": "5.0.2"
   },
   "peerDependencies": {
     "prettier": ">=3.9.8 <4",
