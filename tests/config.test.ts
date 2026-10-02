@@ -20,14 +20,8 @@ describe('Prettier Config', () => {
 		expect(config).not.toHaveProperty('jsxSingleQuote');
 		expect(config.tabWidth).toBe(2);
 
-		const tomlOverride = config.overrides.find(
-			(override) => Array.isArray(override.files) && override.files.includes('**/*.toml'),
-		);
+		const tomlOverride = config.overrides.find((override) => override.files.includes('**/*.toml'));
 		expect(tomlOverride?.options).not.toHaveProperty('tabWidth');
-
-		const svelteOverride = config.overrides.find((override) => override.files === '**/*.svelte');
-		expect(svelteOverride?.options).toEqual({ parser: 'svelte' });
-		expect(svelteOverride?.options).not.toHaveProperty('svelteAllowShorthand');
 	});
 
 	it.each([

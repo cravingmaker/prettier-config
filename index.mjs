@@ -43,14 +43,6 @@ const config = {
 			options: { parser: 'oxc' },
 		},
 		{
-			files: '**/*.astro',
-			options: { parser: 'astro' },
-		},
-		{
-			files: '**/*.svelte',
-			options: { parser: 'svelte' },
-		},
-		{
 			files: ['**/*.{css,scss,less}'],
 			options: {
 				singleQuote: false,
@@ -85,7 +77,6 @@ const config = {
 			files: ['**/*.toml'],
 			options: {
 				keyQuoteStyle: 'double',
-				parser: 'toml',
 				printWidth: 100,
 				stringQuoteStyle: 'double',
 				useTabs: false,
@@ -94,7 +85,6 @@ const config = {
 		{
 			files: ['**/*.xml'],
 			options: {
-				parser: 'xml',
 				printWidth: 100,
 				useTabs: false,
 				xmlQuoteAttributes: 'double',

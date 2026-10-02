@@ -72,6 +72,21 @@ describe('Format Integration', () => {
 		});
 	});
 
+	it.each([
+		{ filename: 'sample.astro', parser: 'astro' },
+		{ filename: 'sample.svelte', parser: 'svelte' },
+		{ filename: 'sample.toml', parser: 'toml' },
+		{ filename: 'sample.xml', parser: 'xml' },
+	])('infers the $parser parser from nested/$filename', async ({ filename, parser }) => {
+		const filePath = await prepareFixture(`nested/${filename}`, temporaryDirectory, filename);
+		const resolved = await prettier.resolveConfig(filePath, { config: configPath, editorconfig: false });
+
+		expect(resolved).not.toBeNull();
+		expect(await prettier.getFileInfo(filePath, { plugins: resolved?.plugins })).toMatchObject({
+			inferredParser: parser,
+		});
+	});
+
 	it('01. formats TypeScript correctly', async () => {
 		await testFixture('sample.ts', temporaryDirectory, configPath);
 	});
@@ -187,7 +202,6 @@ describe('Format Integration', () => {
 	it('18. applies TOML options while inheriting the base tab width', async () => {
 		await expectResolvedOptions('sample.toml', temporaryDirectory, configPath, {
 			keyQuoteStyle: 'double',
-			parser: 'toml',
 			printWidth: 100,
 			stringQuoteStyle: 'double',
 			tabWidth: 2,
@@ -238,7 +252,6 @@ describe('Format Integration', () => {
 		expect(formatted).toContain('<!-- keep this comment -->');
 		expect(formatted).toContain('<empty />');
 		await expectResolvedOptions('sample.xml', temporaryDirectory, configPath, {
-			parser: 'xml',
 			printWidth: 100,
 			singleAttributePerLine: true,
 			tabWidth: 2,
@@ -263,7 +276,7 @@ describe('Format Integration', () => {
 		const options = { ...resolved, filepath: filePath };
 		const formatted = await prettier.format(source, options);
 
-		expect(resolved).toMatchObject({ parser: 'xml', printWidth: 100, useTabs: false });
+		expect(resolved).toMatchObject({ printWidth: 100, useTabs: false });
 		expect(formatted.trim()).not.toContain('\n');
 		expect(formatted).not.toBe(await prettier.format(source, { ...options, printWidth: 80 }));
 		expect(await prettier.format(formatted, options)).toBe(formatted);
