@@ -24,7 +24,7 @@ for (const name of ['prettier-plugin-astro', 'prettier-plugin-svelte', 'prettier
 
 process.chdir(path.dirname(directory));
 const examples = [
-	['nested/config.xml', "<config><item name='fixture'/></config>", '<config>\n  <item name="fixture" />\n</config>\n', 100],
+	['nested/config.xml', "<config><item name='fixture'/></config>", '<config>\n  <item name="fixture" />\n</config>\n', 120],
 	['example.js', 'const greeting="hello"', "const greeting = 'hello';\n", 120],
 	['example.ts', 'const greeting:string="hello"', "const greeting: string = 'hello';\n", 120],
 	[
@@ -33,10 +33,10 @@ const examples = [
 		'const element = <div className="greeting">Hello</div>;\n',
 		120,
 	],
-	['config.json', '{"name":"fixture","enabled":true}', '{ "name": "fixture", "enabled": true }\n', 100],
-	['config.yaml', 'name: fixture\nenabled: true\n', 'name: fixture\nenabled: true\n', 100],
-	['nested/package.json', '{"version":"1.0.0","name":"fixture"}', '{\n  "name": "fixture",\n  "version": "1.0.0"\n}\n', 100],
-	['pyproject.toml', '[project]\nname="fixture"\n', '[project]\nname = "fixture"\n', 100],
+	['config.json', '{"name":"fixture","enabled":true}', '{ "name": "fixture", "enabled": true }\n', 120],
+	['config.yaml', 'name: fixture\nenabled: true\n', 'name: fixture\nenabled: true\n', 120],
+	['nested/package.json', '{"version":"1.0.0","name":"fixture"}', '{\n  "name": "fixture",\n  "version": "1.0.0"\n}\n', 120],
+	['pyproject.toml', '[project]\nname="fixture"\n', '[project]\nname = "fixture"\n', 120],
 ];
 for (const [filename, source, expected, printWidth] of examples) {
 	const filepath = path.join(directory, filename);

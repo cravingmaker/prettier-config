@@ -32,7 +32,6 @@ const plugins = [
 ];
 
 const dataFormatOptions = {
-	printWidth: 100,
 	useTabs: false,
 };
 
