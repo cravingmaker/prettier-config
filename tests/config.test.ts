@@ -18,7 +18,8 @@ describe('Prettier Config', () => {
 		expect(config.plugins).toContain(require.resolve('prettier-plugin-toml'));
 		expect(config.plugins).toContain(require.resolve('@prettier/plugin-xml'));
 		expect(config).not.toHaveProperty('jsxSingleQuote');
-		expect(config.tabWidth).toBe(2);
+		expect(config).not.toHaveProperty('tabWidth');
+		expect(config).not.toHaveProperty('useTabs');
 
 		const tomlOverride = config.overrides.find((override) => override.files.includes('**/*.toml'));
 		expect(tomlOverride?.options).not.toHaveProperty('tabWidth');

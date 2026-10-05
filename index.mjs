@@ -103,8 +103,6 @@ const config = {
 	printWidth: 120,
 	singleAttributePerLine: true,
 	singleQuote: true,
-	tabWidth: 2,
-	useTabs: true,
 };
 
 // eslint-disable-next-line import-x/no-default-export -- Prettier configuration is typically exported as a default export

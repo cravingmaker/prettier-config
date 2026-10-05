@@ -199,12 +199,11 @@ describe('Format Integration', () => {
 		expect(formatted).toContain('targets = [\n  "production-region-primary",');
 	});
 
-	it('18. applies TOML options while inheriting the base tab width', async () => {
+	it('18. applies TOML options while inheriting the default tab width', async () => {
 		await expectResolvedOptions('sample.toml', temporaryDirectory, configPath, {
 			keyQuoteStyle: 'double',
 			printWidth: 120,
 			stringQuoteStyle: 'double',
-			tabWidth: 2,
 			useTabs: false,
 		});
 	});
@@ -254,7 +253,6 @@ describe('Format Integration', () => {
 		await expectResolvedOptions('sample.xml', temporaryDirectory, configPath, {
 			printWidth: 120,
 			singleAttributePerLine: true,
-			tabWidth: 2,
 			useTabs: false,
 			xmlQuoteAttributes: 'double',
 			xmlWhitespaceSensitivity: 'preserve',
