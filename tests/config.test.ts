@@ -29,11 +29,11 @@ describe('Prettier Config', () => {
 		['YAML', '**/*.{yaml,yml}'],
 		['TOML', '**/*.toml'],
 		['XML', '**/*.xml'],
-	])('shares data format options in %s override', async (_name, pattern) => {
+	])('does not override print width for %s while sharing space-based indentation', async (_name, pattern) => {
 		const { default: config } = await import('../index.mjs');
 		const override = config.overrides.find((entry) => entry.files.includes(pattern));
+		expect(override?.options).not.toHaveProperty('printWidth');
 		expect(override?.options).toMatchObject({
-			printWidth: 100,
 			useTabs: false,
 		});
 	});

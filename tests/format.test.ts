@@ -130,7 +130,7 @@ describe('Format Integration', () => {
 	it('11. applies space-based JSON options to JSON', async () => {
 		await testFixture('sample.json', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.json', temporaryDirectory, configPath, {
-			printWidth: 100,
+			printWidth: 120,
 			singleQuote: false,
 			trailingComma: 'none',
 			useTabs: false,
@@ -140,7 +140,7 @@ describe('Format Integration', () => {
 	it('12. applies space-based JSON options to JSONC', async () => {
 		await testFixture('sample.jsonc', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.jsonc', temporaryDirectory, configPath, {
-			printWidth: 100,
+			printWidth: 120,
 			singleQuote: false,
 			trailingComma: 'none',
 			useTabs: false,
@@ -150,7 +150,7 @@ describe('Format Integration', () => {
 	it('13. applies space-based JSON options to JSON5', async () => {
 		await testFixture('sample.json5', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.json5', temporaryDirectory, configPath, {
-			printWidth: 100,
+			printWidth: 120,
 			singleQuote: false,
 			trailingComma: 'none',
 			useTabs: false,
@@ -160,7 +160,7 @@ describe('Format Integration', () => {
 	it('14. applies space-based YAML options to YAML', async () => {
 		await testFixture('sample.yaml', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.yaml', temporaryDirectory, configPath, {
-			printWidth: 100,
+			printWidth: 120,
 			singleQuote: false,
 			useTabs: false,
 		});
@@ -169,7 +169,7 @@ describe('Format Integration', () => {
 	it('15. applies space-based YAML options to YML', async () => {
 		await testFixture('sample.yml', temporaryDirectory, configPath);
 		await expectResolvedOptions('sample.yml', temporaryDirectory, configPath, {
-			printWidth: 100,
+			printWidth: 120,
 			singleQuote: false,
 			useTabs: false,
 		});
@@ -202,7 +202,7 @@ describe('Format Integration', () => {
 	it('18. applies TOML options while inheriting the base tab width', async () => {
 		await expectResolvedOptions('sample.toml', temporaryDirectory, configPath, {
 			keyQuoteStyle: 'double',
-			printWidth: 100,
+			printWidth: 120,
 			stringQuoteStyle: 'double',
 			tabWidth: 2,
 			useTabs: false,
@@ -252,7 +252,7 @@ describe('Format Integration', () => {
 		expect(formatted).toContain('<!-- keep this comment -->');
 		expect(formatted).toContain('<empty />');
 		await expectResolvedOptions('sample.xml', temporaryDirectory, configPath, {
-			printWidth: 100,
+			printWidth: 120,
 			singleAttributePerLine: true,
 			tabWidth: 2,
 			useTabs: false,
@@ -269,14 +269,14 @@ describe('Format Integration', () => {
 		expect(formatted).toContain('<![CDATA[if (a < b) { value = "x & y"; }]]>');
 	});
 
-	it('applies the XML width override in nested directories', async () => {
+	it('inherits the base print width for XML in nested directories', async () => {
 		const filePath = await prepareFixture('nested/width.xml', temporaryDirectory, 'width.xml');
 		const source = await fs.readFile(filePath, 'utf8');
 		const resolved = await prettier.resolveConfig(filePath, { config: configPath, editorconfig: false });
 		const options = { ...resolved, filepath: filePath };
 		const formatted = await prettier.format(source, options);
 
-		expect(resolved).toMatchObject({ printWidth: 100, useTabs: false });
+		expect(resolved).toMatchObject({ printWidth: 120, useTabs: false });
 		expect(formatted.trim()).not.toContain('\n');
 		expect(formatted).not.toBe(await prettier.format(source, { ...options, printWidth: 80 }));
 		expect(await prettier.format(formatted, options)).toBe(formatted);
@@ -296,7 +296,7 @@ describe('Format Integration', () => {
 			const source = await fs.readFile(filePath, 'utf8');
 			const resolved = await prettier.resolveConfig(filePath, { config: configPath, editorconfig: false });
 			expect(resolved).toMatchObject({
-				printWidth: 100,
+				printWidth: 120,
 				singleQuote: false,
 				trailingComma: 'none',
 				useTabs: false,
