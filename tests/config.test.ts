@@ -25,6 +25,20 @@ describe('Prettier Config', () => {
 	});
 
 	it.each([
+		['JSON', '**/*.{json,jsonc,json5}'],
+		['YAML', '**/*.{yaml,yml}'],
+		['TOML', '**/*.toml'],
+		['XML', '**/*.xml'],
+	])('shares data format options in %s override', async (_name, pattern) => {
+		const { default: config } = await import('../index.mjs');
+		const override = config.overrides.find((entry) => entry.files.includes(pattern));
+		expect(override?.options).toMatchObject({
+			printWidth: 100,
+			useTabs: false,
+		});
+	});
+
+	it.each([
 		{ installed: [], label: 'none' },
 		{ installed: ['astro'], label: 'Astro' },
 		{ installed: ['svelte'], label: 'Svelte' },

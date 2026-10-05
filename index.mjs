@@ -31,6 +31,11 @@ const plugins = [
 	...resolveOptionalPlugin('prettier-plugin-tailwindcss'),
 ];
 
+const dataFormatOptions = {
+	printWidth: 100,
+	useTabs: false,
+};
+
 /** @satisfies {import('prettier').Config} */
 const config = {
 	overrides: [
@@ -59,34 +64,30 @@ const config = {
 		{
 			files: ['**/*.{json,jsonc,json5}'],
 			options: {
-				printWidth: 100,
+				...dataFormatOptions,
 				singleQuote: false,
 				trailingComma: 'none',
-				useTabs: false,
 			},
 		},
 		{
 			files: ['**/*.{yaml,yml}'],
 			options: {
-				printWidth: 100,
+				...dataFormatOptions,
 				singleQuote: false,
-				useTabs: false,
 			},
 		},
 		{
 			files: ['**/*.toml'],
 			options: {
+				...dataFormatOptions,
 				keyQuoteStyle: 'double',
-				printWidth: 100,
 				stringQuoteStyle: 'double',
-				useTabs: false,
 			},
 		},
 		{
 			files: ['**/*.xml'],
 			options: {
-				printWidth: 100,
-				useTabs: false,
+				...dataFormatOptions,
 				xmlQuoteAttributes: 'double',
 				xmlWhitespaceSensitivity: 'preserve',
 			},
