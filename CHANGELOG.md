@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/cravingmaker/prettier-config/compare/v0.3.0...v0.3.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* type always-set config keys as present and correct usage docs ([#102](https://github.com/cravingmaker/prettier-config/issues/102)) ([352dd56](https://github.com/cravingmaker/prettier-config/commit/352dd5624764c33b4d6c6d3dff0cd3896c540e64))
+
 ## 0.3.0 - 2026-10-06
 
 ### Changed
