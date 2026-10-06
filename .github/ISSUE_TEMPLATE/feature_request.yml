@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest an improvement to the configuration or supported plugins.
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: Describe the problem this change would solve and the language or plugin involved, if applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the improvement. Include an example of the desired configuration or formatting output when relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Alternatives and additional context
+      description: Include workarounds, alternatives, or relevant links.

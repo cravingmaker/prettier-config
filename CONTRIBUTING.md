@@ -5,6 +5,14 @@
 Development requires Node.js 22.22.1 or newer. The published configuration
 supports Node.js 22.12.0 or newer.
 
+Use the contributor Node.js version pinned in [.nvmrc](.nvmrc). If you use
+nvm, run:
+
+```bash
+nvm install
+nvm use
+```
+
 From a local checkout, run:
 
 ```bash

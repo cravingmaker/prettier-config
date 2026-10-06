@@ -1,0 +1,37 @@
+name: Bug report
+description: Report unexpected formatting, configuration, or plugin behavior.
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For security vulnerabilities, use [private vulnerability reporting](https://github.com/cravingmaker/prettier-config/security/advisories/new).
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions
+      description: Include the exact @cravingmaker/prettier-config, Prettier, Node.js, and optional plugin versions in your reproduction.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include reproduction steps or a repository link, the file name and extension, your Prettier configuration, and minimal input. Use fenced code blocks for code samples.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe the expected behavior or show the expected formatted output in a fenced code block.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Describe what happens and include the actual formatted output or full error message in a fenced code block.
+    validations:
+      required: true
