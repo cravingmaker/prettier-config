@@ -47,6 +47,33 @@ dependencies.
 The pre-commit hook runs ESLint fixes and Prettier on staged files. Full
 typechecking and tests run through `npm run validate` and in CI.
 
+## Releases
+
+Release Please maintains a release pull request from conventional squash
+commits on `main`. Use `fix: ...` for patch releases and `feat: ...` for minor
+releases. Mark breaking changes with `!`, such as `fix!: ...`, or a
+`BREAKING CHANGE:` commit footer. Breaking changes bump the minor version
+while the package is below 1.0.0 and the major version afterward.
+
+Changes limited to `chore: ...`, `docs: ...`, or `test: ...` do not start a
+package release. Dependabot uses `fix(deps): ...` for production dependencies
+and `chore(deps-dev): ...` for development dependencies. Review formatting
+output changes from runtime plugin updates and mark breaking changes when
+needed.
+
+Review the proposed version and changelog before merging the release pull
+request. Include consumer-facing migration guidance for formatting changes,
+using `docs/releases/` when additional examples or instructions are needed.
+The bot updates `package.json`, `package-lock.json`, the release manifest,
+and `CHANGELOG.md`, then creates a `vX.Y.Z` tag and GitHub Release after the
+pull request is merged. The GitHub Release triggers the existing npm
+publishing workflow, which validates the package and uses Trusted Publishing.
+
+To retry release automation, run the **Release Please** workflow manually
+from the Actions tab with `main` selected. The release manifest records the
+latest released version; its initial 0.3.0 version and bootstrap commit mark
+the release that predates automation.
+
 ## Reporting issues
 
 For formatting bugs, open a
