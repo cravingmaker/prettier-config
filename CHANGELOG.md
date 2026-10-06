@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0 - 2026-10-06
 
 ### Changed
 
@@ -20,7 +20,7 @@
 
 See the [0.3.0 migration notes](docs/releases/0.3.0.md) before upgrading.
 
-[Changes since 0.2.0](https://github.com/cravingmaker/prettier-config/compare/v0.2.0...main)
+[Changes since 0.2.0](https://github.com/cravingmaker/prettier-config/compare/v0.2.0...v0.3.0)
 
 ## 0.2.0 - 2026-09-30
 
