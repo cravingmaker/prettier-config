@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/cravingmaker/prettier-config/compare/v0.3.1...v0.3.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* **deps:** bump source-map-js from 1.2.1 to 1.2.2 ([#95](https://github.com/cravingmaker/prettier-config/issues/95)) ([f0acf77](https://github.com/cravingmaker/prettier-config/commit/f0acf779969a1b6c1717ade5d5bdbe02ced86a38))
+
 ## [0.3.1](https://github.com/cravingmaker/prettier-config/compare/v0.3.0...v0.3.1) (2026-10-06)
 
 
