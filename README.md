@@ -47,7 +47,10 @@ import config from "@cravingmaker/prettier-config";
 
 export default {
   ...config,
-  // Add your own overrides here
+  overrides: [
+    ...(config.overrides ?? []),
+    // Add your own overrides here
+  ],
 };
 ```
 
