@@ -28,6 +28,9 @@ bun add --dev --exact prettier @cravingmaker/prettier-config
 
 ## Usage
 
+The config uses Prettier's formatting defaults with `singleAttributePerLine: true`.
+JavaScript and TypeScript files use the bundled Oxc parsers.
+
 Reference this config in your `package.json`:
 
 ```json
@@ -40,7 +43,7 @@ Or, export it from a `.prettierrc.{js,mjs,ts,mts}` or
 `prettier.config.{js,mjs,ts,mts}` file:
 
 ```javascript
-import config from '@cravingmaker/prettier-config';
+import config from "@cravingmaker/prettier-config";
 
 export default {
   ...config,
