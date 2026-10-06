@@ -94,6 +94,12 @@ Prettier only.
 TypeScript into a temporary consumer project. This check needs npm registry
 access (or a populated npm cache); the temporary project is removed afterward.
 
+## Contributing and security
+
+See [CONTRIBUTING.md](https://github.com/cravingmaker/prettier-config/blob/main/CONTRIBUTING.md)
+for contribution and pull request guidance. Report vulnerabilities privately
+as described in [SECURITY.md](https://github.com/cravingmaker/prettier-config/blob/main/SECURITY.md).
+
 ## License
 
 MIT © [cravingmaker](https://github.com/cravingmaker)
