@@ -1,0 +1,7 @@
+/* Keep component styles */
+.button{
+  @apply text-white   p-4 hover:bg-blue-700 flex bg-blue-500 items-center rounded;
+  color: var(--accent);
+}
+
+.button--compact { @apply px-4 flex py-2 items-center !important; }

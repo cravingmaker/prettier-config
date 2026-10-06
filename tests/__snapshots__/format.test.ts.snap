@@ -277,6 +277,80 @@ exports[`Format Integration > preserves XML mixed text, entities, CDATA, and exp
 "
 `;
 
+exports[`Format Integration > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.css 1`] = `
+"/* Keep component styles */
+.button {
+  @apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;
+  color: var(--accent);
+}
+
+.button--compact {
+  @apply flex items-center px-4 py-2 !important;
+}
+"
+`;
+
+exports[`Format Integration > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.less 1`] = `
+"@accent: #2563eb;
+
+/* Keep component styles */
+.button {
+  @apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;
+  color: @accent;
+
+  &--compact {
+    @apply flex items-center px-4 py-2 !important;
+  }
+}
+"
+`;
+
+exports[`Format Integration > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.scss 1`] = `
+"$accent: #2563eb;
+
+/* Keep component styles */
+.button {
+  @apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;
+  color: $accent;
+
+  &--compact {
+    @apply flex items-center px-4 py-2 !important;
+  }
+}
+"
+`;
+
+exports[`Format Integration > sorts Tailwind classes in Vue attributes, bindings, and scoped styles 1`] = `
+"<template>
+  <button
+    id="save"
+    class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"
+    :class="
+      active ? 'px-6 py-3 text-lg font-bold' : 'px-4 py-2 text-sm font-normal'
+    "
+  >
+    Save
+  </button>
+  <div
+    v-bind:class="['flex justify-center', { 'bg-black text-white': active }]"
+    data-label="text-white bg-black"
+  >
+    Preview
+  </div>
+</template>
+
+<script setup>
+const active = true;
+</script>
+
+<style scoped>
+.custom-button {
+  @apply flex rounded bg-blue-500 p-4 text-white;
+}
+</style>
+"
+`;
+
 exports[`Format Integration > uses Prettier defaults while preserving package formatting for nested/package.json 1`] = `
 "{
   "name": "width-fixture",

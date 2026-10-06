@@ -331,6 +331,17 @@ describe("Published Package", () => {
         [...requiredDependencies, ...optionalDependencies],
       );
 
+      await Promise.all(
+        ["tailwind.vue", "tailwind.css", "tailwind.scss", "tailwind.less"].map(
+          async (filename) => {
+            await fs.copyFile(
+              path.join(projectDirectory, "tests", "fixtures", filename),
+              path.join(consumerDirectory, filename),
+            );
+          },
+        ),
+      );
+
       const output = runConsumer(
         consumerDirectory,
         String.raw`
@@ -393,6 +404,33 @@ describe("Published Package", () => {
 
 				if (!/class=['"]flex p-4['"]/.test(astro)) {
 					throw new Error('Tailwind did not sort Astro classes: ' + astro);
+				}
+
+				const vue = await format(
+					'tailwind.vue',
+					await fs.readFile(path.join(consumerDirectory, 'tailwind.vue'), 'utf8'),
+				);
+				if (
+					!vue.includes('class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"') ||
+					!vue.includes("'px-6 py-3 text-lg font-bold'") ||
+					!vue.includes("'bg-black text-white': active") ||
+					!vue.includes('data-label="text-white bg-black"') ||
+					!vue.includes('@apply flex rounded bg-blue-500 p-4 text-white;')
+				) {
+					throw new Error('Tailwind did not sort Vue classes and scoped styles: ' + vue);
+				}
+
+				for (const filename of ['tailwind.css', 'tailwind.scss', 'tailwind.less']) {
+					const stylesheet = await format(
+						filename,
+						await fs.readFile(path.join(consumerDirectory, filename), 'utf8'),
+					);
+					if (
+						!stylesheet.includes('@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;') ||
+						!stylesheet.includes('@apply flex items-center px-4 py-2 !important;')
+					) {
+						throw new Error('Tailwind did not sort @apply utilities in ' + filename + ': ' + stylesheet);
+					}
 				}
 
 				process.stdout.write('ok');
