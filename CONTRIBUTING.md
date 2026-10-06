@@ -70,8 +70,8 @@ pull request is merged. The GitHub Release triggers the existing npm
 publishing workflow, which validates the package and uses Trusted Publishing.
 
 To retry release automation, run the **Release Please** workflow manually
-from the Actions tab with `main` selected. Keep the published version history
-in the release manifest; its initial 0.3.0 version and bootstrap commit mark
+from the Actions tab with `main` selected. The release manifest records the
+latest released version; its initial 0.3.0 version and bootstrap commit mark
 the release that predates automation.
 
 ## Reporting issues
