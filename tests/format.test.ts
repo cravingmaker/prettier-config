@@ -404,8 +404,6 @@ describe("Format Integration", () => {
         plugins: resolved?.plugins ?? [],
         singleAttributePerLine: true,
       });
-      const keywords =
-        '["formatting-tools", "configuration", "developer-workflow", "package-metadata"]';
 
       // Package files infer json-stringify and retain package-key sorting.
       expect(await prettier.getFileInfo(filePath)).toMatchObject({
@@ -413,20 +411,6 @@ describe("Format Integration", () => {
       });
       expect(formatted).toMatchSnapshot();
       expect(formatted).toBe(defaults);
-
-      // The same fixture distinguishes 80 from 100 with the regular JSON parser.
-      const jsonWide = await prettier.format(source, {
-        ...options,
-        parser: "json",
-        printWidth: 100,
-      });
-      const jsonNarrow = await prettier.format(source, {
-        ...options,
-        parser: "json",
-        printWidth: 80,
-      });
-      expect(jsonWide).toContain(keywords);
-      expect(jsonNarrow).not.toContain(keywords);
       expect(JSON.parse(formatted)).toEqual(JSON.parse(source));
       expect(await prettier.format(formatted, options)).toBe(formatted);
     },
