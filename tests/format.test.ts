@@ -100,6 +100,10 @@ describe("Format Integration", () => {
     { filename: "sample.svelte", parser: "svelte" },
     { filename: "sample.toml", parser: "toml" },
     { filename: "sample.xml", parser: "xml" },
+    { filename: "tailwind.vue", parser: "vue" },
+    { filename: "tailwind.css", parser: "css" },
+    { filename: "tailwind.scss", parser: "scss" },
+    { filename: "tailwind.less", parser: "less" },
   ])(
     "infers the $parser parser from nested/$filename",
     async ({ filename, parser }) => {
@@ -153,6 +157,51 @@ describe("Format Integration", () => {
   it("08. formats CSS correctly", async () => {
     await testFixture("sample.css", temporaryDirectory, configPath);
   });
+
+  it("sorts Tailwind classes in Vue attributes, bindings, and scoped styles", async () => {
+    const formatted = await testFixture(
+      "tailwind.vue",
+      temporaryDirectory,
+      configPath,
+    );
+
+    expect(formatted).toContain(
+      'class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"',
+    );
+    expect(formatted).toContain("'px-6 py-3 text-lg font-bold'");
+    expect(formatted).toContain("'px-4 py-2 text-sm font-normal'");
+    expect(formatted).toContain(
+      `v-bind:class="['flex justify-center', { 'bg-black text-white': active }]"`,
+    );
+    expect(formatted).toContain('data-label="text-white bg-black"');
+    expect(formatted).toContain(
+      "@apply flex rounded bg-blue-500 p-4 text-white;",
+    );
+  });
+
+  it.each([
+    { declaration: "color: var(--accent);", filename: "tailwind.css" },
+    { declaration: "color: $accent;", filename: "tailwind.scss" },
+    { declaration: "color: @accent;", filename: "tailwind.less" },
+  ])(
+    "sorts Tailwind @apply utilities while preserving stylesheet syntax in $filename",
+    async ({ declaration, filename }) => {
+      const formatted = await testFixture(
+        filename,
+        temporaryDirectory,
+        configPath,
+      );
+
+      expect(formatted).toContain(
+        "@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;",
+      );
+      expect(formatted).toContain(
+        "@apply flex items-center px-4 py-2 !important;",
+      );
+      expect(formatted).toContain(declaration);
+      expect(formatted).toContain("/* Keep component styles */");
+    },
+  );
 
   it("09. formats Markdown correctly", async () => {
     await testFixture("sample.md", temporaryDirectory, configPath);

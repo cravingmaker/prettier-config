@@ -1,0 +1,9 @@
+@accent: #2563eb;
+
+/* Keep component styles */
+.button{
+  @apply text-white   p-4 hover:bg-blue-700 flex bg-blue-500 items-center rounded;
+  color: @accent;
+
+  &--compact { @apply px-4 flex py-2 items-center !important; }
+}
