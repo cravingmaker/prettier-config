@@ -42,8 +42,8 @@ Reference this config in your `package.json`:
 }
 ```
 
-Or, export it from a `.prettierrc.{js,mjs,ts,mts}` or
-`prettier.config.{js,mjs,ts,mts}` file:
+Or, to extend it, export it from a `.prettierrc.mjs` or `prettier.config.mjs`
+file:
 
 ```javascript
 import config from "@cravingmaker/prettier-config";
@@ -51,13 +51,44 @@ import config from "@cravingmaker/prettier-config";
 export default {
   ...config,
   overrides: [
-    ...(config.overrides ?? []),
+    ...config.overrides,
     // Add your own overrides here
   ],
 };
 ```
 
-## Optional plugin compatibility
+This package is ESM-only, so the config file must be an ES module:
+
+| Config file                              | Requirement                                                             |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| `.prettierrc.mjs`, `prettier.config.mjs` | None.                                                                   |
+| `.prettierrc.mts`, `prettier.config.mts` | Node.js 22.18.0 or newer.                                               |
+| `.prettierrc.js`, `prettier.config.js`   | `"type": "module"` in your `package.json`.                              |
+| `.prettierrc.ts`, `prettier.config.ts`   | Node.js 22.18.0 or newer and `"type": "module"` in your `package.json`. |
+| `.prettierrc.cjs`, `prettier.config.cjs` | Not supported. `require()` fails with `No "exports" main defined`.      |
+
+Without `"type": "module"`, Node.js still loads `.js` and `.ts` config files
+but prints a `MODULE_TYPELESS_PACKAGE_JSON` warning on every run.
+
+## Optional plugins
+
+The config detects these plugins when they are installed in your project and
+loads them automatically. Install only the ones you need:
+
+| Plugin                        | Supported versions | Formats                               |
+| ----------------------------- | ------------------ | ------------------------------------- |
+| `prettier-plugin-astro`       | `>=0.14.1 <0.15`   | `.astro` files                        |
+| `prettier-plugin-svelte`      | `>=4.1.1 <5`       | `.svelte` files                       |
+| `prettier-plugin-tailwindcss` | `>=0.8.1 <1`       | Tailwind CSS class and `@apply` order |
+
+```bash
+npm install --save-dev --save-exact prettier-plugin-tailwindcss
+```
+
+No extra configuration is needed. The Tailwind plugin is always loaded last,
+as it requires.
+
+### Astro compatibility
 
 For Astro files, use `prettier-plugin-astro@0.14.1`. This package supports
 the `0.14.x` series alongside `prettier-plugin-tailwindcss@0.8.1`.
