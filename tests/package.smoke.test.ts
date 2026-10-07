@@ -27,23 +27,26 @@ const optionalDependencies = [
   `svelte@${packageJson.devDependencies.svelte}`,
 ] as const;
 
-const runConsumer = (
+const runConsumer = async (
   consumerDirectory: string,
-  script: string,
+  script: "base.mjs" | "optional.mjs",
   externalCwd: boolean,
-) =>
-  execFileSync(
-    consumerNode,
-    [
-      "--input-type=module",
-      "--eval",
-      `const consumerDirectory = process.cwd();\n${externalCwd ? `process.chdir(${JSON.stringify(path.dirname(consumerDirectory))});` : ""}\n${script}`,
-    ],
-    {
-      cwd: consumerDirectory,
-      encoding: "utf8",
-    },
+) => {
+  await Promise.all(
+    [script, "helpers.mjs"].map(async (filename) => {
+      await fs.copyFile(
+        path.join(projectDirectory, "tests", "consumers", filename),
+        path.join(consumerDirectory, filename),
+      );
+    }),
   );
+
+  return execFileSync(consumerNode, [path.join(consumerDirectory, script)], {
+    cwd: externalCwd ? path.dirname(consumerDirectory) : consumerDirectory,
+    encoding: "utf8",
+    timeout: 30_000,
+  });
+};
 
 const linkDependency = async (
   nodeModulesDirectory: string,
@@ -248,83 +251,9 @@ describe("Published Package", () => {
         requiredDependencies,
       );
 
-      const output = runConsumer(
+      const output = await runConsumer(
         consumerDirectory,
-        String.raw`
-				import fs from 'node:fs/promises';
-				import path from 'node:path';
-				import prettier from 'prettier';
-				import config from '@cravingmaker/prettier-config';
-
-				const optionalPlugins = [
-					'prettier-plugin-astro',
-					'prettier-plugin-svelte',
-					'prettier-plugin-tailwindcss',
-				];
-
-				const format = async (filename, source) => {
-					const filePath = path.resolve(consumerDirectory, filename);
-					await fs.mkdir(path.dirname(filePath), { recursive: true });
-					await fs.writeFile(filePath, source, 'utf8');
-
-					const resolved = await prettier.resolveConfig(filePath);
-					if (!resolved) throw new Error('Shared config was not resolved');
-
-					const options = Object.assign({}, resolved, { filepath: filePath });
-					const formatted = await prettier.format(source, options);
-					if (await prettier.format(formatted, options) !== formatted) {
-						throw new Error('Formatting is not idempotent for ' + filename);
-					}
-
-					return formatted;
-				};
-
-				const javascript = await format('src/example.js', 'const greeting = "hello";');
-				const typescript = await format('src/example.ts', 'const greeting: string = "hello";');
-				const packageJson = await format(
-					'nested/package.json',
-					JSON.stringify({ version: '1.0.0', name: 'fixture' }),
-				);
-				const toml = await format(
-					'pyproject.toml',
-					'[project]\nname="fixture"\nversion="1.0.0"\ndependencies=["alpha","beta"]\n',
-				);
-
-				const xml = await format('nested/config.xml', "<config><item name='fixture'/></config>");
-				if (xml !== "<config><item name='fixture' /></config>\n") {
-					throw new Error('XML formatting did not use the XML plugin');
-				}
-
-				const configuredPlugins = config.plugins ?? [];
-				const detectedOptionalPlugins = optionalPlugins.filter((plugin) =>
-					configuredPlugins.some((entry) => typeof entry === 'string' && entry.includes(plugin)),
-				);
-
-				if (javascript !== 'const greeting = "hello";\n') {
-					throw new Error('JavaScript formatting did not use the shared config');
-				}
-
-				if (typescript !== 'const greeting: string = "hello";\n') {
-					throw new Error('TypeScript formatting did not use the shared config');
-				}
-
-				if (packageJson !== '{\n  "name": "fixture",\n  "version": "1.0.0"\n}\n') {
-					throw new Error('package.json formatting did not use the package.json plugin');
-				}
-
-				if (
-					toml !==
-					'[project]\nname = "fixture"\nversion = "1.0.0"\ndependencies = ["alpha", "beta"]\n'
-				) {
-					throw new Error('TOML formatting did not use the TOML plugin');
-				}
-
-				if (detectedOptionalPlugins.length !== 0) {
-					throw new Error('Optional plugins were detected when they were not installed');
-				}
-
-				process.stdout.write('ok');
-			`,
+        "base.mjs",
         externalCwd,
       );
 
@@ -355,107 +284,10 @@ describe("Published Package", () => {
 
     it.each([false, true])(
       "loads optional plugins from the consumer (external cwd: %s)",
-      (externalCwd) => {
-        const output = runConsumer(
+      async (externalCwd) => {
+        const output = await runConsumer(
           consumerDirectory,
-          String.raw`
-				import fs from 'node:fs/promises';
-				import path from 'node:path';
-				import { createRequire } from 'node:module';
-				import prettier from 'prettier';
-				import config from '@cravingmaker/prettier-config';
-
-				const format = async (filename, source) => {
-					const filePath = path.resolve(consumerDirectory, filename);
-					await fs.writeFile(filePath, source, 'utf8');
-
-					const resolved = await prettier.resolveConfig(filePath);
-					if (!resolved) throw new Error('Shared config was not resolved');
-
-					const options = Object.assign({}, resolved, { filepath: filePath });
-					const formatted = await prettier.format(source, options);
-					if (await prettier.format(formatted, options) !== formatted) {
-						throw new Error('Formatting is not idempotent for ' + filename);
-					}
-
-					return formatted;
-				};
-
-				const astro = await format(
-					'example.astro',
-					'---\nconst name="World"\n---\n<div class="p-4 flex">{name}</div>',
-				);
-				const svelte = await format(
-					'example.svelte',
-					'<script>let name="World"</script><div class="p-4 flex">{name}</div>',
-				);
-				const require = createRequire(path.join(consumerDirectory, 'package.json'));
-				const configuredPlugins = (config.plugins ?? []).filter((plugin) => typeof plugin === 'string');
-				const modules = await fs.realpath(path.join(consumerDirectory, 'node_modules'));
-
-				for (const plugin of configuredPlugins) {
-					if (!(await fs.realpath(plugin)).startsWith(modules + path.sep)) {
-						throw new Error('Plugin resolved outside the consumer installation: ' + plugin);
-					}
-				}
-
-				if (!configuredPlugins.includes(require.resolve('prettier-plugin-astro'))) {
-					throw new Error('Astro plugin was not detected');
-				}
-
-				if (!configuredPlugins.includes(require.resolve('prettier-plugin-svelte'))) {
-					throw new Error('Svelte plugin was not detected');
-				}
-
-				if (configuredPlugins.at(-1) !== require.resolve('prettier-plugin-tailwindcss')) {
-					throw new Error('Tailwind plugin was not loaded last');
-				}
-
-				if (!astro.includes('const name = "World";')) {
-					throw new Error('Astro parser did not format the script');
-				}
-
-				if (!svelte.includes('let name = "World";')) {
-					throw new Error('Svelte parser did not format the script');
-				}
-
-				if (!/class=['"]flex p-4['"]/.test(svelte)) {
-					throw new Error('Tailwind did not sort Svelte classes: ' + svelte);
-				}
-
-				if (!/class=['"]flex p-4['"]/.test(astro)) {
-					throw new Error('Tailwind did not sort Astro classes: ' + astro);
-				}
-
-				const vue = await format(
-					'tailwind.vue',
-					await fs.readFile(path.join(consumerDirectory, 'tailwind.vue'), 'utf8'),
-				);
-				if (
-					!vue.includes('class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"') ||
-					!vue.includes("'px-6 py-3 text-lg font-bold'") ||
-					!vue.includes("'bg-black text-white': active") ||
-					!vue.includes('data-label="text-white bg-black"') ||
-					!vue.includes('@apply flex rounded bg-blue-500 p-4 text-white;')
-				) {
-					throw new Error('Tailwind did not sort Vue classes and scoped styles: ' + vue);
-				}
-
-				for (const filename of ['tailwind.css', 'tailwind.scss', 'tailwind.less']) {
-					const stylesheet = await format(
-						filename,
-						await fs.readFile(path.join(consumerDirectory, filename), 'utf8'),
-					);
-					if (
-						!stylesheet.includes('@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;') ||
-						!stylesheet.includes('@apply flex items-center px-4 py-2 !important;')
-					) {
-						throw new Error('Tailwind did not sort @apply utilities in ' + filename + ': ' + stylesheet);
-					}
-				}
-
-				process.stdout.write('ok');
-			`,
+          "optional.mjs",
           externalCwd,
         );
 
