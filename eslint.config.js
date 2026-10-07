@@ -1,7 +1,7 @@
 /**
  * Test-only rule overrides
  *
- * All TypeScript files under tests/
+ * All TypeScript files under tests/ and JavaScript consumer programs under tests/consumers/
  *
  * functional/functional-parameters — disabled because vi.doMock() factory functions must match
  * the exact shape of the mocked module's API. Adding dummy parameters solely to satisfy the rule
@@ -17,17 +17,19 @@
  * functional/no-throw-statements — disabled because mocks and test guards intentionally throw to
  * reproduce Node resolution failures and fail fast on invalid test state.
  *
- * tests/format.test.ts and tests/package.smoke.test.ts
+ * tests/format.test.ts, tests/package.smoke.test.ts, and tests/consumers/*.mjs
  *
  * security/detect-non-literal-fs-filename — disabled because these tests intentionally construct
  * filesystem paths from controlled fixture names and temporary directories. The paths are dynamic
  * by design but are not derived from untrusted input.
  *
- * tests/package.smoke.test.ts
+ * tests/package.smoke.test.ts and tests/consumers/*.mjs
  *
  * functional/no-promise-reject — disabled because async smoke-test helpers intentionally throw
  * when package setup invariants fail; those throws become rejected promises and should fail the
  * test immediately rather than be modeled as functional result values.
+ *
+ * tests/package.smoke.test.ts
  *
  * n/no-sync — disabled because the package smoke tests intentionally use synchronous child-process
  * calls for deterministic pack, install, extraction, and consumer execution boundaries before
@@ -49,7 +51,7 @@ const config = [
     },
   },
   {
-    files: ["tests/**/*.ts"],
+    files: ["tests/**/*.ts", "tests/consumers/**/*.mjs"],
     rules: {
       "functional/functional-parameters": "off",
       "functional/no-conditional-statements": "off",
@@ -69,6 +71,13 @@ const config = [
     rules: {
       "functional/no-promise-reject": "off",
       "n/no-sync": "off",
+      "security/detect-non-literal-fs-filename": "off",
+    },
+  },
+  {
+    files: ["tests/consumers/**/*.mjs"],
+    rules: {
+      "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",
     },
   },

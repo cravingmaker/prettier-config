@@ -22,5 +22,11 @@
     "verbatimModuleSyntax": true
   },
   "exclude": ["node_modules", "tests/fixtures"],
-  "include": ["index.mjs", "index.d.ts", "prettier.config.mjs", "tests/**/*.ts"]
+  "include": [
+    "index.mjs",
+    "index.d.ts",
+    "prettier.config.mjs",
+    "tests/**/*.ts",
+    "tests/consumers/**/*.mjs"
+  ]
 }
