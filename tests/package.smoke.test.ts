@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import packageJson from "../package.json" with { type: "json" };
 
@@ -21,10 +21,10 @@ const requiredDependencies = [
 ] as const;
 
 const optionalDependencies = [
-  "prettier-plugin-astro",
-  "prettier-plugin-svelte",
-  "prettier-plugin-tailwindcss",
-  "svelte",
+  `prettier-plugin-astro@${packageJson.devDependencies["prettier-plugin-astro"]}`,
+  `prettier-plugin-svelte@${packageJson.devDependencies["prettier-plugin-svelte"]}`,
+  `prettier-plugin-tailwindcss@${packageJson.devDependencies["prettier-plugin-tailwindcss"]}`,
+  `svelte@${packageJson.devDependencies.svelte}`,
 ] as const;
 
 const runConsumer = (
@@ -135,6 +135,39 @@ const createConsumer = async (
   return consumerDirectory;
 };
 
+const installConsumer = async (
+  consumerDirectory: string,
+  dependencies: readonly string[],
+) => {
+  await fs.mkdir(consumerDirectory);
+  await fs.writeFile(
+    path.join(consumerDirectory, "package.json"),
+    JSON.stringify({
+      name: path.basename(consumerDirectory),
+      prettier: packageJson.name,
+      private: true,
+      type: "module",
+    }),
+    "utf8",
+  );
+
+  // Only install the tarball and consumer tools; runtime dependencies must come from package metadata.
+  execFileSync(
+    "npm",
+    [
+      "install",
+      "--ignore-scripts",
+      "--no-audit",
+      "--no-fund",
+      "--save-exact",
+      tarball,
+      `prettier@${packageJson.devDependencies.prettier}`,
+      ...dependencies,
+    ],
+    { cwd: consumerDirectory, encoding: "utf8", timeout: 120_000 },
+  );
+};
+
 describe("Published Package", () => {
   afterAll(async () => {
     await fs.rm(temporaryDirectory, {
@@ -165,33 +198,9 @@ describe("Published Package", () => {
       temporaryDirectory,
       "installed-consumer",
     );
-    await fs.mkdir(consumerDirectory);
-    await fs.writeFile(
-      path.join(consumerDirectory, "package.json"),
-      JSON.stringify({
-        name: "installed-consumer",
-        prettier: packageJson.name,
-        private: true,
-        type: "module",
-      }),
-      "utf8",
-    );
-
-    // Only install the tarball and consumer tools; runtime dependencies must come from package metadata.
-    execFileSync(
-      "npm",
-      [
-        "install",
-        "--ignore-scripts",
-        "--no-audit",
-        "--no-fund",
-        "--save-exact",
-        tarball,
-        `prettier@${packageJson.devDependencies.prettier}`,
-        `typescript@${packageJson.devDependencies.typescript}`,
-      ],
-      { cwd: consumerDirectory, encoding: "utf8", timeout: 120_000 },
-    );
+    await installConsumer(consumerDirectory, [
+      `typescript@${packageJson.devDependencies.typescript}`,
+    ]);
 
     const installedPackage = await fs.lstat(
       path.join(consumerDirectory, "node_modules", packageJson.name),
@@ -323,13 +332,14 @@ describe("Published Package", () => {
     },
   );
 
-  it.each([false, true])(
-    "loads optional plugins from the consumer (external cwd: %s)",
-    async (externalCwd) => {
-      const consumerDirectory = await createConsumer(
-        `optional-consumer-${String(externalCwd)}`,
-        [...requiredDependencies, ...optionalDependencies],
-      );
+  describe("with npm-installed optional plugins", () => {
+    const consumerDirectory = path.join(
+      temporaryDirectory,
+      "installed-optional-consumer",
+    );
+
+    beforeAll(async () => {
+      await installConsumer(consumerDirectory, optionalDependencies);
 
       await Promise.all(
         ["tailwind.vue", "tailwind.css", "tailwind.scss", "tailwind.less"].map(
@@ -341,10 +351,14 @@ describe("Published Package", () => {
           },
         ),
       );
+    }, 180_000);
 
-      const output = runConsumer(
-        consumerDirectory,
-        String.raw`
+    it.each([false, true])(
+      "loads optional plugins from the consumer (external cwd: %s)",
+      (externalCwd) => {
+        const output = runConsumer(
+          consumerDirectory,
+          String.raw`
 				import fs from 'node:fs/promises';
 				import path from 'node:path';
 				import { createRequire } from 'node:module';
@@ -377,6 +391,13 @@ describe("Published Package", () => {
 				);
 				const require = createRequire(path.join(consumerDirectory, 'package.json'));
 				const configuredPlugins = (config.plugins ?? []).filter((plugin) => typeof plugin === 'string');
+				const modules = await fs.realpath(path.join(consumerDirectory, 'node_modules'));
+
+				for (const plugin of configuredPlugins) {
+					if (!(await fs.realpath(plugin)).startsWith(modules + path.sep)) {
+						throw new Error('Plugin resolved outside the consumer installation: ' + plugin);
+					}
+				}
 
 				if (!configuredPlugins.includes(require.resolve('prettier-plugin-astro'))) {
 					throw new Error('Astro plugin was not detected');
@@ -435,10 +456,11 @@ describe("Published Package", () => {
 
 				process.stdout.write('ok');
 			`,
-        externalCwd,
-      );
+          externalCwd,
+        );
 
-      expect(output).toBe("ok");
-    },
-  );
+        expect(output).toBe("ok");
+      },
+    );
+  });
 });
