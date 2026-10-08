@@ -30,6 +30,7 @@ bun add --dev --exact prettier @cravingmaker/prettier-config
 
 The config uses Prettier's formatting defaults with `singleAttributePerLine: true`.
 JavaScript and TypeScript files use the bundled Oxc parsers.
+Flow syntax is not supported.
 
 See the [changelog](https://github.com/cravingmaker/prettier-config/blob/main/CHANGELOG.md)
 for release history and migration notes.
@@ -85,8 +86,31 @@ loads them automatically. Install only the ones you need:
 npm install --save-dev --save-exact prettier-plugin-tailwindcss
 ```
 
-No extra configuration is needed. The Tailwind plugin is always loaded last,
-as it requires.
+The Tailwind plugin is always loaded last, as it requires.
+
+### Tailwind CSS v4
+
+Set `tailwindStylesheet` to your project's existing Tailwind CSS entry point
+so the plugin can use your theme and custom utilities when sorting classes:
+
+```javascript
+// prettier.config.mjs
+import config from "@cravingmaker/prettier-config";
+
+export default {
+  ...config,
+  tailwindStylesheet: "./src/app.css",
+};
+```
+
+The stylesheet path is relative to this configuration file. Replace
+`./src/app.css` with the path to your project's Tailwind stylesheet.
+
+If you followed the `package.json` example above, remove its `"prettier"`
+field when adding this configuration file.
+
+See the [Tailwind plugin documentation](https://github.com/tailwindlabs/prettier-plugin-tailwindcss#specifying-your-tailwind-stylesheet-path-tailwind-css-v4)
+for more details.
 
 ### Astro compatibility
 

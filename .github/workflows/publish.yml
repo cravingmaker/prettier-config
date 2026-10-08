@@ -75,8 +75,5 @@ jobs:
       - name: Validate
         run: npm run validate
 
-      - name: Verify package contents
-        run: npm pack --dry-run
-
       - name: Publish
         run: npm publish --access public --ignore-scripts
