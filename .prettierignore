@@ -1,4 +1,5 @@
 tests/fixtures/
+repos/
 tests/__snapshots__/
 package-lock.json
 

@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Local read-only dependency references
+repos/
+
 # Test output
 coverage/
 .nyc_output/

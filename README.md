@@ -141,6 +141,30 @@ The repository sets `ignore-scripts=true`, so installation does not run
 lifecycle scripts automatically. Run `npm run prepare` explicitly once per
 checkout to activate Husky Git hooks. CI keeps hooks disabled.
 
+For Effect-specific development, acquire the matching upstream source:
+
+```bash
+npm run setup:effect-reference
+```
+
+This explicitly invoked command creates a shallow, Git-ignored checkout at
+`repos/effect`, verifies its release and commit against
+`scripts/effect-reference.json`, and leaves a valid checkout unchanged.
+It refuses dirty, mismatched, or unexpected existing content. Coding agents
+use this read-only reference as described in [AGENTS.md](./AGENTS.md).
+Installation and validation do not clone it automatically.
+
+When upgrading Effect, update the exact `effect`, `@effect/platform-node-shared`,
+and `@effect/vitest` pins together with the reference version, tag, and commit.
+Move the old checkout aside before rerunning setup. The language service has
+its own version and should be checked separately.
+
+The project-local Zed settings use workspace TypeScript through `vtsls` and
+hide `repos/` from file scans and auto-import suggestions. The TypeScript plugin
+provides Effect diagnostics in the editor. Run `npm run check:effect` for the
+same diagnostics in the terminal; floating Effects are errors. Full validation
+includes this command because ordinary `tsc` does not run editor plugins.
+
 Run `npm run validate` to run all checks. For staged files covered by ESLint,
 the pre-commit hook runs ESLint fixes before Prettier; other files run
 Prettier only.
@@ -148,6 +172,9 @@ Prettier only.
 `npm run test:package` also installs the packed tarball, Prettier, and
 TypeScript into a temporary consumer project. This check needs npm registry
 access (or a populated npm cache); the temporary project is removed afterward.
+The Effect harness scopes temporary files and asynchronous subprocesses,
+including deadline and interruption cleanup. Local lifecycle regressions run
+with the normal `npm test` command.
 
 ## Contributing and security
 

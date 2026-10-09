@@ -17,29 +17,31 @@
  * functional/no-throw-statements — disabled because mocks and test guards intentionally throw to
  * reproduce Node resolution failures and fail fast on invalid test state.
  *
- * tests/format.test.ts, tests/package.smoke.test.ts, and tests/consumers/*.mjs
+ * tests/format.test.ts, tests/helpers/package-smoke.ts, the source setup script,
+ * and tests/consumers/*.mjs
  *
  * security/detect-non-literal-fs-filename — disabled because these tests intentionally construct
  * filesystem paths from controlled fixture names and temporary directories. The paths are dynamic
  * by design but are not derived from untrusted input.
  *
- * tests/package.smoke.test.ts and tests/consumers/*.mjs
+ * scripts/setup-effect-reference.mjs and tests/consumers/*.mjs
  *
- * functional/no-promise-reject — disabled because async smoke-test helpers intentionally throw
- * when package setup invariants fail; those throws become rejected promises and should fail the
- * test immediately rather than be modeled as functional result values.
+ * functional/no-promise-reject — disabled for native async programs that reject
+ * when setup or consumer invariants fail.
  *
- * tests/package.smoke.test.ts
+ * Effect harness and tests
  *
- * n/no-sync — disabled because the package smoke tests intentionally use synchronous child-process
- * calls for deterministic pack, install, extraction, and consumer execution boundaries before
- * assertions continue.
+ * Effect services and schema errors use class-based factory APIs. Their Effect
+ * and Stream parameters carry runtime internals, while service types combine
+ * immutable data and operations. The harness overrides only the conflicting
+ * functional rules. unicorn/throw-new-error mistakes Schema.TaggedError's
+ * curried class factory for an Error constructor.
  */
 
 import { createConfig } from "@cravingmaker/eslint-config";
 
 const baseConfig = await createConfig({
-  ignores: ["tests/fixtures/**/*"],
+  ignores: ["tests/fixtures/**/*", "repos/**"],
 });
 
 const config = [
@@ -67,10 +69,25 @@ const config = [
     },
   },
   {
-    files: ["tests/package.smoke.test.ts"],
+    files: ["tests/helpers/package-smoke.ts", "tests/package.smoke.test.ts"],
+    rules: {
+      "functional/no-class-inheritance": "off",
+      "functional/no-classes": "off",
+    },
+  },
+  {
+    files: ["tests/helpers/package-smoke.ts"],
+    rules: {
+      "functional/no-mixed-types": "off",
+      "functional/prefer-immutable-types": "off",
+      "security/detect-non-literal-fs-filename": "off",
+      "unicorn/throw-new-error": "off",
+    },
+  },
+  {
+    files: ["scripts/setup-effect-reference.mjs"],
     rules: {
       "functional/no-promise-reject": "off",
-      "n/no-sync": "off",
       "security/detect-non-literal-fs-filename": "off",
     },
   },
