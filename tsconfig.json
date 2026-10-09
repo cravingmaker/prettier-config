@@ -14,6 +14,14 @@
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
     "noUncheckedSideEffectImports": true,
+    "plugins": [
+      {
+        "diagnosticSeverity": {
+          "floatingEffect": "error"
+        },
+        "name": "@effect/language-service"
+      }
+    ],
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
@@ -21,11 +29,13 @@
     "types": ["node"],
     "verbatimModuleSyntax": true
   },
-  "exclude": ["node_modules", "tests/fixtures"],
+  "exclude": ["node_modules", "tests/fixtures", "repos"],
   "include": [
     "index.mjs",
     "index.d.ts",
     "prettier.config.mjs",
+    "scripts/setup-effect-reference.mjs",
+    "vitest.config.ts",
     "tests/**/*.ts",
     "tests/consumers/**/*.mjs"
   ]

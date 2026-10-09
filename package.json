@@ -36,6 +36,7 @@
   ],
   "scripts": {
     "check:commit": "npm run lint:staged",
+    "check:effect": "effect-language-service diagnostics --project tsconfig.json",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
@@ -43,11 +44,12 @@
     "lint:staged": "lint-staged",
     "prepare": "husky",
     "prepublishOnly": "npm run validate",
+    "setup:effect-reference": "node scripts/setup-effect-reference.mjs",
     "test": "vitest run --exclude tests/package.smoke.test.ts",
     "test:package": "vitest run tests/package.smoke.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:package": "attw --pack . --profile esm-only",
-    "validate": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run test:package && npm run lint:package && npm run typecheck:package"
+    "validate": "npm run typecheck && npm run check:effect && npm run lint && npm run format:check && npm run test && npm run test:package && npm run lint:package && npm run typecheck:package"
   },
   "lint-staged": {
     "*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": [
@@ -65,7 +67,11 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@cravingmaker/eslint-config": "0.0.10",
+    "@effect/language-service": "0.87.3",
+    "@effect/platform-node-shared": "4.0.0",
+    "@effect/vitest": "4.0.0",
     "@types/node": "22.20.4",
+    "effect": "4.0.0",
     "eslint": "10.10.0",
     "husky": "9.1.7",
     "lint-staged": "17.5.1",

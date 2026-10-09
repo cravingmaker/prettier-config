@@ -1,0 +1,22 @@
+{
+  "file_scan_exclusions": ["**/repos", "..."],
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "javascript": {
+          "preferences": {
+            "autoImportFileExcludePatterns": ["**/repos/**"]
+          }
+        },
+        "typescript": {
+          "preferences": {
+            "autoImportFileExcludePatterns": ["**/repos/**"]
+          }
+        },
+        "vtsls": {
+          "autoUseWorkspaceTsdk": true
+        }
+      }
+    }
+  }
+}
