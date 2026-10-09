@@ -110,7 +110,7 @@ language service, source reference, and Zed setup are part of this implementatio
 | `eslint.config.js`                    | Exclude source references, remove obsolete synchronous-process exceptions, and scope necessary helper overrides |
 | `scripts/setup-effect-reference.mjs`  | Add the reproducible Node/Git reference-checkout command                                                        |
 | `scripts/effect-reference.json`       | Record the upstream repository, matching Effect release, tag, and immutable commit                              |
-| `.gitignore`, `.prettierignore`       | Exclude `repos/` from Git and formatting                                                                        |
+| `.gitignore`                          | Exclude `repos/` from Git and formatting; Prettier CLI uses the root Git ignore rules                           |
 | `vitest.config.ts`                    | Limit test discovery to package tests and exclude reference sources while preserving default exclusions         |
 | `tsconfig.json`                       | Register the language-service plugin, check the setup script/config, and exclude `repos/`                       |
 | `AGENTS.md`                           | Direct agents to the pinned read-only reference and relevant Effect source and tests                            |
