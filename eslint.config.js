@@ -32,7 +32,7 @@
  * Effect harness and tests
  *
  * Effect services and schema errors use class-based factory APIs. Their Effect
- * and Stream parameters carry runtime internals, while service types combine
+ * parameters carry runtime internals, while service types combine
  * immutable data and operations. The harness overrides only the conflicting
  * functional rules. unicorn/throw-new-error mistakes Schema.TaggedError's
  * curried class factory for an Error constructor.
@@ -53,6 +53,39 @@ const config = [
     },
   },
   {
+    files: ["**/*.{js,mjs,ts}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              importNames: ["NodeChildProcessSpawner"],
+              message:
+                "Use the native Node command adapter; Effect's process API is unstable.",
+              name: "@effect/platform-node-shared",
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                "effect/process",
+                "effect/process/**",
+                "effect/unstable",
+                "effect/unstable/**",
+                "@effect/experimental",
+                "@effect/experimental/**",
+                "@effect/platform-node-shared/NodeChildProcessSpawner",
+              ],
+              message:
+                "Use public, stable Effect APIs only; process execution belongs in the native Node adapter.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["tests/**/*.ts", "tests/consumers/**/*.mjs"],
     rules: {
       "functional/functional-parameters": "off",
@@ -69,19 +102,33 @@ const config = [
     },
   },
   {
-    files: ["tests/helpers/package-smoke.ts", "tests/package.smoke.test.ts"],
+    files: [
+      "tests/helpers/package-smoke.ts",
+      "tests/helpers/node-command.ts",
+      "tests/package.smoke.test.ts",
+    ],
     rules: {
       "functional/no-class-inheritance": "off",
       "functional/no-classes": "off",
     },
   },
   {
-    files: ["tests/helpers/package-smoke.ts"],
+    files: ["tests/helpers/package-smoke.ts", "tests/helpers/node-command.ts"],
     rules: {
       "functional/no-mixed-types": "off",
       "functional/prefer-immutable-types": "off",
       "security/detect-non-literal-fs-filename": "off",
       "unicorn/throw-new-error": "off",
+    },
+  },
+  {
+    // Node event listeners maintain process state and bounded output buffers.
+    files: ["tests/helpers/node-command.ts"],
+    rules: {
+      "functional/immutable-data": "off",
+      "functional/no-let": "off",
+      "functional/no-loop-statements": "off",
+      "functional/no-promise-reject": "off",
     },
   },
   {

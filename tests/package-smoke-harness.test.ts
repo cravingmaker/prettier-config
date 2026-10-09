@@ -278,3 +278,87 @@ it.live("decodes UTF-8 after collecting split byte sequences", () =>
     ).toBe("🙂");
   }).pipe(Effect.scoped, Effect.provide(nodeServices)),
 );
+
+it.live.each([
+  { code: 0, stdio: "ignore" },
+  { code: 0, stdio: "inherit" },
+  { code: 7, stdio: "ignore" },
+  { code: 7, stdio: "inherit" },
+] as const)(
+  "terminates descendants after leader exit $code (stdio: $stdio)",
+  ({ code, stdio }) =>
+    Effect.gen(function* () {
+      const smoke = yield* createPackageSmoke(fakePack);
+      const ready = `${smoke.workspace}/descendant.pid`;
+      const descendant = `${uncooperativeChild}\nsetTimeout(() => process.exit(0), 15000);`;
+      const leader = [
+        `require('node:child_process').spawn(process.execPath, ['-e', ${JSON.stringify(descendant)}, process.argv[1]], { stdio: '${stdio}' }).unref();`,
+        `setInterval(() => { if (require('node:fs').existsSync(process.argv[1])) { process.stdout.write('output'); process.stderr.write('diagnostic'); process.exit(${String(code)}); } }, 10);`,
+      ].join("\n");
+      const fiber = yield* smoke
+        .run({
+          args: ["-e", leader, ready],
+          cwd: smoke.workspace,
+          executable: process.execPath,
+          phase: "leader exit",
+          timeoutMs: 5000,
+        })
+        .pipe(Effect.result, Effect.forkChild);
+      const pid = yield* waitForPid(ready);
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          try {
+            process.kill(pid, "SIGKILL");
+          } catch (error) {
+            if (!(
+              error instanceof Error &&
+              "code" in error &&
+              error.code === "ESRCH"
+            )) {
+              throw error;
+            }
+          }
+        }),
+      );
+      const result = yield* Fiber.join(fiber);
+      if (code === 0) {
+        expect(result).toMatchObject({ success: "output", _tag: "Success" });
+      } else {
+        expect(result).toMatchObject({
+          failure: {
+            exitCode: code,
+            stderr: "diagnostic",
+            stdout: "output",
+            _tag: "CommandFailure",
+          },
+          _tag: "Failure",
+        });
+      }
+      expect(() => process.kill(pid, 0)).toThrow(
+        expect.objectContaining({ code: "ESRCH" }),
+      );
+    }).pipe(Effect.scoped, Effect.provide(nodeServices)),
+  10_000,
+);
+
+it.live.each(["cwd", "executable"] as const)(
+  "reports a missing %s without hanging during cleanup",
+  (missing) =>
+    Effect.gen(function* () {
+      const smoke = yield* createPackageSmoke(fakePack);
+      const absent = `${smoke.workspace}/does-not-exist`;
+      const error = yield* smoke
+        .run({
+          args: ["-e", "process.stdout.write('unexpected');"],
+          cwd: missing === "cwd" ? absent : smoke.workspace,
+          executable: missing === "executable" ? absent : process.execPath,
+          phase: "spawn failure",
+          timeoutMs: 2000,
+        })
+        .pipe(Effect.flip);
+      expect(error).toMatchObject({
+        phase: "spawn failure",
+        _tag: "CommandFailure",
+      });
+    }).pipe(Effect.scoped, Effect.provide(nodeServices)),
+);
