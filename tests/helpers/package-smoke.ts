@@ -1,4 +1,4 @@
-import type { PlatformError } from "effect/PlatformError";
+import type { CommandError, CommandSpec } from "./node-command.js";
 
 import nativeFs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -12,15 +12,11 @@ import {
   Path,
   Schema,
   Scope,
-  Stream,
 } from "effect";
-import {
-  NodeChildProcessSpawner,
-  NodeFileSystem,
-  NodePath,
-} from "@effect/platform-node-shared";
-import { ChildProcess, ChildProcessSpawner } from "effect/process";
+import { layer as nodeFileSystemLayer } from "@effect/platform-node-shared/NodeFileSystem";
+import { layer as nodePathLayer } from "@effect/platform-node-shared/NodePath";
 
+import { runCommand } from "./node-command.js";
 import packageJson from "../../package.json" with { type: "json" };
 
 const projectDirectory = fileURLToPath(new URL("../..", import.meta.url));
@@ -28,53 +24,8 @@ const consumerNode =
   // eslint-disable-next-line n/no-process-env -- CI chooses the consumer runtime separately from the development runtime
   process.env.PRETTIER_CONFIG_CONSUMER_NODE ?? process.execPath;
 
-const commandFields = {
-  args: Schema.Array(Schema.String),
-  cwd: Schema.String,
-  executable: Schema.String,
-  message: Schema.String,
-  phase: Schema.String,
-};
+type SmokeError = CommandError | InvalidTarballCount | SmokeFileSystemError;
 
-type CommandSpec = {
-  readonly args: readonly string[];
-  readonly cwd: string;
-  readonly executable: string;
-  readonly phase: string;
-  readonly timeoutMs: number;
-};
-type SmokeError =
-  | CommandDeadline
-  | CommandFailure
-  | CommandOutputLimit
-  | InvalidTarballCount
-  | SmokeFileSystemError;
-
-class CommandDeadline extends Schema.TaggedError<CommandDeadline>()(
-  "CommandDeadline",
-  {
-    ...commandFields,
-    timeoutMs: Schema.Number,
-  },
-) {}
-class CommandFailure extends Schema.TaggedError<CommandFailure>()(
-  "CommandFailure",
-  {
-    ...commandFields,
-    cause: Schema.Defect(),
-    exitCode: Schema.optional(Schema.Number),
-    stderr: Schema.optional(Schema.String),
-    stdout: Schema.optional(Schema.String),
-  },
-) {}
-class CommandOutputLimit extends Schema.TaggedError<CommandOutputLimit>()(
-  "CommandOutputLimit",
-  {
-    ...commandFields,
-    limit: Schema.Number,
-    stream: Schema.Literals(["stdout", "stderr"]),
-  },
-) {}
 class InvalidTarballCount extends Schema.TaggedError<InvalidTarballCount>()(
   "InvalidTarballCount",
   {
@@ -93,103 +44,7 @@ class SmokeFileSystemError extends Schema.TaggedError<SmokeFileSystemError>()(
   },
 ) {}
 
-const outputLimit = 1024 * 1024;
-const platformServices = Layer.merge(NodeFileSystem.layer, NodePath.layer);
-const nodeServices = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(platformServices),
-);
-
-const runCommand = Effect.fn("packageSmoke.runCommand")(function* (
-  spec: CommandSpec,
-) {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const details = {
-    args: [...spec.args],
-    cwd: spec.cwd,
-    executable: spec.executable,
-    phase: spec.phase,
-  };
-  const failure = (cause: unknown) =>
-    new CommandFailure({
-      ...details,
-      cause,
-      message: `${spec.phase}: ${spec.executable} failed in ${spec.cwd}`,
-    });
-  const collect = (
-    stream: Stream.Stream<Uint8Array, PlatformError>,
-    name: "stderr" | "stdout",
-  ) =>
-    stream.pipe(
-      Stream.runFoldEffect(
-        (): {
-          readonly chunks: readonly Uint8Array[];
-          readonly size: number;
-        } => ({ chunks: [], size: 0 }),
-        (buffer, chunk) =>
-          buffer.size + chunk.byteLength > outputLimit
-            ? Effect.fail(
-                new CommandOutputLimit({
-                  ...details,
-                  limit: outputLimit,
-                  message: `${spec.phase}: ${name} exceeds ${String(outputLimit)} bytes`,
-                  stream: name,
-                }),
-              )
-            : Effect.succeed({
-                chunks: [...buffer.chunks, chunk],
-                size: buffer.size + chunk.byteLength,
-              }),
-      ),
-      Effect.map((buffer) => Buffer.concat(buffer.chunks).toString("utf8")),
-      Effect.catchTag("PlatformError", (cause) => Effect.fail(failure(cause))),
-    );
-
-  return yield* Effect.gen(function* () {
-    const handle = yield* spawner
-      .spawn(
-        ChildProcess.make(spec.executable, [...spec.args], {
-          cwd: spec.cwd,
-          extendEnv: true,
-          forceKillAfter: "1 second",
-        }),
-      )
-      .pipe(Effect.mapError(failure));
-    const [stdout, stderr, exitCode] = yield* Effect.all(
-      [
-        collect(handle.stdout, "stdout"),
-        collect(handle.stderr, "stderr"),
-        handle.exitCode.pipe(Effect.mapError(failure)),
-      ],
-      { concurrency: "unbounded" },
-    );
-    if (exitCode !== 0) {
-      return yield* new CommandFailure({
-        ...details,
-        cause: new Error(`Exit code ${String(exitCode)}`),
-        exitCode,
-        message: `${spec.phase}: ${spec.executable} exited with ${String(
-          exitCode,
-        )} in ${spec.cwd}\nstdout:\n${stdout}\nstderr:\n${stderr}`,
-        stderr,
-        stdout,
-      });
-    }
-    return stdout;
-  }).pipe(
-    Effect.scoped,
-    Effect.timeoutOrElse({
-      duration: spec.timeoutMs,
-      orElse: () =>
-        Effect.fail(
-          new CommandDeadline({
-            ...details,
-            message: `${spec.phase}: ${spec.executable} exceeded ${String(spec.timeoutMs)}ms in ${spec.cwd}`,
-            timeoutMs: spec.timeoutMs,
-          }),
-        ),
-    }),
-  );
-});
+const nodeServices = Layer.merge(nodeFileSystemLayer, nodePathLayer);
 
 const withFileContext = <A, E>(
   phase: string,
@@ -225,12 +80,7 @@ type SmokeHarness = {
   readonly isInstalledPackageSymlink: (
     consumer: string,
   ) => Effect.Effect<boolean, SmokeFileSystemError>;
-  readonly run: (
-    spec: CommandSpec,
-  ) => Effect.Effect<
-    string,
-    CommandDeadline | CommandFailure | CommandOutputLimit
-  >;
+  readonly run: (spec: CommandSpec) => Effect.Effect<string, CommandError>;
   readonly runConsumer: (
     consumer: string,
     script: "base.mjs" | "optional.mjs",
@@ -247,20 +97,12 @@ class PackageSmoke extends Context.Service<PackageSmoke, SmokeHarness>()(
 const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
   pack?: (
     workspace: string,
-  ) => Effect.Effect<
-    void,
-    SmokeError,
-    ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem
-  >,
+  ) => Effect.Effect<void, SmokeError, FileSystem.FileSystem>,
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const scope = yield* Scope.fork(yield* Effect.scope);
-  const run = (spec: CommandSpec) =>
-    runCommand(spec).pipe(
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-    );
+  const run = runCommand;
 
   return yield* Effect.gen(function* () {
     const workspace = yield* Effect.acquireRelease(
@@ -474,9 +316,6 @@ const packageSmokeLayer = Layer.effect(PackageSmoke, createPackageSmoke()).pipe(
 );
 
 export {
-  CommandDeadline,
-  CommandFailure,
-  CommandOutputLimit,
   consumerNode,
   createPackageSmoke,
   InvalidTarballCount,
@@ -484,7 +323,13 @@ export {
   PackageSmoke,
   packageSmokeLayer,
   projectDirectory,
-  runCommand,
   SmokeFileSystemError,
 };
-export type { CommandSpec, SmokeError };
+export type { SmokeError };
+export {
+  type CommandSpec,
+  CommandDeadline,
+  CommandFailure,
+  CommandOutputLimit,
+  runCommand,
+} from "./node-command.js";

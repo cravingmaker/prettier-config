@@ -172,9 +172,12 @@ Prettier only.
 `npm run test:package` also installs the packed tarball, Prettier, and
 TypeScript into a temporary consumer project. This check needs npm registry
 access (or a populated npm cache); the temporary project is removed afterward.
-The Effect harness scopes temporary files and asynchronous subprocesses,
-including deadline and interruption cleanup. Local lifecycle regressions run
-with the normal `npm test` command.
+The harness uses stable Effect APIs to scope temporary files and a native Node.js
+subprocess adapter, including deadline and interruption cleanup. The adapter
+terminates process groups on POSIX, including descendants of exited commands.
+Local lifecycle regressions run with the normal `npm test` command. ESLint blocks
+the known unstable Effect process imports; check upstream stability annotations
+before adopting other APIs.
 
 ## Contributing and security
 

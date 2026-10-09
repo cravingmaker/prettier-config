@@ -1,18 +1,21 @@
 # Agent guidance
 
-## Effect source reference
+## Dependency source references
 
-Following [Effect's source-reference approach](https://effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive/),
-the local checkout at `repos/effect` gives coding agents implementations,
-tests, and examples for writing version-correct Effect code. Keep it pinned to
-the installed Effect release using the pin in `scripts/effect-reference.json`.
+External library checkouts belong under `repos/`, following
+[Effect's source-reference approach](https://effect.website/blog/the-one-weird-git-trick-that-makes-coding-agents-more-effect-ive/).
 
-Before writing Effect code, run `npm run setup:effect-reference` to acquire or
-verify the checkout, then read `repos/effect/LLMS.md` and relevant source and
-tests. For this harness, start with Scope/Layer in `packages/effect/src/`,
-the spawner in `packages/platform/node-shared/src/NodeChildProcessSpawner.ts`,
-and `packages/vitest/src/internal/internal.ts` plus their tests.
+- Consult the relevant source, examples, and tests instead of guessing library behavior.
+- Keep these checkouts untouched unless the task explicitly requests changes to them.
+- Resolve imports through installed packages; never use `repos/` as an application dependency.
 
-Treat `repos/` as read-only reference material: import from installed npm
-packages and edit reference sources only when explicitly requested. See the
-[development guide](./README.md#development) for setup and version updates.
+## Effect
+
+Before writing Effect code, run `npm run setup:effect-reference` and read
+`repos/effect/LLMS.md`. Use this pinned checkout to verify APIs and idioms.
+
+Use public, stable APIs only. Check the module and symbol documentation for
+`@stability unstable` or experimental annotations; an ordinary import path
+does not establish stability. Upstream examples may use APIs outside this rule.
+
+See the [development guide](./README.md#development) for setup and pin updates.
