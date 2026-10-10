@@ -40,6 +40,19 @@ marked complete only after their acceptance criteria have been demonstrated.
   directly (matching the existing lint config dependency; published 2026-05-04).
   Full validation passed (95 regular tests, six package checks), including
   installed public-type extension/spread checks and unchanged package contents.
+- Stage 3: 18 negative cases failed before the new rule. Thirty additional
+  tooling checks now demonstrate path/symbol/module enforcement, aliases,
+  destructuring, literal computed access, re-exports, reference exclusions, stable
+  positive cases, and an actual `floatingEffect` CLI failure. The rule consults
+  attached documentation in installed declarations and never scans whole mixed
+  modules or reads `repos/`. `@typescript-eslint/utils` 8.59.3 is now a direct
+  development dependency, preserving the previously installed version and
+  lockfile tree. Full validation passed (125 regular tests, six package checks).
+  Enforcement decision: CommonJS Effect loads are rejected at the loading
+  boundary because Node's `Require` returns `any`; typed ESM imports retain
+  stability information. Nonliteral module loading is also rejected because its
+  target cannot be established. Arbitrary runtime indirection is not claimed to
+  be statically verified.
 
 ## Verified baseline
 
@@ -493,7 +506,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 
 - [x] Stage 1: optional-plugin resolution defect fixed and regression covered.
 - [x] Stage 2: JavaScript typed linting and public contract checks enforced.
-- [ ] Stage 3: Effect stability and import guardrails tested.
+- [x] Stage 3: Effect stability and import guardrails tested.
 - [ ] Stage 4: offline dependency/reference consistency enforced.
 - [ ] Stage 5: consumer programs consolidated and checked.
 - [ ] Stage 6: agent guidance and architecture/change documentation delivered.

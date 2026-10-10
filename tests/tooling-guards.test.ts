@@ -3,9 +3,12 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { Effect } from "effect";
 import { ESLint } from "eslint";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+
+import { runCommand } from "./helpers/node-command.js";
 
 const directory = fileURLToPath(new URL("..", import.meta.url));
 const eslint = new ESLint({ cwd: directory });
@@ -27,6 +30,115 @@ const parseProject = (filename: string) => {
 };
 
 describe("repository tooling guards", () => {
+  it.each([
+    'import { make } from "effect/process/ChildProcess"; void make;',
+    'export { make } from "effect/process/ChildProcess";',
+    'export * from "effect/process/ChildProcess";',
+    'await import("effect/process/ChildProcess");',
+    'await import("effect/net/NetAddress");',
+    'import { NetAddress } from "effect/net"; void NetAddress;',
+    'const processApi = require("effect/process/ChildProcess"); void processApi;',
+    'const S = require("effect/Schema"); void S.MacAddress;',
+    'const { MacAddress } = require("effect/Schema"); void MacAddress;',
+    'import { createRequire } from "node:module"; const load = createRequire(import.meta.url); load("effect/process/ChildProcess");',
+    'import { Schema as S } from "effect"; void S.MacAddress;',
+    'import { MacAddress as M } from "effect/Schema"; void M;',
+    'import * as S from "effect/Schema"; void S.MacAddress;',
+    'import * as S from "effect/Schema"; void S["MacAddress"];',
+    'import { Schema } from "effect"; const alias = Schema; void alias.MacAddress;',
+    'import { Schema } from "effect"; const { MacAddress } = Schema; void MacAddress;',
+    'export { MacAddress as M } from "effect/Schema";',
+    'export * from "effect/Schema";',
+    'import type { API } from "@effect/vitest"; type Test = API;',
+    'const target = "effect/Schema"; await import(target);',
+    'import { Schema } from "effect"; const key = "String"; void Schema[key];',
+    'import { Schema } from "../repos/effect/packages/effect/src/index.ts"; void Schema;',
+    'await import("../repos/effect/packages/effect/src/Schema.ts");',
+  ])("rejects unsupported Effect access: %s", async (source) => {
+    const [result] = await eslint.lintText(source, {
+      filePath: "tests/helpers/package-smoke.ts",
+    });
+    expect(result?.messages).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: "local/effect-stability" }),
+      ]),
+    );
+  });
+
+  it.each([
+    'import { Effect, Schema } from "effect"; void Effect.succeed; void Schema.String;',
+    'import * as S from "effect/Schema"; void S["String"];',
+    'import { String as S } from "effect/Schema"; void S;',
+    'import { it, layer } from "@effect/vitest"; void it.live; void it.effect; void layer;',
+    'await import("effect/Schema");',
+  ])("permits stable Effect APIs: %s", async (source) => {
+    const [result] = await eslint.lintText(source, {
+      filePath: "tests/helpers/package-smoke.ts",
+    });
+    expect(
+      result?.messages.filter(
+        (message) => message.ruleId === "local/effect-stability",
+      ),
+    ).toEqual([]);
+  });
+
+  it("excludes raw fixtures and reference checkouts from tooling", async () => {
+    expect(await eslint.isPathIgnored("repos/effect/example.ts")).toBe(true);
+    expect(await eslint.isPathIgnored("tests/fixtures/example.js")).toBe(true);
+    const parsed = parseProject(path.join(directory, "tsconfig.json"));
+    expect(
+      parsed.fileNames.some(
+        (filename) =>
+          filename.includes("/repos/") || filename.includes("/tests/fixtures/"),
+      ),
+    ).toBe(false);
+  });
+
+  it("rejects an unobserved Effect through the configured language service", async () => {
+    const workspace = await fs.mkdtemp(
+      path.join(os.tmpdir(), "prettier-effect-diagnostic-"),
+    );
+    try {
+      await fs.copyFile(
+        path.join(directory, "tsconfig.json"),
+        path.join(workspace, "tsconfig.json"),
+      );
+      await fs.symlink(
+        path.join(directory, "node_modules"),
+        path.join(workspace, "node_modules"),
+        "junction",
+      );
+      await fs.mkdir(path.join(workspace, "tests"));
+      await fs.writeFile(
+        path.join(workspace, "tests", "floating.ts"),
+        'import { Effect } from "effect";\nEffect.succeed("unobserved");\n',
+      );
+      const error = await Effect.runPromise(
+        runCommand({
+          args: [
+            path.join(
+              directory,
+              "node_modules/@effect/language-service/cli.js",
+            ),
+            "diagnostics",
+            "--project",
+            path.join(workspace, "tsconfig.json"),
+          ],
+          cwd: workspace,
+          executable: process.execPath,
+          phase: "negative Effect diagnostic",
+          timeoutMs: 30_000,
+        }).pipe(Effect.flip),
+      );
+      expect(error).toMatchObject({ exitCode: 1, _tag: "CommandFailure" });
+      expect(
+        error._tag === "CommandFailure" ? error.stdout : undefined,
+      ).toContain("floatingEffect");
+    } finally {
+      await fs.rm(workspace, { force: true, recursive: true });
+    }
+  }, 40_000);
+
   it.each([
     "index.mjs",
     "eslint.config.js",
