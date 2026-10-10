@@ -101,6 +101,27 @@ Finish with `npm run validate` and `git diff --check`. Treat local results and
 remote CI separately. All required Node and Dependency Review contexts must
 settle successfully before a PR is ready for review.
 
+Focused tests fail locally as well as in CI (`allowOnly: false`). ESLint checks
+ordinary tests, aliases, `.each`, Effect testers, and layer-provided helpers.
+Skipped, pending, or conditional tests require a local rule exception explaining
+why coverage is intentionally disabled; do not disable these guards for a file or
+suite. Use explicit file/name filters during development.
+
+Check workflow semantics locally with:
+
+```bash
+npm run lint:workflows
+```
+
+This command installs actionlint 1.7.12 from its pinned GitHub release into the
+ignored `.tools/` cache on first use. It verifies archive and binary SHA-256 pins,
+then rechecks cached binary contents on each run. Node and `tar` are required;
+no global actionlint is used. Linux and macOS x64/arm64 binaries are pinned.
+First use needs GitHub release access; a verified cache works offline. Actionlint
+can also use optional ShellCheck/Pyflakes installations when present. Full
+validation and CI include the workflow command. Review
+`scripts/actionlint-reference.json` when updating the tool pin.
+
 The pre-commit hook runs ESLint fixes and Prettier on staged files. Full
 typechecking and tests run through `npm run validate` and in CI.
 
