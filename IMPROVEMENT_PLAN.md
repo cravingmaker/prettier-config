@@ -1,6 +1,6 @@
 # Codebase improvement implementation plan
 
-Status: proposed; implementation has not started.
+Status: implementation in progress; see the completion checklist and evidence below.
 
 Audit date: 2026-10-10. Baseline: `2317114230b0fcf95843e9db263875817ebbb8dd`
 (`@cravingmaker/prettier-config` 0.3.2).
@@ -11,10 +11,20 @@ Make routine agent changes easier to implement correctly and make mistakes fail
 early with actionable diagnostics. Strengthen the existing runtime, typing,
 tests, documentation, and CI without adding unnecessary architecture.
 
-This document is the deliverable for the planning PR. Its implementation steps
-are future work, to be delivered as focused PRs. Creating or merging this plan
-does not implement its proposed code changes, dependency additions, file moves,
-or repository-setting changes.
+Implementation is delivered as focused, dependent PRs. Checklist entries are
+marked complete only after their acceptance criteria have been demonstrated.
+
+## Implementation decisions and evidence
+
+- Delivery prerequisite: CI and Dependency Review now accept PRs targeting
+  feature branches as well as `main`. The previous `main`-only event filters
+  prevented remote validation of stacked PRs. This small trigger change comes
+  before Stage 9; required job names, commands, and repository rules are retained.
+- CI baseline (PR #122, run `38013060607`): Node 22 took 53 seconds, Node 24
+  and 26 each took 50 seconds, and minimum Node 22.12.0 took 32 seconds.
+  Each Node matrix job performed full validation and two npm consumer installs;
+  the minimum-runtime job performed two more. Stage 9 will compare these owners
+  and installation counts with the proposed workflow.
 
 ## Verified baseline
 
