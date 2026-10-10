@@ -100,8 +100,10 @@ marked complete only after their acceptance criteria have been demonstrated.
   2026-03-30) uses verified archive/binary pins and a checked cache, with four
   regressions for version, invalid expressions, and altered cache preservation.
   Full validation passed (177 regular tests, six package checks), including the
-  pinned workflow command. Remote workflow-gate verification is pending on the
-  Stage 7 PR; its checklist remains open until that check passes.
+  pinned workflow command. All remote required checks passed on PR #131 (CI run
+  `38017791451`), including the pinned workflow gate in Node 22/24/26 validation
+  and minimum Node 22.12.0 consumers. The stack preserves the subsequent main
+  merges; refreshed branch histories have identical source trees.
 
 ## Verified baseline
 
@@ -569,7 +571,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 - [x] Stage 4: offline dependency/reference consistency enforced.
 - [x] Stage 5: consumer programs consolidated and checked.
 - [x] Stage 6: agent guidance and architecture/change documentation delivered.
-- [ ] Stage 7: test and workflow guardrails enforced.
+- [x] Stage 7: test and workflow guardrails enforced.
 - [ ] Stage 8: minimum-peer, custom Tailwind, and macOS coverage delivered.
 - [ ] Stage 9: CI duplication reduced with required gates verified.
 
