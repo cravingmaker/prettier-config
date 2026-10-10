@@ -202,8 +202,39 @@ pinned actionlint; see [installation and cache details](../CONTRIBUTING.md#valid
 remote checks and deliberate prerequisite failures when changing dependencies
 between jobs. Do not accept a skipped prerequisite as required-job success.
 
-## Planned CI consolidation
+## CI check ownership
 
-Stage 9 of the [implementation plan](../IMPROVEMENT_PLAN.md) remains pending:
-shared static CI ownership with explicit required-job result gates. The Linux
-Node matrix currently runs full validation in each job.
+`npm run validate` composes `validate:static` and `validate:behavior`. The local
+command, `prepublishOnly`, and the publishing workflow retain every check. CI uses
+these smaller entry points to give repository static analysis one owner while
+retaining behavior on each supported runtime.
+
+| Commands/checks                                       | CI owner                                  | Coverage                                                                         |
+| ----------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
+| `check:effect-reference`, `typecheck`, `check:effect` | Shared static checks, Linux Node 24       | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
+| `lint`, `format:check`, `lint:workflows`              | Shared static checks, Linux Node 24       | Typed rules, test/API guards, repository formatting, pinned actionlint           |
+| `lint:package`, `typecheck:package`                   | Shared static checks, Linux Node 24       | Publint and ATTW's ESM package profile                                           |
+| `test`                                                | Node.js 22/24/26 on Linux                 | Behavior, negative tooling fixtures, native process lifecycle                    |
+| `test:package`, current peers                         | Node.js 22/24/26; Minimum Node.js 22.12.0 | Real npm consumers, custom stylesheets, public types, package contents           |
+| `test:package`, minimum peers                         | Minimum peer versions, Linux Node 24      | The same package assertions at declared lower bounds                             |
+| `test:lifecycle`                                      | macOS lifecycle, Node 24                  | Live-clock cleanup, process trees, interruption, deadlines, output limits, paths |
+| Dependency Review action                              | Dependency Review                         | Existing dependency-change policy                                                |
+| CodeQL default setup                                  | Repository-managed CodeQL analysis        | Existing Actions and JavaScript/TypeScript analysis                              |
+
+The minimum-runtime job runs the test harness and installed type compiler on
+development Node, with runtime programs on Node 22.12.0. Negative tooling tests
+remain behavioral regressions on each matrix runtime; they do not replace the
+repository-wide static owner.
+
+Each required `Node.js 22/24/26` job depends on shared static, minimum-peer, and
+macOS lifecycle checks. Its `always()` condition allows the explicit result gate
+to run after a failed or skipped prerequisite. Only three `success` results
+permit the behavior steps; other results fail the required status before checkout
+or installation. `Minimum Node.js 22.12.0` and `Dependency Review` remain separate
+required contexts. Existing strict/up-to-date repository rules are preserved.
+
+The [plan](../IMPROVEMENT_PLAN.md#implementation-decisions-and-evidence) records
+baseline timings, installation counts, and remote verification of prerequisite
+failure/skip behavior. Eight static commands run once instead of three times;
+the dedicated owner adds one root installation while retaining ten consumer
+installations across compatibility jobs.

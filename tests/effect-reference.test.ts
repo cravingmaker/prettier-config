@@ -65,7 +65,13 @@ const withProject = async (check: (root: string) => Promise<void>) => {
       scripts: Object.fromEntries(
         Object.entries(packageJson.scripts).map(([name, command]) => [
           name,
-          name === "validate" || name === "check:effect-reference"
+          [
+            "check:effect-reference",
+            "prepublishOnly",
+            "validate",
+            "validate:behavior",
+            "validate:static",
+          ].includes(name)
             ? command
             : 'node -e ""',
         ]),
@@ -165,16 +171,19 @@ describe("Effect reference metadata", () => {
     });
   });
 
-  it("makes the complete validate command reject drift before its other checks", async () => {
-    await withProject(async (root) => {
-      await writeJson(root, "scripts/effect-reference.json", {
-        ...reference,
-        tag: "effect@4.0.1",
-        version: "4.0.1",
+  it.each(["validate", "prepublishOnly"])(
+    "makes %s reject drift before its other checks",
+    async (entry) => {
+      await withProject(async (root) => {
+        await writeJson(root, "scripts/effect-reference.json", {
+          ...reference,
+          tag: "effect@4.0.1",
+          version: "4.0.1",
+        });
+        await checkFailure(root, ["run", entry], "package.json", "npm");
       });
-      await checkFailure(root, ["run", "validate"], "package.json", "npm");
-    });
-  });
+    },
+  );
 
   it.each(names)("rejects a mismatched declared %s pin", async (name) => {
     await withProject(async (root) => {

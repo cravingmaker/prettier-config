@@ -79,8 +79,11 @@ Before opening a pull request, run:
 npm run validate
 ```
 
-This runs typechecking, linting, formatting checks, tests, and package
-integrity checks. Package smoke tests install the tarball and consumer tools
+This runs `validate:static` followed by `validate:behavior`: offline Effect pin
+checks, typechecking, Effect diagnostics, linting, formatting, pinned workflow
+lint, package static analysis, regular tests, and installed-consumer tests.
+`prepublishOnly` and the publishing workflow use the same complete entry point.
+Package smoke tests install the tarball and consumer tools
 in a temporary project, so they need npm registry access or cached
 dependencies.
 
@@ -108,6 +111,15 @@ CI runs behavioral and package coverage on Linux Node 22/24/26, consumers on
 Node 22.12.0, and minimum peers once on development Node. Process lifecycle tests
 also run on macOS Node 24 through `npm run test:lifecycle`; Linux retains the
 same lifecycle suite. Windows execution remains unverified.
+
+CI owns repository static checks once on development Node 24, then runs
+version-sensitive behavior and installed consumers on Node 22/24/26. Each required
+matrix status rejects failed, cancelled, or skipped static/minimum-peer/macOS
+prerequisites through an explicit result gate. The required minimum-runtime and
+Dependency Review names remain unchanged. See the
+[CI ownership table](docs/architecture.md#ci-check-ownership) for the complete
+command map; `validate:static` and `validate:behavior` are composable CI entry points,
+and `npm run validate` remains the required final local check.
 
 To run only a file or named case during development, use, for example:
 
