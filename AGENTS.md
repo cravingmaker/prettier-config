@@ -1,8 +1,6 @@
 # Agent guidance
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes. For this improvement
-stack, [IMPROVEMENT_PLAN.md](IMPROVEMENT_PLAN.md) is the implementation specification;
-mark its checklist only after the acceptance criteria are demonstrated.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes.
 
 ## Repository map and contracts
 
@@ -23,7 +21,7 @@ mark its checklist only after the acceptance criteria are demonstrated.
 
 Add meaningful regressions before behavior changes. Review intentional snapshot
 changes; never update snapshots merely to obtain passing checks. Preserve unrelated
-work and deliver focused dependent PRs without merging them.
+work and keep pull requests focused.
 
 Use the targeted [change recipes](docs/architecture.md#change-recipes), then run
 `npm run validate` and `git diff --check` before a PR. Verify remote checks separately;
