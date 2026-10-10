@@ -116,7 +116,10 @@ marked complete only after their acceptance criteria have been demonstrated.
   separate Node 22.12.0 consumer job. Windows execution remains unverified.
   Full local validation passed (177 regular tests, eight package checks), as did
   all eight minimum-peer checks on Node 22.12.0, all 16 macOS lifecycle tests,
-  pinned actionlint, and diff checks. Completion awaits both platform CI results.
+  pinned actionlint, and diff checks. All remote checks passed on PR #134 (CI run
+  `38018674182`): Linux Node 22/24/26, consumer Node 22.12.0, eight minimum-peer
+  checks, 16 macOS lifecycle tests, and Dependency Review. The existing Linux
+  lifecycle coverage also passed in the full Node suites. Stage 8 is complete.
 
 ## Verified baseline
 
@@ -585,7 +588,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 - [x] Stage 5: consumer programs consolidated and checked.
 - [x] Stage 6: agent guidance and architecture/change documentation delivered.
 - [x] Stage 7: test and workflow guardrails enforced.
-- [ ] Stage 8: minimum-peer, custom Tailwind, and macOS coverage delivered.
+- [x] Stage 8: minimum-peer, custom Tailwind, and macOS coverage delivered.
 - [ ] Stage 9: CI duplication reduced with required gates verified.
 
 ## References
