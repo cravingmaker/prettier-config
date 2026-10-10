@@ -39,27 +39,37 @@ Review snapshot diffs and update snapshots only when the output change is
 intentional. For runtime or plugin changes, exercise packed consumers in
 `tests/package.smoke.test.ts` as well.
 
-Owned JavaScript uses TypeScript's project service for promise and unsafe-value
-lint checks. New `scripts/**/*.mjs` files are included automatically; executable
-consumers belong in `tests/consumers/`. Decode external tooling manifests through
-the stable Schema helper in `scripts/manifest.mjs`. The runtime's JSDoc contract
-references `index.d.ts`, so required public properties are checked in both files.
+Use the [architecture guide](docs/architecture.md) to find runtime, declaration,
+consumer, tooling, and native-process ownership. Its
+[change recipes](docs/architecture.md#change-recipes) name the smallest checks for
+plugin updates, formatter behavior, public types, subprocess lifecycle,
+dependency/reference updates, and CI changes. Owned executable JavaScript is
+linted with type information and checked by TypeScript; raw fixtures stay excluded.
 
-`local/effect-stability` checks installed declarations for module and symbol
-annotations, follows aliases, and rejects unstable paths, reference imports,
-and nonliteral loading/member access. Effect imports must use typed ESM;
-CommonJS loading erases the symbol information required for this check. The
-guard covers ordinary static syntax, not arbitrary runtime indirection. Rule
-tests and the `floatingEffect` language-service regression run in `npm test`.
-Ordinary validation does not require a cloned source reference.
+## Effect reference
 
-`npm run check:effect-reference` checks the exact coordinated Effect dependencies,
-root lockfile records, and source pin offline. Full validation runs it before
-other checks. Dependabot groups the three matching packages; update
-`scripts/effect-reference.json` in the same change and verify the actual source
-with `npm run setup:effect-reference`. The independently versioned language
-service stays separate. Setup refuses unexpected checkout content and leaves it
-intact; move it aside yourself before changing the pin.
+Before writing Effect code, run:
+
+```bash
+npm run setup:effect-reference
+```
+
+Read `repos/effect/LLMS.md`, then consult the relevant pinned source, examples,
+and tests. Use public stable APIs only: inspect both module and symbol annotations
+for unstable or experimental APIs, including examples. Keep reference checkouts
+untouched and resolve imports through installed packages.
+
+The explicit setup verifies version, tag, commit, origin, and clean checkout
+contents. It refuses unexpected user content without deleting it. To update a
+pin, preserve the existing checkout by moving it aside first. See the
+[dependency recipe](docs/architecture.md#dependency-and-reference-updates) for the
+coordinated packages and offline consistency checks.
+
+Workspace Zed settings use local TypeScript through `vtsls` and hide `repos/`
+from scans and auto-imports. The Effect plugin supplies editor diagnostics;
+`npm run check:effect` runs them in the terminal because ordinary `tsc` does not
+run editor plugins. `local/effect-stability` checks installed declarations during
+linting, so normal validation works without a cloned reference.
 
 ## Validation
 
@@ -74,14 +84,22 @@ integrity checks. Package smoke tests install the tarball and consumer tools
 in a temporary project, so they need npm registry access or cached
 dependencies.
 
-Package tests share one npm-installed base consumer and one npm-installed optional
-consumer. `tests/consumers/installed.mjs` retains the base output assertions;
-`helpers.mjs` checks parser selection, default options, plugin provenance, and
-idempotence. Both programs run from normal and external directories. Executable
-support is linted and typechecked; the intentional consumer type fixture remains
-in `tests/fixtures/installed-consumer/` and compiles inside the installed project
-on the development runtime. `PRETTIER_CONFIG_CONSUMER_NODE` selects only the
-runtime consumers.
+Package tests reuse npm-installed base and optional consumers from normal and
+external directories. `PRETTIER_CONFIG_CONSUMER_NODE` selects the runtime programs;
+installed type compilation stays on development Node. See the
+[consumer boundary](docs/architecture.md#installed-consumers) for fixtures,
+provenance, and cleanup requirements.
+
+To run only a file or named case during development, use, for example:
+
+```bash
+npx vitest run tests/package-smoke-harness.test.ts
+npx vitest run tests/config.test.ts -t "optional"
+```
+
+Finish with `npm run validate` and `git diff --check`. Treat local results and
+remote CI separately. All required Node and Dependency Review contexts must
+settle successfully before a PR is ready for review.
 
 The pre-commit hook runs ESLint fixes and Prettier on staged files. Full
 typechecking and tests run through `npm run validate` and in CI.
