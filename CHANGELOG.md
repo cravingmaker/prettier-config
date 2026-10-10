@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/cravingmaker/prettier-config/compare/v0.3.2...v0.3.3) (2026-10-10)
+
+
+### Bug Fixes
+
+* validate stacked PRs and reject broken optional plugins ([#123](https://github.com/cravingmaker/prettier-config/issues/123)) ([41d84c7](https://github.com/cravingmaker/prettier-config/commit/41d84c7e23b4f47f1938681ac339111e276a5988))
+
 ## [0.3.2](https://github.com/cravingmaker/prettier-config/compare/v0.3.1...v0.3.2) (2026-10-06)
 
 
