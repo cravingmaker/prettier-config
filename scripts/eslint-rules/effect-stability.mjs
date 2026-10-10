@@ -198,7 +198,17 @@ const effectStability = {
         const key = node.argumentExpression;
         if (ts.isStringLiteralLike(key)) {
           checkSymbol(node, objectType.getProperty(key.text));
-        } else if (objectSymbol && belongsToEffect(objectSymbol)) {
+        } else if (
+          objectSymbol &&
+          belongsToEffect(objectSymbol) &&
+          originalSymbol(objectSymbol)
+            .getDeclarations()
+            ?.some(
+              (declaration) =>
+                ts.isSourceFile(declaration) ||
+                ts.isModuleDeclaration(declaration),
+            )
+        ) {
           report(key, "literal", "Effect member access");
         }
       }

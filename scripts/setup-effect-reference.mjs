@@ -5,9 +5,12 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
-import reference from "./effect-reference.json" with { type: "json" };
+import {
+  checkEffectReference,
+  effectPackages as packages,
+} from "./effect-reference-metadata.mjs";
+import { foreignGitEnvironment } from "./git-environment.mjs";
 import { decodeJson, packageManifestSchema } from "./manifest.mjs";
-import packageJson from "../package.json" with { type: "json" };
 
 const projectDirectory = fileURLToPath(
   new globalThis.URL("..", import.meta.url),
@@ -15,14 +18,6 @@ const projectDirectory = fileURLToPath(
 const referencesDirectory = path.join(projectDirectory, "repos");
 const destination = path.join(referencesDirectory, "effect");
 const execute = promisify(execFile);
-const packages = [
-  { manifest: "packages/effect/package.json", name: "effect" },
-  {
-    manifest: "packages/platform/node-shared/package.json",
-    name: "@effect/platform-node-shared",
-  },
-  { manifest: "packages/vitest/package.json", name: "@effect/vitest" },
-];
 
 /** @param {string} filename */
 const inspect = async (filename) => {
@@ -37,16 +32,17 @@ const inspect = async (filename) => {
 };
 
 /** @param {readonly string[]} arguments_ @param {string} directory */
-const git = (arguments_, directory) =>
+const git = async (arguments_, directory) =>
   execute("git", arguments_, {
     cwd: directory,
     encoding: "utf8",
+    env: await foreignGitEnvironment(),
     maxBuffer: 1024 * 1024,
     timeout: 60_000,
   });
 
-/** @param {string} directory */
-const verify = async (directory) => {
+/** @param {string} directory @param {Awaited<ReturnType<typeof checkEffectReference>>} reference */
+const verify = async (directory, reference) => {
   const gitDirectory = await inspect(path.join(directory, ".git"));
   if (!gitDirectory?.isDirectory() || gitDirectory.isSymbolicLink()) {
     throw new Error(`Expected a standalone Git checkout at ${directory}`);
@@ -90,16 +86,7 @@ const verify = async (directory) => {
 };
 
 const setup = async () => {
-  const mismatched = packages.find(
-    (package_) =>
-      Reflect.get(packageJson.devDependencies, package_.name) !==
-      reference.version,
-  );
-  if (mismatched) {
-    throw new Error(
-      `Update the source pin to match the exact ${mismatched.name} dependency`,
-    );
-  }
+  const reference = await checkEffectReference(projectDirectory);
   const parent = await inspect(referencesDirectory);
   if (parent && (!parent.isDirectory() || parent.isSymbolicLink())) {
     throw new Error(`Expected a real directory at ${referencesDirectory}`);
@@ -112,7 +99,7 @@ const setup = async () => {
         `Unexpected content at ${destination}; leave it intact and move it aside`,
       );
     }
-    await verify(destination);
+    await verify(destination, reference);
     process.stdout.write(
       `Effect ${reference.version} reference verified at ${destination}\n`,
     );
@@ -134,7 +121,7 @@ const setup = async () => {
       ],
       projectDirectory,
     );
-    await verify(staging);
+    await verify(staging, reference);
     if (await inspect(destination)) {
       throw new Error(
         `Content appeared at ${destination}; leave it intact and retry`,

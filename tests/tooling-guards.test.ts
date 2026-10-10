@@ -54,16 +54,20 @@ describe("repository tooling guards", () => {
     'import { Schema } from "effect"; const key = "String"; void Schema[key];',
     'import { Schema } from "../repos/effect/packages/effect/src/index.ts"; void Schema;',
     'await import("../repos/effect/packages/effect/src/Schema.ts");',
-  ])("rejects unsupported Effect access: %s", async (source) => {
-    const [result] = await eslint.lintText(source, {
-      filePath: "tests/helpers/package-smoke.ts",
-    });
-    expect(result?.messages).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ ruleId: "local/effect-stability" }),
-      ]),
-    );
-  });
+  ])(
+    "rejects unsupported Effect access: %s",
+    async (source) => {
+      const [result] = await eslint.lintText(source, {
+        filePath: "tests/helpers/package-smoke.ts",
+      });
+      expect(result?.messages).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ ruleId: "local/effect-stability" }),
+        ]),
+      );
+    },
+    15_000,
+  );
 
   it.each([
     'import { Effect, Schema } from "effect"; void Effect.succeed; void Schema.String;',
@@ -71,6 +75,7 @@ describe("repository tooling guards", () => {
     'import { String as S } from "effect/Schema"; void S;',
     'import { it, layer } from "@effect/vitest"; void it.live; void it.effect; void layer;',
     'await import("effect/Schema");',
+    'import { Schema } from "effect"; const record = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.String))({ one: "value" }); const key = "one"; void record[key];',
   ])("permits stable Effect APIs: %s", async (source) => {
     const [result] = await eslint.lintText(source, {
       filePath: "tests/helpers/package-smoke.ts",

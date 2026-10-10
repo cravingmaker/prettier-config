@@ -25,6 +25,8 @@ type CommandSpec = {
   readonly executable: string;
   readonly phase: string;
   readonly timeoutMs: number;
+
+  readonly env?: NodeJS.ProcessEnv;
 };
 type OutputBuffer = { chunks: Buffer[]; size: number };
 
@@ -73,6 +75,7 @@ const startCommand = (spec: CommandSpec) => {
   const child = spawn(spec.executable, [...spec.args], {
     cwd: spec.cwd,
     detached: process.platform !== "win32",
+    env: spec.env,
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
