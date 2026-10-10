@@ -56,7 +56,7 @@ const plugins = [
   ...resolveOptionalPlugin("prettier-plugin-tailwindcss"),
 ];
 
-/** @satisfies {import('prettier').Config} */
+/** @satisfies {typeof import('./index.d.ts').default} */
 const config = {
   overrides: [
     {

@@ -32,6 +32,14 @@ marked complete only after their acceptance criteria have been demonstrated.
   original error identity. Full validation passed (84 regular tests, six package
   checks), as did all six consumer checks on Node 22.12.0. Snapshots, plugin
   ordering, runtime dependencies, and the five-file tarball are unchanged.
+- Stage 2: six tooling regressions failed before the change and now pass.
+  JavaScript uses typed promise/unsafe-value rules with project service; new
+  scripts are compiler inputs. The runtime checks the required shape from the
+  explicitly resolved `index.d.ts`. Five schema regressions cover external JSON
+  boundaries with file/phase diagnostics. `typescript-eslint` 8.59.2 is declared
+  directly (matching the existing lint config dependency; published 2026-05-04).
+  Full validation passed (95 regular tests, six package checks), including
+  installed public-type extension/spread checks and unchanged package contents.
 
 ## Verified baseline
 
@@ -484,7 +492,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 ## Completion checklist
 
 - [x] Stage 1: optional-plugin resolution defect fixed and regression covered.
-- [ ] Stage 2: JavaScript typed linting and public contract checks enforced.
+- [x] Stage 2: JavaScript typed linting and public contract checks enforced.
 - [ ] Stage 3: Effect stability and import guardrails tested.
 - [ ] Stage 4: offline dependency/reference consistency enforced.
 - [ ] Stage 5: consumer programs consolidated and checked.

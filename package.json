@@ -82,6 +82,7 @@
     "publint": "0.3.24",
     "svelte": "5.57.1",
     "typescript": "6.0.3",
+    "typescript-eslint": "8.59.2",
     "vitest": "5.0.2"
   },
   "peerDependencies": {
