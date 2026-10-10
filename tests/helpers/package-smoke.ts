@@ -18,6 +18,7 @@ import { layer as nodePathLayer } from "@effect/platform-node-shared/NodePath";
 
 import { runCommand } from "./node-command.js";
 import packageJson from "../../package.json" with { type: "json" };
+import { peerScenario } from "./peer-scenarios.js";
 
 const projectDirectory = fileURLToPath(new URL("../..", import.meta.url));
 const consumerNode =
@@ -72,6 +73,7 @@ type SmokeHarness = {
   readonly installConsumer: (
     name: string,
     dependencies: readonly string[],
+    prettierVersion?: string,
   ) => Effect.Effect<string, SmokeError>;
   readonly isInstalledPackageSymlink: (
     consumer: string,
@@ -79,7 +81,7 @@ type SmokeHarness = {
   readonly run: (spec: CommandSpec) => Effect.Effect<string, CommandError>;
   readonly runConsumer: (
     consumer: string,
-    script: "installed.mjs" | "optional.mjs",
+    script: "installed.mjs" | "optional.mjs" | "tailwind.mjs",
     externalCwd: boolean,
   ) => Effect.Effect<string, SmokeError>;
   readonly tarball: string;
@@ -172,7 +174,11 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
       );
     });
     const installConsumer = Effect.fn("packageSmoke.installConsumer")(
-      function* (name: string, dependencies: readonly string[]) {
+      function* (
+        name: string,
+        dependencies: readonly string[],
+        prettierVersion: string = peerScenario.prettier,
+      ) {
         const consumer = path.join(workspace, name);
         yield* withFileContext(
           "create installed consumer",
@@ -188,7 +194,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
             "--no-fund",
             "--save-exact",
             tarball,
-            `prettier@${packageJson.devDependencies.prettier}`,
+            `prettier@${prettierVersion}`,
             ...dependencies,
           ],
           cwd: consumer,
@@ -201,7 +207,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
     );
     const runConsumer = Effect.fn("packageSmoke.runConsumer")(function* (
       consumer: string,
-      script: "installed.mjs" | "optional.mjs",
+      script: "installed.mjs" | "optional.mjs" | "tailwind.mjs",
       externalCwd: boolean,
     ) {
       yield* copyFixtures(
@@ -210,7 +216,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
         [script, "helpers.mjs"],
       );
       return yield* run({
-        args: [path.join(consumer, script)],
+        args: [path.join(consumer, script), peerScenario.prettier],
         cwd: externalCwd ? path.dirname(consumer) : consumer,
         executable: consumerNode,
         phase: `run ${script}`,

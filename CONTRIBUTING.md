@@ -90,6 +90,25 @@ installed type compilation stays on development Node. See the
 [consumer boundary](docs/architecture.md#installed-consumers) for fixtures,
 provenance, and cleanup requirements.
 
+The default peer scenario uses the exact development versions. To exercise the
+declared lower bounds for Prettier and all three optional plugins, run:
+
+```bash
+PRETTIER_CONFIG_PEER_SCENARIO=minimum npm run test:package
+```
+
+`tests/helpers/peer-scenarios.ts` derives these bounds from `peerDependencies`
+and rejects unsupported scenario names or missing explicit minima. Consumer
+programs verify the installed Prettier version. The optional project explicitly
+installs Svelte and Tailwind CSS 4.1.14 for its checked stylesheet configuration;
+its custom theme/utility changes sorting from both working directories.
+The scenario and consumer-runtime variables can be combined.
+
+CI runs behavioral and package coverage on Linux Node 22/24/26, consumers on
+Node 22.12.0, and minimum peers once on development Node. Process lifecycle tests
+also run on macOS Node 24 through `npm run test:lifecycle`; Linux retains the
+same lifecycle suite. Windows execution remains unverified.
+
 To run only a file or named case during development, use, for example:
 
 ```bash
