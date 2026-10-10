@@ -120,6 +120,35 @@ marked complete only after their acceptance criteria have been demonstrated.
   `38018674182`): Linux Node 22/24/26, consumer Node 22.12.0, eight minimum-peer
   checks, 16 macOS lifecycle tests, and Dependency Review. The existing Linux
   lifecycle coverage also passed in the full Node suites. Stage 8 is complete.
+- Stage 9 baseline recorded before workflow changes (PR #134, run
+  `38018674182`): Node 22/24/26 jobs took 57/66/54 seconds; minimum Node took
+  38 seconds, minimum peers 26 seconds, and macOS lifecycle 31 seconds (272
+  summed job seconds, excluding Dependency Review/CodeQL). Each matrix job owns
+  all ten `validate` commands: `check:effect-reference`, `typecheck`,
+  `check:effect`, `lint`, `format:check`, `lint:workflows`, `test`, `test:package`,
+  `lint:package`, and `typecheck:package`. Minimum runtime and minimum peers each
+  own `test:package`; macOS owns `test:lifecycle`; Dependency Review remains in
+  its own workflow. Publishing and `prepublishOnly` both own complete `validate`.
+  There are six root `npm ci` invocations and ten consumer `npm install`
+  invocations (two per matrix/minimum-runtime/minimum-peer job), totaling 16
+  registry-install commands. Eight static commands currently execute three times.
+- Stage 9 implementation: `validate` now composes complete static and behavioral
+  entry points, while publishing retains `validate`. The shared Node 24 owner runs
+  all eight static commands once; required Node 22/24/26 jobs retain behavior and
+  installed consumers and depend on shared static, minimum-peer, and macOS
+  results. An `always()` job condition and explicit success-only result gate
+  prevent failed/skipped prerequisites from yielding successful required statuses.
+  Minimum Node and Dependency Review remain separate required contexts; repository
+  rules and action pins are unchanged. Contributor/architecture guidance maps
+  every command to its owner. The disposable metadata fixture preserves the real
+  script composition, and both local validation and publishing entry points
+  reject deliberate pin drift (25 targeted reference tests passed before the
+  composition change). This adds one root installation (six to seven), preserves
+  all ten consumer installations, and removes 16 duplicate static executions.
+  Full local validation passed (178 regular tests, eight package checks), as did
+  the 25 reference tests after composition, pinned actionlint, and diff checks.
+  Completion awaits measured CI results and controlled failed/skipped
+  prerequisite verification.
 
 ## Verified baseline
 

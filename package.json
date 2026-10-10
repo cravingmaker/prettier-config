@@ -52,7 +52,9 @@
     "test:package": "vitest run tests/package.smoke.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:package": "attw --pack . --profile esm-only",
-    "validate": "npm run check:effect-reference && npm run typecheck && npm run check:effect && npm run lint && npm run format:check && npm run lint:workflows && npm run test && npm run test:package && npm run lint:package && npm run typecheck:package"
+    "validate": "npm run validate:static && npm run validate:behavior",
+    "validate:behavior": "npm run test && npm run test:package",
+    "validate:static": "npm run check:effect-reference && npm run typecheck && npm run check:effect && npm run lint && npm run format:check && npm run lint:workflows && npm run lint:package && npm run typecheck:package"
   },
   "lint-staged": {
     "*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": [
