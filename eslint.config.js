@@ -41,6 +41,8 @@
 import { createConfig } from "@cravingmaker/eslint-config";
 import tseslint from "typescript-eslint";
 
+import { effectStability } from "./scripts/eslint-rules/effect-stability.mjs";
+
 const baseConfig = await createConfig({
   ignores: ["tests/fixtures/**/*", "repos/**"],
 });
@@ -83,7 +85,9 @@ const config = [
   },
   {
     files: ["**/*.{js,mjs,ts}"],
+    plugins: { local: { rules: { "effect-stability": effectStability } } },
     rules: {
+      "local/effect-stability": "error",
       "no-restricted-imports": [
         "error",
         {

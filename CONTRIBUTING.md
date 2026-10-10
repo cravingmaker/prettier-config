@@ -45,6 +45,14 @@ consumers belong in `tests/consumers/`. Decode external tooling manifests throug
 the stable Schema helper in `scripts/manifest.mjs`. The runtime's JSDoc contract
 references `index.d.ts`, so required public properties are checked in both files.
 
+`local/effect-stability` checks installed declarations for module and symbol
+annotations, follows aliases, and rejects unstable paths, reference imports,
+and nonliteral loading/member access. Effect imports must use typed ESM;
+CommonJS loading erases the symbol information required for this check. The
+guard covers ordinary static syntax, not arbitrary runtime indirection. Rule
+tests and the `floatingEffect` language-service regression run in `npm test`.
+Ordinary validation does not require a cloned source reference.
+
 ## Validation
 
 Before opening a pull request, run:
