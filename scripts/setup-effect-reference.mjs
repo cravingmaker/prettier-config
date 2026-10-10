@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import reference from "./effect-reference.json" with { type: "json" };
+import { decodeJson, packageManifestSchema } from "./manifest.mjs";
 import packageJson from "../package.json" with { type: "json" };
 
 const projectDirectory = fileURLToPath(
@@ -69,8 +70,12 @@ const verify = async (directory) => {
   }
   await Promise.all(
     packages.map(async (package_) => {
-      const manifest = JSON.parse(
-        await fs.readFile(path.join(directory, package_.manifest), "utf8"),
+      const filename = path.join(directory, package_.manifest);
+      const manifest = decodeJson(
+        packageManifestSchema,
+        await fs.readFile(filename, "utf8"),
+        filename,
+        "verify reference package",
       );
       if (
         manifest.name !== package_.name ||

@@ -34,7 +34,8 @@
     "index.mjs",
     "index.d.ts",
     "prettier.config.mjs",
-    "scripts/setup-effect-reference.mjs",
+    "eslint.config.js",
+    "scripts/**/*.mjs",
     "vitest.config.ts",
     "tests/**/*.ts",
     "tests/consumers/**/*.mjs"

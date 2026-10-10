@@ -39,6 +39,12 @@ Review snapshot diffs and update snapshots only when the output change is
 intentional. For runtime or plugin changes, exercise packed consumers in
 `tests/package.smoke.test.ts` as well.
 
+Owned JavaScript uses TypeScript's project service for promise and unsafe-value
+lint checks. New `scripts/**/*.mjs` files are included automatically; executable
+consumers belong in `tests/consumers/`. Decode external tooling manifests through
+the stable Schema helper in `scripts/manifest.mjs`. The runtime's JSDoc contract
+references `index.d.ts`, so required public properties are checked in both files.
+
 ## Validation
 
 Before opening a pull request, run:

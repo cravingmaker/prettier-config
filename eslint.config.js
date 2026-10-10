@@ -39,6 +39,7 @@
  */
 
 import { createConfig } from "@cravingmaker/eslint-config";
+import tseslint from "typescript-eslint";
 
 const baseConfig = await createConfig({
   ignores: ["tests/fixtures/**/*", "repos/**"],
@@ -46,6 +47,34 @@ const baseConfig = await createConfig({
 
 const config = [
   ...baseConfig,
+  {
+    files: [
+      "index.mjs",
+      "prettier.config.mjs",
+      "eslint.config.js",
+      "scripts/**/*.mjs",
+      "tests/consumers/**/*.mjs",
+    ],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        projectService: true,
+        // eslint-disable-next-line n/no-unsupported-features/node-builtins -- Development tooling requires Node >=22.22.1; dirname is stable there.
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    plugins: { "@typescript-eslint": tseslint.plugin },
+    rules: {
+      "@typescript-eslint/await-thenable": "error",
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
+      "@typescript-eslint/no-unsafe-argument": "error",
+      "@typescript-eslint/no-unsafe-assignment": "error",
+      "@typescript-eslint/no-unsafe-call": "error",
+      "@typescript-eslint/no-unsafe-member-access": "error",
+      "@typescript-eslint/no-unsafe-return": "error",
+    },
+  },
   {
     linterOptions: {
       reportUnusedDisableDirectives: "error",
@@ -97,6 +126,13 @@ const config = [
   },
   {
     files: ["tests/format.test.ts"],
+    rules: {
+      "security/detect-non-literal-fs-filename": "off",
+    },
+  },
+  {
+    // Guard tests use controlled temporary projects and compiler filesystem hosts.
+    files: ["tests/tooling-guards.test.ts"],
     rules: {
       "security/detect-non-literal-fs-filename": "off",
     },
