@@ -76,7 +76,7 @@
     "@effect/platform-node-shared": "4.0.0",
     "@effect/vitest": "4.0.0",
     "@types/node": "22.20.4",
-    "@typescript-eslint/utils": "8.59.3",
+    "@typescript-eslint/utils": "8.70.1",
     "@vitest/eslint-plugin": "1.6.27",
     "effect": "4.0.0",
     "eslint": "10.10.0",
