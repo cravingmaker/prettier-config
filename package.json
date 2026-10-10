@@ -43,6 +43,7 @@
     "lint": "eslint . --max-warnings 0",
     "lint:package": "publint --strict",
     "lint:staged": "lint-staged",
+    "lint:workflows": "node scripts/check-workflows.mjs",
     "prepare": "husky",
     "prepublishOnly": "npm run validate",
     "setup:effect-reference": "node scripts/setup-effect-reference.mjs",
@@ -50,7 +51,7 @@
     "test:package": "vitest run tests/package.smoke.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:package": "attw --pack . --profile esm-only",
-    "validate": "npm run check:effect-reference && npm run typecheck && npm run check:effect && npm run lint && npm run format:check && npm run test && npm run test:package && npm run lint:package && npm run typecheck:package"
+    "validate": "npm run check:effect-reference && npm run typecheck && npm run check:effect && npm run lint && npm run format:check && npm run lint:workflows && npm run test && npm run test:package && npm run lint:package && npm run typecheck:package"
   },
   "lint-staged": {
     "*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": [
@@ -73,6 +74,7 @@
     "@effect/vitest": "4.0.0",
     "@types/node": "22.20.4",
     "@typescript-eslint/utils": "8.59.3",
+    "@vitest/eslint-plugin": "1.6.27",
     "effect": "4.0.0",
     "eslint": "10.10.0",
     "husky": "9.1.7",

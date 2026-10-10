@@ -179,16 +179,15 @@ Read the new `LLMS.md` and re-audit APIs before adopting them. Run
 Map each existing command to its job before removing duplicated execution. Keep
 the required `Node.js 22`, `Node.js 24`, `Node.js 26`, `Minimum Node.js 22.12.0`,
 and `Dependency Review` contexts effective. Stacked PRs receive CI for feature
-branch bases as well as `main`. Run actionlint using an explicitly installed
-binary until Stage 7's pinned repository command is delivered. Verify successful
+branch bases as well as `main`. Run `npm run lint:workflows` with the repository's
+pinned actionlint; see [installation and cache details](../CONTRIBUTING.md#validation). Verify successful
 remote checks and deliberate prerequisite failures when changing dependencies
 between jobs. Do not accept a skipped prerequisite as required-job success.
 
 ## Planned guardrail and CI additions
 
-Stages 7–9 of the [implementation plan](../IMPROVEMENT_PLAN.md) are pending here:
-pinned local/CI actionlint and test guards; minimum-peer, custom Tailwind stylesheet,
-and macOS lifecycle coverage; then shared static CI ownership with explicit
+Stages 8–9 of the [implementation plan](../IMPROVEMENT_PLAN.md) are pending here:
+minimum-peer, custom Tailwind stylesheet, and macOS lifecycle coverage; then shared static CI ownership with explicit
 required-job result gates. Existing CI runs full validation on Linux Node
 22/24/26, plus consumers on minimum Node 22.12.0. These planned checks are not yet
 claimed as delivered coverage.

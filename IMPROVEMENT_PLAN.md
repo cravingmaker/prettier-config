@@ -89,6 +89,21 @@ marked complete only after their acceptance criteria have been demonstrated.
   names were reviewed; documentation lint/format, diff checks, and full validation
   passed (151 regular tests, six package checks). Stages 7–9 are labeled pending
   in the guide until their implementations and remote checks are demonstrated.
+- Stage 7 implementation: fifteen lint negatives failed before enforcement;
+  ordinary/named-alias/each tests, Effect live/effect testers, typed tester aliases,
+  layer helpers, conditional/pending modes, and invalid assertions are now guarded.
+  Six positives include unrelated objects and an explained local exception. A
+  real local Vitest invocation accepted focus before `allowOnly: false` and now
+  rejects it. The pinned Vitest plugin is 1.6.27 (published 2026-08-10, compatible
+  declared peers). Its built-in chains omit Effect helpers, so a typed local rule
+  supplements them without excluding Effect tests. Actionlint 1.7.12 (released
+  2026-03-30) uses verified archive/binary pins and a checked cache, with four
+  regressions for version, invalid expressions, and altered cache preservation.
+  Full validation passed (177 regular tests, six package checks), including the
+  pinned workflow command. All remote required checks passed on PR #131 (CI run
+  `38017791451`), including the pinned workflow gate in Node 22/24/26 validation
+  and minimum Node 22.12.0 consumers. The stack preserves the subsequent main
+  merges; refreshed branch histories have identical source trees.
 
 ## Verified baseline
 
@@ -556,7 +571,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 - [x] Stage 4: offline dependency/reference consistency enforced.
 - [x] Stage 5: consumer programs consolidated and checked.
 - [x] Stage 6: agent guidance and architecture/change documentation delivered.
-- [ ] Stage 7: test and workflow guardrails enforced.
+- [x] Stage 7: test and workflow guardrails enforced.
 - [ ] Stage 8: minimum-peer, custom Tailwind, and macOS coverage delivered.
 - [ ] Stage 9: CI duplication reduced with required gates verified.
 

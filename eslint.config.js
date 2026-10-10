@@ -40,8 +40,10 @@
 
 import { createConfig } from "@cravingmaker/eslint-config";
 import tseslint from "typescript-eslint";
+import plugin from "@vitest/eslint-plugin";
 
 import { effectStability } from "./scripts/eslint-rules/effect-stability.mjs";
+import { testModes } from "./scripts/eslint-rules/test-modes.mjs";
 
 const baseConfig = await createConfig({
   ignores: ["tests/fixtures/**/*", "repos/**"],
@@ -85,7 +87,11 @@ const config = [
   },
   {
     files: ["**/*.{js,mjs,ts}"],
-    plugins: { local: { rules: { "effect-stability": effectStability } } },
+    plugins: {
+      local: {
+        rules: { "effect-stability": effectStability, "test-modes": testModes },
+      },
+    },
     rules: {
       "local/effect-stability": "error",
       "no-restricted-imports": [
@@ -119,6 +125,19 @@ const config = [
     },
   },
   {
+    files: ["tests/**/*.test.ts"],
+    plugins: { vitest: plugin },
+    rules: {
+      "local/test-modes": "error",
+      "vitest/no-disabled-tests": "error",
+      "vitest/no-focused-tests": ["error", { fixable: false }],
+      "vitest/require-awaited-expect-poll": "error",
+      "vitest/valid-expect": "error",
+      "vitest/valid-expect-in-promise": "error",
+    },
+    settings: { vitest: { vitestImports: ["@effect/vitest"] } },
+  },
+  {
     files: ["tests/**/*.ts", "tests/consumers/**/*.mjs"],
     rules: {
       "functional/functional-parameters": "off",
@@ -136,7 +155,11 @@ const config = [
   },
   {
     // Guard tests use controlled temporary projects and compiler filesystem hosts.
-    files: ["tests/tooling-guards.test.ts", "tests/effect-reference.test.ts"],
+    files: [
+      "tests/tooling-guards.test.ts",
+      "tests/effect-reference.test.ts",
+      "tests/workflow-tool.test.ts",
+    ],
     rules: {
       "security/detect-non-literal-fs-filename": "off",
     },
@@ -175,6 +198,7 @@ const config = [
     files: [
       "scripts/setup-effect-reference.mjs",
       "scripts/effect-reference-metadata.mjs",
+      "scripts/actionlint.mjs",
     ],
     rules: {
       "functional/no-promise-reject": "off",
