@@ -86,7 +86,7 @@
     "prettier-plugin-astro": "0.14.1",
     "prettier-plugin-svelte": "4.1.1",
     "prettier-plugin-tailwindcss": "0.8.1",
-    "publint": "0.3.24",
+    "publint": "0.3.25",
     "svelte": "5.57.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.59.2",
