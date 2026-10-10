@@ -5,7 +5,7 @@ import process from "node:process";
 
 import config from "@cravingmaker/prettier-config";
 
-import { consumerDirectory, format } from "./helpers.mjs";
+import { consumerDirectory, format, verifyPluginPaths } from "./helpers.mjs";
 
 const astro = await format(
   "example.astro",
@@ -19,18 +19,7 @@ const require = createRequire(path.join(consumerDirectory, "package.json"));
 const configuredPlugins = (config.plugins ?? []).filter(
   (plugin) => typeof plugin === "string",
 );
-const modules = await fs.realpath(path.join(consumerDirectory, "node_modules"));
-
-await Promise.all(
-  configuredPlugins.map(async (plugin) => {
-    const pluginPath = await fs.realpath(plugin);
-    if (!pluginPath.startsWith(modules + path.sep)) {
-      throw new Error(
-        `Plugin resolved outside the consumer installation: ${plugin}`,
-      );
-    }
-  }),
-);
+await verifyPluginPaths();
 
 if (!configuredPlugins.includes(require.resolve("prettier-plugin-astro"))) {
   throw new Error("Astro plugin was not detected");

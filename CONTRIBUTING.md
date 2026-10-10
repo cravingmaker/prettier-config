@@ -74,6 +74,15 @@ integrity checks. Package smoke tests install the tarball and consumer tools
 in a temporary project, so they need npm registry access or cached
 dependencies.
 
+Package tests share one npm-installed base consumer and one npm-installed optional
+consumer. `tests/consumers/installed.mjs` retains the base output assertions;
+`helpers.mjs` checks parser selection, default options, plugin provenance, and
+idempotence. Both programs run from normal and external directories. Executable
+support is linted and typechecked; the intentional consumer type fixture remains
+in `tests/fixtures/installed-consumer/` and compiles inside the installed project
+on the development runtime. `PRETTIER_CONFIG_CONSUMER_NODE` selects only the
+runtime consumers.
+
 The pre-commit hook runs ESLint fixes and Prettier on staged files. Full
 typechecking and tests run through `npm run validate` and in CI.
 
