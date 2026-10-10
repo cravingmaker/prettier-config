@@ -80,6 +80,15 @@ marked complete only after their acceptance criteria have been demonstrated.
   Full validation passed (151 regular tests, six package checks); all six
   consumer checks also passed on Node 22.12.0, and all 16 lifecycle regressions
   passed. Public type compilation and the five-file tarball check remain separate.
+- Stage 6: concise agent guidance maps repository ownership and preserved
+  contracts; `docs/architecture.md` explains runtime/types, installed consumers,
+  stable Effect scopes, native processes, and six change recipes. Contributor
+  setup includes explicit hook activation, live clocks, minimum/development Node,
+  source-pin updates, and intentional snapshot review. README keeps consumer
+  instructions and links contributor details. Local paths/anchors and command
+  names were reviewed; documentation lint/format, diff checks, and full validation
+  passed (151 regular tests, six package checks). Stages 7–9 are labeled pending
+  in the guide until their implementations and remote checks are demonstrated.
 
 ## Verified baseline
 
@@ -546,7 +555,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 - [x] Stage 3: Effect stability and import guardrails tested.
 - [x] Stage 4: offline dependency/reference consistency enforced.
 - [x] Stage 5: consumer programs consolidated and checked.
-- [ ] Stage 6: agent guidance and architecture/change documentation delivered.
+- [x] Stage 6: agent guidance and architecture/change documentation delivered.
 - [ ] Stage 7: test and workflow guardrails enforced.
 - [ ] Stage 8: minimum-peer, custom Tailwind, and macOS coverage delivered.
 - [ ] Stage 9: CI duplication reduced with required gates verified.

@@ -122,66 +122,19 @@ a compatible combination is verified.
 
 ## Development
 
-`index.mjs` is the runtime configuration and is published directly alongside
-`index.d.ts`. The repository uses it through `prettier.config.mjs`; no build
-step is required. TypeScript checks the JavaScript configuration via JSDoc
-and the TypeScript tests with `npm run typecheck`.
+`index.mjs` is published directly alongside `index.d.ts`. The repository uses
+it through `prettier.config.mjs`; no build step is required. Development requires
+Node.js 22.22.1 or newer, while consumers support Node.js 22.12.0 or newer.
 
-Development requires Node.js 22.22.1 or newer. The published configuration
-still supports Node.js 22.12.0 or newer.
+See [CONTRIBUTING.md](https://github.com/cravingmaker/prettier-config/blob/main/CONTRIBUTING.md)
+for npm installation, explicit hook activation, Effect reference setup, and
+validation commands. The [architecture and change guide](https://github.com/cravingmaker/prettier-config/blob/main/docs/architecture.md)
+explains runtime contracts, checked npm consumers, and subprocess ownership.
 
-Set up a local checkout with:
-
-```bash
-npm ci
-npm run prepare
-```
-
-The repository sets `ignore-scripts=true`, so installation does not run
-lifecycle scripts automatically. Run `npm run prepare` explicitly once per
-checkout to activate Husky Git hooks. CI keeps hooks disabled.
-
-For Effect-specific development, acquire the matching upstream source:
-
-```bash
-npm run setup:effect-reference
-```
-
-This explicitly invoked command creates a shallow, Git-ignored checkout at
-`repos/effect`, verifies its release and commit against
-`scripts/effect-reference.json`, and leaves a valid checkout unchanged.
-It refuses dirty, mismatched, or unexpected existing content. Coding agents
-use this read-only reference as described in [AGENTS.md](./AGENTS.md).
-Installation and validation do not clone it automatically.
-
-`npm run check:effect-reference` validates dependency and lockfile pins against
-the reference metadata offline, without inspecting or modifying `repos/`.
-Full validation includes this check.
-
-When upgrading Effect, update the exact `effect`, `@effect/platform-node-shared`,
-and `@effect/vitest` pins together with the reference version, tag, and commit.
-Move the old checkout aside before rerunning setup. The language service has
-its own version and should be checked separately.
-
-The project-local Zed settings use workspace TypeScript through `vtsls` and
-hide `repos/` from file scans and auto-import suggestions. The TypeScript plugin
-provides Effect diagnostics in the editor. Run `npm run check:effect` for the
-same diagnostics in the terminal; floating Effects are errors. Full validation
-includes this command because ordinary `tsc` does not run editor plugins.
-
-Run `npm run validate` to run all checks. For staged files covered by ESLint,
-the pre-commit hook runs ESLint fixes before Prettier; other files run
-Prettier only.
-
-`npm run test:package` also installs the packed tarball, Prettier, and
-TypeScript into a temporary consumer project. This check needs npm registry
-access (or a populated npm cache); the temporary project is removed afterward.
-The harness uses stable Effect APIs to scope temporary files and a native Node.js
-subprocess adapter, including deadline and interruption cleanup. The adapter
-terminates process groups on POSIX, including descendants of exited commands.
-Local lifecycle regressions run with the normal `npm test` command. ESLint blocks
-the known unstable Effect process imports; check upstream stability annotations
-before adopting other APIs.
+Run `npm run validate` before a PR. Package checks install temporary consumers
+from the packed tarball and need npm registry access or a populated cache.
+Reference acquisition is explicit: installation and validation do not clone
+`repos/effect` automatically.
 
 ## Contributing and security
 
