@@ -2,13 +2,19 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 import config from "@cravingmaker/prettier-config";
-import { format as formatSource, resolveConfig } from "prettier";
+import { format as formatSource, resolveConfig, version } from "prettier";
 
 // eslint-disable-next-line unicorn/prefer-import-meta-properties -- import.meta.dirname is not stable on the minimum Node.js 22.12 runtime.
 const consumerDirectory = path.dirname(fileURLToPath(import.meta.url));
+assert.equal(
+  version,
+  process.argv[2],
+  "The installed Prettier must match the selected peer scenario",
+);
 
 /**
  * Format a consumer file and verify that formatting is idempotent.

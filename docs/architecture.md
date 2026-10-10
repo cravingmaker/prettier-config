@@ -45,10 +45,15 @@ stylesheets. Shared helpers check resolved parsers, default options, idempotence
 and real plugin paths inside the consumer's `node_modules`; the base program also
 checks Oxc object identity and optional absence. The resolution program isolates
 broken package manifests in fresh Node processes to avoid metadata-cache effects.
+`tailwind.mjs` reuses the optional installation and loads a checked configuration
+with a relative `tailwindStylesheet` path. Its Tailwind v4 theme and utility produce
+a different class order from the ordinary configuration, with default formatting
+and idempotence checked in both cases. Svelte and Tailwind CSS are explicit fixture
+dependencies; they are not dependencies of the published configuration.
 The [plan's assertion inventory](../IMPROVEMENT_PLAN.md#stage-5-consolidate-installed-consumer-tests)
 records the consolidation.
 
-Both runtime programs run from their project and an external working directory.
+All runtime programs run from their project and an external working directory.
 Resolve fixtures relative to the program's file URL, not `process.cwd()`. Consumer
 code supports Node 22.12.0; avoid `import.meta.dirname`, which is not stable there.
 Use real paths when comparing macOS `/var` and `/private/var` aliases.
@@ -68,6 +73,19 @@ This variable does not select the test runner or compiler. Development requires
 Node >=22.22.1; use [.nvmrc](../.nvmrc) and the
 [contributor setup](../CONTRIBUTING.md#setup). Package tests need registry access
 or cached dependencies, and remove their temporary installations afterward.
+
+The default `current` peer scenario installs exact development versions.
+`PRETTIER_CONFIG_PEER_SCENARIO=minimum` derives the lower bounds of Prettier and
+the three optional plugins from the manifest. Both scenarios run the same required,
+optional, custom stylesheet, public-type, and package-content assertions. Prettier's
+installed version is checked inside each runtime program. Minimum peers run once
+in CI, without multiplying peer combinations across the Node matrix. See the
+[contributor commands](../CONTRIBUTING.md#validation) for selecting peers and the
+consumer runtime independently.
+
+Linux CI covers Node 22/24/26 and consumer Node 22.12.0. Linux and macOS execute
+the live-clock lifecycle suite; `npm run test:lifecycle` selects that suite alone.
+Windows execution remains unverified.
 
 ## Effect and native process boundaries
 
@@ -184,10 +202,8 @@ pinned actionlint; see [installation and cache details](../CONTRIBUTING.md#valid
 remote checks and deliberate prerequisite failures when changing dependencies
 between jobs. Do not accept a skipped prerequisite as required-job success.
 
-## Planned guardrail and CI additions
+## Planned CI consolidation
 
-Stages 8–9 of the [implementation plan](../IMPROVEMENT_PLAN.md) are pending here:
-minimum-peer, custom Tailwind stylesheet, and macOS lifecycle coverage; then shared static CI ownership with explicit
-required-job result gates. Existing CI runs full validation on Linux Node
-22/24/26, plus consumers on minimum Node 22.12.0. These planned checks are not yet
-claimed as delivered coverage.
+Stage 9 of the [implementation plan](../IMPROVEMENT_PLAN.md) remains pending:
+shared static CI ownership with explicit required-job result gates. The Linux
+Node matrix currently runs full validation in each job.

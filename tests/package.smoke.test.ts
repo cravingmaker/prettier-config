@@ -7,14 +7,8 @@ import {
   PackageSmoke,
   packageSmokeLayer,
 } from "./helpers/package-smoke.js";
+import { peerScenario } from "./helpers/peer-scenarios.js";
 import packageJson from "../package.json" with { type: "json" };
-
-const optionalDependencies = [
-  `prettier-plugin-astro@${packageJson.devDependencies["prettier-plugin-astro"]}`,
-  `prettier-plugin-svelte@${packageJson.devDependencies["prettier-plugin-svelte"]}`,
-  `prettier-plugin-tailwindcss@${packageJson.devDependencies["prettier-plugin-tailwindcss"]}`,
-  `svelte@${packageJson.devDependencies.svelte}`,
-] as const;
 
 class BaseConsumer extends Context.Service<BaseConsumer, string>()(
   "prettier-config/tests/BaseConsumer",
@@ -49,19 +43,29 @@ const optionalConsumerLayer = Layer.effect(
     const smoke = yield* PackageSmoke;
     const consumer = yield* smoke.installConsumer(
       "installed-optional-consumer",
-      optionalDependencies,
+      peerScenario.optionalDependencies,
     );
     yield* smoke.copyFixtures(
       consumer,
       ["tests", "fixtures"],
       ["tailwind.vue", "tailwind.css", "tailwind.scss", "tailwind.less"],
     );
+    yield* smoke.copyFixtures(
+      consumer,
+      ["tests", "consumers"],
+      ["tailwind-config.mjs"],
+    );
+    yield* smoke.copyFixtures(
+      consumer,
+      ["tests", "fixtures", "tailwind-stylesheet"],
+      ["theme.css"],
+    );
     return consumer;
   }),
 );
 
 layer(packageSmokeLayer, { excludeTestServices: true, timeout: "60 seconds" })(
-  "Published Package",
+  `Published Package (${peerScenario.name} peers, Prettier ${peerScenario.prettier})`,
   (it) => {
     it.effect(
       "ships the runtime and public types without build artifacts",
@@ -148,6 +152,18 @@ layer(packageSmokeLayer, { excludeTestServices: true, timeout: "60 seconds" })(
     it.layer(optionalConsumerLayer, { timeout: "180 seconds" })(
       "with npm-installed optional plugins",
       (optionalTests) => {
+        optionalTests.effect.each([false, true])(
+          "resolves custom Tailwind stylesheet relative to config (external cwd: %s)",
+          (externalCwd) =>
+            Effect.gen(function* () {
+              const smoke = yield* PackageSmoke;
+              const consumer = yield* OptionalConsumer;
+              expect(
+                yield* smoke.runConsumer(consumer, "tailwind.mjs", externalCwd),
+              ).toBe("ok");
+            }),
+          60_000,
+        );
         optionalTests.effect.each([false, true])(
           "loads optional plugins from the consumer (external cwd: %s)",
           (externalCwd) =>

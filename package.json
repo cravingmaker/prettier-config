@@ -48,6 +48,7 @@
     "prepublishOnly": "npm run validate",
     "setup:effect-reference": "node scripts/setup-effect-reference.mjs",
     "test": "vitest run --exclude tests/package.smoke.test.ts",
+    "test:lifecycle": "vitest run tests/package-smoke-harness.test.ts",
     "test:package": "vitest run tests/package.smoke.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:package": "attw --pack . --profile esm-only",

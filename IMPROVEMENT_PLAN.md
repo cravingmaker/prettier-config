@@ -104,6 +104,19 @@ marked complete only after their acceptance criteria have been demonstrated.
   `38017791451`), including the pinned workflow gate in Node 22/24/26 validation
   and minimum Node 22.12.0 consumers. The stack preserves the subsequent main
   merges; refreshed branch histories have identical source trees.
+- Stage 8 implementation: the minimum-peer scenario first exposed the old fixed
+  Prettier installation (3.9.9 instead of 3.9.8). Installations now select exact
+  current or declared-minimum peers from one definition; runtime programs assert
+  the selected Prettier version. The optional consumer explicitly installs
+  Tailwind CSS 4.1.14 (published 2025-10-01) and retains Svelte. Two additional
+  checks cover a relative Tailwind v4 stylesheet from normal/external directories,
+  observable custom theme/utility sorting versus a control, defaults, and
+  idempotence. The same two npm installations cover all eight package checks.
+  Minimum-peer and macOS lifecycle jobs supplement the retained Linux matrix and
+  separate Node 22.12.0 consumer job. Windows execution remains unverified.
+  Full local validation passed (177 regular tests, eight package checks), as did
+  all eight minimum-peer checks on Node 22.12.0, all 16 macOS lifecycle tests,
+  pinned actionlint, and diff checks. Completion awaits both platform CI results.
 
 ## Verified baseline
 

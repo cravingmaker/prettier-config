@@ -14,6 +14,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  minimum-peers:
+    name: Minimum peer versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      HUSKY: 0
+      PRETTIER_CONFIG_PEER_SCENARIO: minimum
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup development Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Test minimum peers and custom stylesheets
+        run: npm run test:package
+
+  macos-lifecycle:
+    name: macOS lifecycle
+    runs-on: macos-latest
+    timeout-minutes: 10
+    env:
+      HUSKY: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Setup development Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Test native process lifecycle and paths
+        run: npm run test:lifecycle
+
   validate:
     name: Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-latest

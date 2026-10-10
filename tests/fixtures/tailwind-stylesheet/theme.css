@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #123456;
+  --spacing-widget: 2.25rem;
+}
+
+@utility card-shell {
+  display: grid;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+}
