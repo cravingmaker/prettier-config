@@ -69,10 +69,6 @@ type SmokeHarness = {
     source: readonly string[],
     filenames: readonly string[],
   ) => Effect.Effect<void, SmokeFileSystemError>;
-  readonly createConsumer: (
-    name: string,
-    dependencies: readonly string[],
-  ) => Effect.Effect<string, SmokeError>;
   readonly installConsumer: (
     name: string,
     dependencies: readonly string[],
@@ -83,7 +79,7 @@ type SmokeHarness = {
   readonly run: (spec: CommandSpec) => Effect.Effect<string, CommandError>;
   readonly runConsumer: (
     consumer: string,
-    script: "base.mjs" | "optional.mjs",
+    script: "installed.mjs" | "optional.mjs",
     externalCwd: boolean,
   ) => Effect.Effect<string, SmokeError>;
   readonly tarball: string;
@@ -175,60 +171,6 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
         { concurrency: "unbounded", discard: true },
       );
     });
-    const createConsumer = Effect.fn("packageSmoke.createConsumer")(function* (
-      name: string,
-      dependencies: readonly string[],
-    ) {
-      const consumer = path.join(workspace, name);
-      const modules = path.join(consumer, "node_modules");
-      const installed = path.join(modules, packageJson.name);
-      yield* withFileContext(
-        "create consumer",
-        installed,
-        fs.makeDirectory(installed, { recursive: true }),
-      );
-      yield* run({
-        args: ["-xzf", tarball, "--strip-components=1", "-C", installed],
-        cwd: workspace,
-        executable: "tar",
-        phase: "extract tarball",
-        timeoutMs: 30_000,
-      });
-      yield* Effect.forEach(
-        dependencies,
-        Effect.fnUntraced(function* (dependency) {
-          const destination = path.join(modules, dependency);
-          yield* withFileContext(
-            "create dependency parent",
-            destination,
-            fs.makeDirectory(path.dirname(destination), { recursive: true }),
-          );
-          yield* withFileContext(
-            "link dependency",
-            destination,
-            Effect.tryPromise({
-              catch: (cause) =>
-                new SmokeFileSystemError({
-                  cause,
-                  message: `Could not link dependency at ${destination}`,
-                  path: destination,
-                  phase: "link dependency",
-                }),
-              async try() {
-                await nativeFs.symlink(
-                  path.join(projectDirectory, "node_modules", dependency),
-                  destination,
-                  "junction",
-                );
-              },
-            }),
-          );
-        }),
-        { concurrency: "unbounded", discard: true },
-      );
-      yield* manifest(consumer, `prettier-config-${name}`);
-      return consumer;
-    });
     const installConsumer = Effect.fn("packageSmoke.installConsumer")(
       function* (name: string, dependencies: readonly string[]) {
         const consumer = path.join(workspace, name);
@@ -259,7 +201,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
     );
     const runConsumer = Effect.fn("packageSmoke.runConsumer")(function* (
       consumer: string,
-      script: "base.mjs" | "optional.mjs",
+      script: "installed.mjs" | "optional.mjs",
       externalCwd: boolean,
     ) {
       yield* copyFixtures(
@@ -295,7 +237,6 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
       );
     return PackageSmoke.of({
       copyFixtures,
-      createConsumer,
       installConsumer,
       isInstalledPackageSymlink,
       run,

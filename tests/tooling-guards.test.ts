@@ -149,6 +149,7 @@ describe("repository tooling guards", () => {
     "eslint.config.js",
     "scripts/setup-effect-reference.mjs",
     "tests/consumers/helpers.mjs",
+    "tests/consumers/installed.mjs",
   ])(
     "rejects floating promises and unsafe parsed data in %s",
     async (filePath) => {

@@ -71,6 +71,15 @@ marked complete only after their acceptance criteria have been demonstrated.
   foreign repositories, following the Git hook documentation. A dedicated
   regression supplies repository/index variables and verifies source preservation;
   the enabled pre-push hook also exercises this environment.
+- Stage 5: the executable fixture moved to `tests/consumers/installed.mjs`; a
+  typed-lint regression failed before the move and now checks its promise/unsafe
+  rules. Both suites reuse a single scoped npm installation. The extracted
+  tarball/dependency-symlink path and redundant base program/list were removed
+  after the assertion inventory below passed. Required string plugins and the
+  object-valued Oxc plugin are verified against consumer-local installations.
+  Full validation passed (151 regular tests, six package checks); all six
+  consumer checks also passed on Node 22.12.0, and all 16 lifecycle regressions
+  passed. Public type compilation and the five-file tarball check remain separate.
 
 ## Verified baseline
 
@@ -295,6 +304,16 @@ Validation: focused script tests, the new offline command, formatting/linting,
 and `npm run validate`.
 
 ## Stage 5: consolidate installed-consumer tests
+
+Delivered assertion inventory:
+
+| Former assertion                                                                | Checked replacement                                                                                         |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Base JavaScript/TypeScript, package.json ordering, full TOML, and XML output    | Exact outputs in `tests/consumers/installed.mjs`                                                            |
+| Installed fixture TSX, JSON, YAML, and minimal TOML output                      | Exact outputs retained alongside the base cases                                                             |
+| Parser selection, single-attribute option, default print width, and idempotence | `tests/consumers/helpers.mjs`, used by both consumer programs                                               |
+| Plugin provenance and optional absence                                          | Shared real-path checks, Oxc object identity, and base optional-name assertions                             |
+| External working directory, installed public types, and package contents        | Shared npm base/optional layers, both working directories, independent type compilation and tarball listing |
 
 **Finding.** `tests/fixtures/installed-consumer/check.mjs` is executable test
 support but is excluded from repository linting and typechecking. It overlaps
@@ -526,7 +545,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 - [x] Stage 2: JavaScript typed linting and public contract checks enforced.
 - [x] Stage 3: Effect stability and import guardrails tested.
 - [x] Stage 4: offline dependency/reference consistency enforced.
-- [ ] Stage 5: consumer programs consolidated and checked.
+- [x] Stage 5: consumer programs consolidated and checked.
 - [ ] Stage 6: agent guidance and architecture/change documentation delivered.
 - [ ] Stage 7: test and workflow guardrails enforced.
 - [ ] Stage 8: minimum-peer, custom Tailwind, and macOS coverage delivered.
