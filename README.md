@@ -154,6 +154,10 @@ It refuses dirty, mismatched, or unexpected existing content. Coding agents
 use this read-only reference as described in [AGENTS.md](./AGENTS.md).
 Installation and validation do not clone it automatically.
 
+`npm run check:effect-reference` validates dependency and lockfile pins against
+the reference metadata offline, without inspecting or modifying `repos/`.
+Full validation includes this check.
+
 When upgrading Effect, update the exact `effect`, `@effect/platform-node-shared`,
 and `@effect/vitest` pins together with the reference version, tag, and commit.
 Move the old checkout aside before rerunning setup. The language service has

@@ -53,6 +53,24 @@ marked complete only after their acceptance criteria have been demonstrated.
   stability information. Nonliteral module loading is also rejected because its
   target cannot be established. Arbitrary runtime indirection is not claimed to
   be statically verified.
+- Stage 4: the new offline command validates all three exact dependency pins,
+  root declarations and installed lockfile records, tag/version agreement, and
+  commit format before full validation. A regression demonstrated that the old
+  `validate` accepted drift. Twenty-four disposable-project tests now cover
+  metadata failures, offline operation without `repos/`, checkout preservation,
+  symlink refusal, and failed-clone/verification cleanup. The real reference was
+  left untouched. Dependabot groups the coordinated packages. Full validation
+  passed (150 regular tests, six package checks), with actionlint and diff checks.
+  A decoded-record regression exposed a Stage 3 false positive: computed access
+  on data is now permitted, while computed Effect namespace access still fails.
+  The rule's cold project initialization has an explicit 15-second test budget;
+  its diagnostic assertions are unchanged.
+  The pre-push hook exposed inherited Git repository variables affecting fixture
+  commands. Those accidental local Git changes were restored before delivery.
+  Setup and fixture commands now clear Git's own `--local-env-vars` list for
+  foreign repositories, following the Git hook documentation. A dedicated
+  regression supplies repository/index variables and verifies source preservation;
+  the enabled pre-push hook also exercises this environment.
 
 ## Verified baseline
 
@@ -507,7 +525,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 - [x] Stage 1: optional-plugin resolution defect fixed and regression covered.
 - [x] Stage 2: JavaScript typed linting and public contract checks enforced.
 - [x] Stage 3: Effect stability and import guardrails tested.
-- [ ] Stage 4: offline dependency/reference consistency enforced.
+- [x] Stage 4: offline dependency/reference consistency enforced.
 - [ ] Stage 5: consumer programs consolidated and checked.
 - [ ] Stage 6: agent guidance and architecture/change documentation delivered.
 - [ ] Stage 7: test and workflow guardrails enforced.

@@ -13,6 +13,14 @@ updates:
       semver-major-days: 21
       semver-minor-days: 14
       semver-patch-days: 7
+    groups:
+      effect-reference:
+        patterns:
+          - effect
+          - "@effect/platform-node-shared"
+          - "@effect/vitest"
+    # Update scripts/effect-reference.json with grouped Effect version changes.
+    # @effect/language-service has an independent version and stays separate.
     ignore:
       - dependency-name: "@types/node"
         update-types:

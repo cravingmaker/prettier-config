@@ -136,7 +136,7 @@ const config = [
   },
   {
     // Guard tests use controlled temporary projects and compiler filesystem hosts.
-    files: ["tests/tooling-guards.test.ts"],
+    files: ["tests/tooling-guards.test.ts", "tests/effect-reference.test.ts"],
     rules: {
       "security/detect-non-literal-fs-filename": "off",
     },
@@ -172,7 +172,10 @@ const config = [
     },
   },
   {
-    files: ["scripts/setup-effect-reference.mjs"],
+    files: [
+      "scripts/setup-effect-reference.mjs",
+      "scripts/effect-reference-metadata.mjs",
+    ],
     rules: {
       "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",

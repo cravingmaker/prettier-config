@@ -53,6 +53,14 @@ guard covers ordinary static syntax, not arbitrary runtime indirection. Rule
 tests and the `floatingEffect` language-service regression run in `npm test`.
 Ordinary validation does not require a cloned source reference.
 
+`npm run check:effect-reference` checks the exact coordinated Effect dependencies,
+root lockfile records, and source pin offline. Full validation runs it before
+other checks. Dependabot groups the three matching packages; update
+`scripts/effect-reference.json` in the same change and verify the actual source
+with `npm run setup:effect-reference`. The independently versioned language
+service stays separate. Setup refuses unexpected checkout content and leaves it
+intact; move it aside yourself before changing the pin.
+
 ## Validation
 
 Before opening a pull request, run:
