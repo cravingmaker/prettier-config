@@ -1,6 +1,8 @@
 // @ts-check
 
+import { lstatSync } from "node:fs";
 import { createRequire } from "node:module";
+import path from "node:path";
 
 // eslint-disable-next-line import-x/no-rename-default -- Use the plugin name instead of the bundled export identifier
 import prettierPluginOxc from "@prettier/plugin-oxc";
@@ -8,16 +10,34 @@ import prettierPluginOxc from "@prettier/plugin-oxc";
 const require = createRequire(import.meta.url);
 
 /** @param {string} name */
+const isOptionalPackageAbsent = (name) =>
+  require.resolve.paths(name)?.every((directory) => {
+    try {
+      // eslint-disable-next-line n/no-sync, security/detect-non-literal-fs-filename -- Configuration loading is synchronous; inspect Node's lookup paths only after failed resolution.
+      lstatSync(path.join(directory, name));
+      return false;
+    } catch (error) {
+      // A directory entry (including a dangling symlink) means the installation
+      // is present. Only ENOENT proves absence; other failures preserve resolution's error.
+      return (
+        error instanceof Error && "code" in error && error.code === "ENOENT"
+      );
+    }
+  }) ?? false;
+
+/** @param {string} name */
 const resolveOptionalPlugin = (name) => {
   try {
     return [require.resolve(name)];
   } catch (error) {
-    // Missing entry points also use MODULE_NOT_FOUND, but Node attaches the installed package path.
+    // Node also reports MODULE_NOT_FOUND without a path for installed packages
+    // that have no entry point. Confirm absence without resolving package.json exports.
     if (
       error instanceof Error &&
       "code" in error &&
       error.code === "MODULE_NOT_FOUND" &&
-      !("path" in error)
+      !("path" in error) &&
+      isOptionalPackageAbsent(name)
     ) {
       return [];
     }
