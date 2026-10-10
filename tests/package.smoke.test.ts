@@ -84,6 +84,20 @@ layer(packageSmokeLayer, { excludeTestServices: true, timeout: "60 seconds" })(
           expect(yield* smoke.isInstalledPackageSymlink(consumer)).toBe(false);
           yield* smoke.copyFixtures(
             consumer,
+            ["tests", "consumers"],
+            ["resolution.mjs"],
+          );
+          expect(
+            yield* smoke.run({
+              args: ["resolution.mjs"],
+              cwd: consumer,
+              executable: consumerNode,
+              phase: "check optional resolution",
+              timeoutMs: 30_000,
+            }),
+          ).toBe("ok");
+          yield* smoke.copyFixtures(
+            consumer,
             ["tests", "fixtures", "installed-consumer"],
             ["check.mjs", "typecheck.ts", "tsconfig.json"],
           );
