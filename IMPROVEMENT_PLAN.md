@@ -25,6 +25,13 @@ marked complete only after their acceptance criteria have been demonstrated.
   Each Node matrix job performed full validation and two npm consumer installs;
   the minimum-runtime job performed two more. Stage 9 will compare these owners
   and installation counts with the proposed workflow.
+- Stage 1: `tests/consumers/resolution.mjs` reproduced the no-entry-point defect
+  before the fix. It now checks confirmed absence and five broken-installation
+  cases for all three optional names against the npm-installed tarball, in fresh
+  Node processes to avoid package-metadata caching. Mocked tests still check
+  original error identity. Full validation passed (84 regular tests, six package
+  checks), as did all six consumer checks on Node 22.12.0. Snapshots, plugin
+  ordering, runtime dependencies, and the five-file tarball are unchanged.
 
 ## Verified baseline
 
@@ -476,7 +483,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 
 ## Completion checklist
 
-- [ ] Stage 1: optional-plugin resolution defect fixed and regression covered.
+- [x] Stage 1: optional-plugin resolution defect fixed and regression covered.
 - [ ] Stage 2: JavaScript typed linting and public contract checks enforced.
 - [ ] Stage 3: Effect stability and import guardrails tested.
 - [ ] Stage 4: offline dependency/reference consistency enforced.

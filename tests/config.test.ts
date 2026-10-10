@@ -45,20 +45,21 @@ describe("Prettier Config", () => {
     async ({ installed }) => {
       vi.doMock("node:module", () => ({
         createRequire: () => ({
-          resolve(name: string) {
-            if (name === "prettier-plugin-packagejson")
-              return "/plugins/packagejson.cjs";
-            if (name === "prettier-plugin-toml") return "/plugins/toml.mjs";
-            if (name === "@prettier/plugin-xml") return "/plugins/xml.mjs";
-            if (
-              installed.some((plugin) => name === `prettier-plugin-${plugin}`)
-            ) {
-              return `/plugins/${name}.mjs`;
-            }
-            throw Object.assign(new Error("Not found"), {
-              code: "MODULE_NOT_FOUND",
-            });
-          },
+          resolve: Object.assign(
+            (name: string) => {
+              if (name === "prettier-plugin-packagejson")
+                return "/plugins/packagejson.cjs";
+              if (name === "prettier-plugin-toml") return "/plugins/toml.mjs";
+              if (name === "@prettier/plugin-xml") return "/plugins/xml.mjs";
+              if (installed.includes(name.slice("prettier-plugin-".length))) {
+                return `/plugins/${name}.mjs`;
+              }
+              throw Object.assign(new Error("Not found"), {
+                code: "MODULE_NOT_FOUND",
+              });
+            },
+            { paths: () => [] },
+          ),
         }),
       }));
 
