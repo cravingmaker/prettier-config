@@ -1,6 +1,7 @@
 # Codebase improvement implementation plan
 
-Status: implementation in progress; see the completion checklist and evidence below.
+Status: all nine stages implemented and acceptance criteria demonstrated; see
+the completion checklist and evidence below. Delivery PRs are not merged by agents.
 
 Audit date: 2026-10-10. Baseline: `2317114230b0fcf95843e9db263875817ebbb8dd`
 (`@cravingmaker/prettier-config` 0.3.2).
@@ -147,8 +148,28 @@ marked complete only after their acceptance criteria have been demonstrated.
   all ten consumer installations, and removes 16 duplicate static executions.
   Full local validation passed (178 regular tests, eight package checks), as did
   the 25 reference tests after composition, pinned actionlint, and diff checks.
-  Completion awaits measured CI results and controlled failed/skipped
-  prerequisite verification.
+  All normal remote checks passed on PR #135 (run `38019285510`). Shared static
+  took 45 seconds, Node 22/24/26 took 31/48/46 seconds, minimum Node 34 seconds,
+  minimum peers 27 seconds, and macOS 26 seconds. Summed job time was 257 versus
+  272 seconds at the Stage 8 baseline; elapsed CI was 95 versus 66 seconds because
+  the matrix waits for shared results. Registry-install commands are 17 versus 16
+  (seven root installations plus the unchanged ten consumer installations).
+  Decision: retain one static owner and the removal of 16 duplicate executions
+  with complete coverage and explicit prerequisite enforcement; do not represent
+  this as an elapsed-time improvement. Required contexts and repository rules are
+  unchanged. Controlled failure verification on temporary PR #136 (run
+  `38058910097`) passed: normal shared validation succeeded, the deliberate final
+  step failed its job, all three required Node jobs failed at the explicit result
+  gate within 3–4 seconds, and GitHub reported `BLOCKED` with a mergeable branch.
+  Independent minimum-runtime, minimum-peer, macOS, and Dependency Review checks
+  passed. The skipped-prerequisite probe (run `38059143607`) also passed: shared
+  static was skipped on the probe branch, all three required Node statuses failed
+  at the gate within 2–3 seconds, the independent checks passed, and GitHub again
+  reported `BLOCKED`. Gate logs show `static=skipped` with successful peer/macOS
+  results. The temporary PR was closed without merging; artificial failure/skip
+  conditions are isolated from delivery. Every required status settled correctly,
+  both complete local/publishing entry points retain all ten checks, and normal CI
+  passed. Stage 9 is complete.
 
 ## Verified baseline
 
@@ -618,7 +639,7 @@ guard, weakening assertions, widening peer ranges, or rewriting snapshots.
 - [x] Stage 6: agent guidance and architecture/change documentation delivered.
 - [x] Stage 7: test and workflow guardrails enforced.
 - [x] Stage 8: minimum-peer, custom Tailwind, and macOS coverage delivered.
-- [ ] Stage 9: CI duplication reduced with required gates verified.
+- [x] Stage 9: CI duplication reduced with required gates verified.
 
 ## References
 

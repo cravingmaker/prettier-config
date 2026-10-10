@@ -219,6 +219,7 @@ retaining behavior on each supported runtime.
 | `test:package`, minimum peers                         | Minimum peer versions, Linux Node 24      | The same package assertions at declared lower bounds                             |
 | `test:lifecycle`                                      | macOS lifecycle, Node 24                  | Live-clock cleanup, process trees, interruption, deadlines, output limits, paths |
 | Dependency Review action                              | Dependency Review                         | Existing dependency-change policy                                                |
+| CodeQL default setup                                  | Repository-managed CodeQL analysis        | Existing Actions and JavaScript/TypeScript analysis                              |
 
 The minimum-runtime job runs the test harness and installed type compiler on
 development Node, with runtime programs on Node 22.12.0. Negative tooling tests
