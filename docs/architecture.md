@@ -38,7 +38,7 @@ one npm-installed optional consumer. Install the actual tarball and explicit
 consumer dependencies with npm. Repository dependency symlinks cannot establish
 installed-consumer compatibility.
 
-`tests/consumers/installed.mjs` combines all former base assertions: JavaScript,
+`tests/consumers/installed.mjs` covers JavaScript,
 TypeScript, TSX, JSON, YAML, package.json ordering, XML, and both TOML cases.
 `optional.mjs` exercises Astro, Svelte, Tailwind ordering, Vue, and CSS-family
 stylesheets. Shared helpers check resolved parsers, default options, idempotence,
@@ -50,8 +50,6 @@ with a relative `tailwindStylesheet` path. Its Tailwind v4 theme and utility pro
 a different class order from the ordinary configuration, with default formatting
 and idempotence checked in both cases. Svelte and Tailwind CSS are explicit fixture
 dependencies; they are not dependencies of the published configuration.
-The [plan's assertion inventory](../IMPROVEMENT_PLAN.md#stage-5-consolidate-installed-consumer-tests)
-records the consolidation.
 
 All runtime programs run from their project and an external working directory.
 Resolve fixtures relative to the program's file URL, not `process.cwd()`. Consumer
@@ -128,7 +126,7 @@ the caller's checkout while a fixture or reference setup operates elsewhere.
 
 For every recipe, run the targeted checks first, then `npm run validate` and
 `git diff --check`. Review the diff against the intended base, preserve unrelated
-work, open focused dependent PRs, and verify remote checks separately. Full
+work, open focused PRs, and verify remote checks separately. Full
 validation also remains the `prepublishOnly` entry point.
 
 ### Plugin updates
@@ -232,9 +230,3 @@ to run after a failed or skipped prerequisite. Only three `success` results
 permit the behavior steps; other results fail the required status before checkout
 or installation. `Minimum Node.js 22.12.0` and `Dependency Review` remain separate
 required contexts. Existing strict/up-to-date repository rules are preserved.
-
-The [plan](../IMPROVEMENT_PLAN.md#implementation-decisions-and-evidence) records
-baseline timings, installation counts, and remote verification of prerequisite
-failure/skip behavior. Eight static commands run once instead of three times;
-the dedicated owner adds one root installation while retaining ten consumer
-installations across compatibility jobs.
