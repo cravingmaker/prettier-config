@@ -35,14 +35,13 @@
     "index.d.ts"
   ],
   "scripts": {
-    "commit:check": "npm run lint:staged",
+    "commit:check": "lint-staged",
     "effect:check": "effect-language-service diagnostics --project tsconfig.json",
     "effect:check-reference": "node scripts/check-effect-reference.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
     "lint:package": "publint --strict",
-    "lint:staged": "lint-staged",
     "lint:workflows": "node scripts/check-workflows.mjs",
     "prepare": "husky",
     "prepublishOnly": "npm run validate",
