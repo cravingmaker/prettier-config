@@ -24,7 +24,7 @@ updates:
         patterns:
           - vitest
           - "@vitest/ui"
-    # Update scripts/effect-reference.json with grouped Effect version changes.
+    # dependabot-effect-reference.yml synchronizes the source pin after grouped PR CI.
     # @effect/language-service has an independent version and stays separate.
     ignore:
       - dependency-name: "@types/node"

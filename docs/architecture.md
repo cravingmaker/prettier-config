@@ -189,8 +189,23 @@ Check real-clock cleanup and canonical paths on each configured CI platform.
 Keep `effect`, `@effect/platform-node-shared`, and `@effect/vitest` on the same exact
 version, updating root lockfile declarations/records and the reference version,
 tag, and full commit together. Dependabot groups these packages; the independently
-versioned language service stays separate. Preserve an old checkout by moving it
-aside yourself before setup; never reset or clean user content automatically.
+versioned language service stays separate.
+
+The [Dependabot reference workflow](../.github/workflows/dependabot-effect-reference.yml)
+runs after CI completes on a grouped Effect PR, including a failed initial pin
+check. Its [updater](../scripts/dependabot-effect-reference.mjs) reads PR files as
+data using trusted default-branch tooling. It accepts only open, same-repository
+Dependabot Effect PRs targeting `main`, verifies matching manifest/lockfile pins,
+resolves the upstream tag to a commit, and verifies all three upstream packages.
+It changes only the reference JSON and requires the inspected PR head to remain
+current. A synchronized reference is a no-op. Existing Release Please App
+credentials create the commit with repository-scoped contents-write and
+pull-requests-read permissions so normal PR CI runs again. The workflow must be
+on `main` before it activates; rerun CI to synchronize an existing grouped PR.
+Manual dependency updates still require updating the source pin together.
+
+Preserve an old checkout by moving it aside yourself before setup; never reset or
+clean user content automatically.
 
 Run `npm run effect:check-reference` offline, then explicitly run
 `npm run setup:effect-reference` to verify the actual source commit and contents.
