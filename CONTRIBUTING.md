@@ -156,6 +156,50 @@ validation and CI include the workflow command. Review
 The pre-commit hook runs ESLint fixes and Prettier on staged files. Full
 typechecking and tests run through `npm run validate` and in CI.
 
+### Interactive test UI
+
+Use [Vitest UI](https://vitest.dev/guide/ui) to browse results, inspect timings and
+snapshot diffs, and rerun individual tests while developing:
+
+```bash
+npm run test:ui
+```
+
+This watches the same regular tests as `npm test`. Installed-consumer tests have
+their own opt-in command because each run packs the package and creates temporary
+npm installations:
+
+```bash
+npm run test:package:ui
+```
+
+Open the URL printed in the terminal, normally
+`http://localhost:51204/__vitest__/`, including its token when present. Use
+`-- --no-open` to prevent automatic browser opening. To run both commands at once,
+give the second command a different port, for example:
+
+```bash
+npm run test:package:ui -- --api.port=51205
+```
+
+File and test-name filters also work with the UI:
+
+```bash
+npm run test:ui -- tests/format.test.ts -t "TypeScript"
+```
+
+The watch mappings in `vitest.config.ts` rerun affected tests when runtime files,
+public declarations, raw fixtures, or consumer programs change. These inputs are
+read through the filesystem or subprocesses rather than ordinary test imports.
+The regular UI continues to exclude package tests, and the package UI stays
+limited to installed consumers. Verify mapping changes with
+`npx vitest run tests/vitest-watch.test.ts`.
+
+Review snapshot changes before accepting them. Keep `vitest` and `@vitest/ui` on
+the same exact version; Dependabot groups their updates. The UI is a development
+tool; finish with `npm run validate` and `git diff --check`. CI and publishing
+continue to use the existing complete validation commands.
+
 ## Releases
 
 Release Please maintains a release pull request from conventional squash

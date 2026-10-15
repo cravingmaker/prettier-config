@@ -158,6 +158,7 @@ const config = [
     files: [
       "tests/tooling-guards.test.ts",
       "tests/effect-reference.test.ts",
+      "tests/vitest-watch.test.ts",
       "tests/workflow-tool.test.ts",
     ],
     rules: {
