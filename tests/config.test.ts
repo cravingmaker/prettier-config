@@ -20,6 +20,14 @@ describe("Prettier Config", () => {
     expect(config.plugins).toContain(require.resolve("prettier-plugin-toml"));
     expect(config.plugins).toContain(require.resolve("@prettier/plugin-xml"));
     expect(config.singleAttributePerLine).toBe(true);
+    expect(config.tailwindFunctions).toEqual([
+      "clsx",
+      "cn",
+      "cva",
+      "classNames",
+      "classnames",
+      "tv",
+    ]);
     expect(config).not.toHaveProperty("printWidth");
     expect(config).not.toHaveProperty("singleQuote");
     expect(config).not.toHaveProperty("jsxSingleQuote");

@@ -11,7 +11,8 @@ const customized = {
     { files: ["*.md"], options: { proseWrap: "always" } },
   ],
   plugins: [...config.plugins],
-} satisfies Config;
+  tailwindFunctions: [...config.tailwindFunctions, "tw"],
+} satisfies typeof config;
 void customized;
 
 const singleAttributePerLine: boolean = config.singleAttributePerLine;
@@ -20,5 +21,9 @@ void singleAttributePerLine;
 // @ts-expect-error The published configuration must be typed, not any.
 const invalidWidth: typeof config.printWidth = "wide";
 void invalidWidth;
+
+// @ts-expect-error Tailwind function names must be strings.
+const invalidTailwindFunctions: typeof config.tailwindFunctions = [false];
+void invalidTailwindFunctions;
 
 export default extended;

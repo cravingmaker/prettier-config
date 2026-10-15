@@ -88,6 +88,22 @@ npm install --save-dev --save-exact prettier-plugin-tailwindcss
 
 The Tailwind plugin is always loaded last, as it requires.
 
+When installed, it also sorts classes in `clsx`, `cn`, `cva`, `classNames`,
+`classnames`, and `tv` calls and tagged templates. To include another helper,
+extend `tailwindFunctions`:
+
+```javascript
+import config from "@cravingmaker/prettier-config";
+
+export default {
+  ...config,
+  tailwindFunctions: [...config.tailwindFunctions, "tw"],
+};
+```
+
+See [sorting classes in function calls](https://github.com/tailwindlabs/prettier-plugin-tailwindcss#sorting-classes-in-function-calls)
+for details.
+
 ### Tailwind CSS v4
 
 Set `tailwindStylesheet` to your project's existing Tailwind CSS entry point

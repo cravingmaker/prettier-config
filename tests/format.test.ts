@@ -158,6 +158,40 @@ describe("Format Integration", () => {
     await testFixture("sample.css", temporaryDirectory, configPath);
   });
 
+  it.each([
+    { filename: "tailwind-functions.js", parser: "oxc" },
+    { filename: "tailwind-functions.ts", parser: "oxc-ts" },
+  ])(
+    "sorts Tailwind helper functions with $parser",
+    async ({ filename, parser }) => {
+      const filePath = await prepareFixture(
+        `nested/${filename}`,
+        temporaryDirectory,
+        "tailwind-functions.js",
+      );
+      const source = await fs.readFile(filePath, "utf8");
+      const resolved = await prettier.resolveConfig(filePath, {
+        config: configPath,
+        editorconfig: false,
+      });
+      const options = { ...resolved, filepath: filePath };
+      const formatted = await prettier.format(source, options);
+
+      expect(resolved?.parser).toBe(parser);
+      expect(formatted).toContain('clsx("flex p-4 text-white")');
+      expect(formatted).toContain('cn("flex p-4 text-white")');
+      expect(formatted).toContain('cva("flex p-4 text-white",');
+      expect(formatted).toContain('classNames("flex p-4 text-white")');
+      expect(formatted).toContain('classnames("flex p-4 text-white")');
+      expect(formatted).toContain('base: "flex p-4 text-white"');
+      expect(formatted).toContain('small: "px-4 py-2"');
+      expect(formatted).toContain('"bg-blue-500 font-bold": active');
+      expect(formatted).toContain("cn`flex p-4 text-white`");
+      expect(formatted).toContain('custom("text-white p-4 flex")');
+      expect(await prettier.format(formatted, options)).toBe(formatted);
+    },
+  );
+
   it("sorts Tailwind classes in Vue attributes, bindings, and scoped styles", async () => {
     const formatted = await testFixture(
       "tailwind.vue",
