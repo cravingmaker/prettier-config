@@ -101,7 +101,7 @@ imports, and checks static/re-export/dynamic-literal forms. It distinguishes
 decoded data from API namespaces and rejects nonliteral module loading and
 namespace access. CommonJS Effect loading loses symbol types and is rejected;
 use typed ESM. Arbitrary runtime indirection is not statically proven safe.
-`npm run check:effect` separately catches unobserved Effects.
+`npm run effect:check` separately catches unobserved Effects.
 
 The native command adapter is intentional: upstream Effect process modules and
 the corresponding platform spawner are unstable at the current pin. Effect
@@ -168,7 +168,7 @@ for the specific failure/deadline/interruption case. Run:
 
 ```bash
 npx vitest run tests/package-smoke-harness.test.ts
-npm run check:effect
+npm run effect:check
 npx vitest run tests/tooling-guards.test.ts
 npm run test:package
 ```
@@ -183,11 +183,11 @@ tag, and full commit together. Dependabot groups these packages; the independent
 versioned language service stays separate. Preserve an old checkout by moving it
 aside yourself before setup; never reset or clean user content automatically.
 
-Run `npm run check:effect-reference` offline, then explicitly run
+Run `npm run effect:check-reference` offline, then explicitly run
 `npm run setup:effect-reference` to verify the actual source commit and contents.
 Read the new `LLMS.md` and re-audit APIs before adopting them. Run
 `npx vitest run tests/effect-reference.test.ts tests/tooling-guards.test.ts` and
-`npm run check:effect`. Decode external JSON through the stable Schema helper in
+`npm run effect:check`. Decode external JSON through the stable Schema helper in
 `scripts/manifest.mjs`, retaining file/phase context.
 
 ### CI changes
@@ -209,7 +209,7 @@ retaining behavior on each supported runtime.
 
 | Commands/checks                                       | CI owner                                  | Coverage                                                                         |
 | ----------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
-| `check:effect-reference`, `typecheck`, `check:effect` | Shared static checks, Linux Node 24       | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
+| `effect:check-reference`, `typecheck`, `effect:check` | Shared static checks, Linux Node 24       | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
 | `lint`, `format:check`, `lint:workflows`              | Shared static checks, Linux Node 24       | Typed rules, test/API guards, repository formatting, pinned actionlint           |
 | `lint:package`, `typecheck:package`                   | Shared static checks, Linux Node 24       | Publint and ATTW's ESM package profile                                           |
 | `test`                                                | Node.js 22/24/26 on Linux                 | Behavior, negative tooling fixtures, native process lifecycle                    |

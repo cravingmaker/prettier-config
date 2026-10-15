@@ -35,9 +35,9 @@
     "index.d.ts"
   ],
   "scripts": {
-    "check:commit": "npm run lint:staged",
-    "check:effect": "effect-language-service diagnostics --project tsconfig.json",
-    "check:effect-reference": "node scripts/check-effect-reference.mjs",
+    "commit:check": "npm run lint:staged",
+    "effect:check": "effect-language-service diagnostics --project tsconfig.json",
+    "effect:check-reference": "node scripts/check-effect-reference.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
@@ -54,7 +54,7 @@
     "typecheck:package": "attw --pack . --profile esm-only",
     "validate": "npm run validate:static && npm run validate:behavior",
     "validate:behavior": "npm run test && npm run test:package",
-    "validate:static": "npm run check:effect-reference && npm run typecheck && npm run check:effect && npm run lint && npm run format:check && npm run lint:workflows && npm run lint:package && npm run typecheck:package"
+    "validate:static": "npm run effect:check-reference && npm run typecheck && npm run effect:check && npm run lint && npm run format:check && npm run lint:workflows && npm run lint:package && npm run typecheck:package"
   },
   "lint-staged": {
     "*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": [

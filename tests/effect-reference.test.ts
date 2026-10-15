@@ -66,7 +66,7 @@ const withProject = async (check: (root: string) => Promise<void>) => {
         Object.entries(packageJson.scripts).map(([name, command]) => [
           name,
           [
-            "check:effect-reference",
+            "effect:check-reference",
             "prepublishOnly",
             "validate",
             "validate:behavior",

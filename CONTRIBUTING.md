@@ -67,7 +67,7 @@ coordinated packages and offline consistency checks.
 
 Workspace Zed settings use local TypeScript through `vtsls` and hide `repos/`
 from scans and auto-imports. The Effect plugin supplies editor diagnostics;
-`npm run check:effect` runs them in the terminal because ordinary `tsc` does not
+`npm run effect:check` runs them in the terminal because ordinary `tsc` does not
 run editor plugins. `local/effect-stability` checks installed declarations during
 linting, so normal validation works without a cloned reference.
 
