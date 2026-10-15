@@ -2,17 +2,17 @@
 
 ## Ownership and package contracts
 
-| Area                  | Owner                                                                                           | Contract                                                                                        |
-| --------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Runtime configuration | [index.mjs](../index.mjs)                                                                       | Published ESM object, consumed directly without compilation                                     |
-| Public declarations   | [index.d.ts](../index.d.ts)                                                                     | Required `plugins`, `overrides`, and `singleAttributePerLine`; consumers can extend/spread them |
-| Repository formatting | [prettier.config.mjs](../prettier.config.mjs)                                                   | Reuses the published runtime                                                                    |
-| Formatting behavior   | [config tests](../tests/config.test.ts), [format tests](../tests/format.test.ts)                | Defaults, parser selection, resolution, ordering, outputs, and reviewed snapshots               |
-| Packed consumers      | [package tests](../tests/package.smoke.test.ts), [programs](../tests/consumers/)                | Real npm installations with consumer-local plugins and tools                                    |
-| Resource lifetime     | [package harness](../tests/helpers/package-smoke.ts)                                            | Effect scopes release shared workspaces on success, failure, and interruption                   |
-| Native processes      | [command adapter](../tests/helpers/node-command.ts)                                             | Process events, bounded buffers, process-tree disposal, and typed failures                      |
-| Development tools     | [scripts](../scripts/), [lint config](../eslint.config.js), [compiler config](../tsconfig.json) | Typed owned code, stable API restrictions, decoded external data                                |
-| CI and release        | [workflows](../.github/workflows/), [package scripts](../package.json)                          | Required statuses and complete local/publishing validation                                      |
+| Area                  | Owner                                                                                           | Contract                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Runtime configuration | [index.mjs](../index.mjs)                                                                       | Published ESM object, consumed directly without compilation                                                          |
+| Public declarations   | [index.d.ts](../index.d.ts)                                                                     | Required `plugins`, `overrides`, `singleAttributePerLine`, and `tailwindFunctions`; consumers can extend/spread them |
+| Repository formatting | [prettier.config.mjs](../prettier.config.mjs)                                                   | Reuses the published runtime                                                                                         |
+| Formatting behavior   | [config tests](../tests/config.test.ts), [format tests](../tests/format.test.ts)                | Defaults, parser selection, resolution, ordering, outputs, and reviewed snapshots                                    |
+| Packed consumers      | [package tests](../tests/package.smoke.test.ts), [programs](../tests/consumers/)                | Real npm installations with consumer-local plugins and tools                                                         |
+| Resource lifetime     | [package harness](../tests/helpers/package-smoke.ts)                                            | Effect scopes release shared workspaces on success, failure, and interruption                                        |
+| Native processes      | [command adapter](../tests/helpers/node-command.ts)                                             | Process events, bounded buffers, process-tree disposal, and typed failures                                           |
+| Development tools     | [scripts](../scripts/), [lint config](../eslint.config.js), [compiler config](../tsconfig.json) | Typed owned code, stable API restrictions, decoded external data                                                     |
+| CI and release        | [workflows](../.github/workflows/), [package scripts](../package.json)                          | Required statuses and complete local/publishing validation                                                           |
 
 The runtime is a small synchronous configuration object. Publishing it directly
 avoids a build artifact that could drift from the tested source. Effect belongs
@@ -24,6 +24,11 @@ JavaScript and `oxc-ts` TypeScript overrides, absolute plugin paths, and Tailwin
 last. Optional plugins may be absent. A broken installed optional package must
 propagate its original resolution error; package-presence inspection runs only
 after failed optional resolution.
+
+`tailwindFunctions` configures class sorting in `clsx`, `cn`, `cva`, `classNames`,
+`classnames`, and `tv` when the Tailwind plugin is installed. Its required public
+array can be spread to add consumer-specific helper names without importing
+optional plugin types.
 
 The five published files are `index.mjs`, `index.d.ts`, `package.json`, `README.md`,
 and `LICENSE`. Keep existing export paths, required public properties, dependency
@@ -112,7 +117,11 @@ exit status, both output streams, UTF-8 decoding, and output limits.
 
 POSIX commands run in process groups. Disposal must terminate descendants even
 after the leader exits, escalate after the grace period, and close streams before
-workspace cleanup. The existing Windows adapter path remains; Windows execution
+workspace cleanup. A signal-zero probe returning `EPERM` still indicates an
+existing group; Darwin can retain a zombie-only group until reaping completes.
+Denied group signals wait for reaping within the cleanup grace period, then
+preserve the permission error if the group still exists.
+The existing Windows adapter path remains; Windows execution
 is unverified. Real subprocess regressions use `it.live` or a suite excluding test
 services so deadlines use a live clock. Do not substitute a virtual test clock
 for operating-system process timing.

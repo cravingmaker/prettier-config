@@ -70,6 +70,7 @@ const config = {
   ],
   plugins,
   singleAttributePerLine: true,
+  tailwindFunctions: ["clsx", "cn", "cva", "classNames", "classnames", "tv"],
 };
 
 // eslint-disable-next-line import-x/no-default-export -- Prettier configuration is typically exported as a default export

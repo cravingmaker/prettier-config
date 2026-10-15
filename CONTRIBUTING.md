@@ -1,5 +1,8 @@
 # Contributing
 
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) in all project
+interactions.
+
 ## Setup
 
 Development requires Node.js 22.22.1 or newer. The published configuration
@@ -199,6 +202,44 @@ Review snapshot changes before accepting them. Keep `vitest` and `@vitest/ui` on
 the same exact version; Dependabot groups their updates. The UI is a development
 tool; finish with `npm run validate` and `git diff --check`. CI and publishing
 continue to use the existing complete validation commands.
+
+### Dependency inspection
+
+Use [Node Modules Inspector](https://github.com/antfu/node-modules-inspector) to
+explore the installed dependency tree, filter production and development
+dependencies, and inspect package sizes:
+
+```bash
+npm run deps:inspect
+```
+
+Open the URL printed in the terminal, normally `http://localhost:9999/`. The
+command leaves browser opening to you; use `-- --open` to open it automatically.
+To select another port, use `npm run deps:inspect -- --port=10000`.
+
+Run reports without starting the UI:
+
+```bash
+npm run deps:report-duplicates
+npm run deps:report-sizes -- --limit 10
+```
+
+Both reports cover the installed tree, including development dependencies. UI
+filters do not limit the CLI reports. For machine-readable JSON, use `--silent`
+to keep npm's script banner out of stdout:
+
+```bash
+npm run --silent deps:report-duplicates -- --json
+npm run --silent deps:report-sizes -- --json --limit 10
+```
+
+Registry metadata is fetched by default and cached under
+`node_modules/.cache/node-modules-inspector/`. For local analysis without metadata
+requests, supply an inspector configuration with `fetchNpmMeta: false` using
+`-- --config /path/to/config.mjs`.
+
+Use these tools when reviewing dependency updates. Finish changes with the
+required `npm run validate` checks.
 
 ## Releases
 
