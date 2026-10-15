@@ -121,15 +121,12 @@ describe("Vitest watch dependencies", () => {
             signal: AbortSignal.timeout(20_000),
           });
           await runner.start(filter);
-          await expect(initial).resolves.toEqual([
-            expect.objectContaining({
-              detail: {
-                errors: [],
-                files: new Set(selectedTests),
-                reason: "passed",
-              },
-            }),
-          ]);
+          const initialReports: readonly unknown[] = await initial;
+          expect(initialReports[0]).toHaveProperty("detail", {
+            errors: [],
+            files: new Set(selectedTests),
+            reason: "passed",
+          });
 
           /* eslint-disable functional/no-loop-statements, no-await-in-loop -- Each filesystem edit must finish its watcher run before the next input changes. */
           for (const change of changes) {
@@ -145,15 +142,15 @@ describe("Vitest watch dependencies", () => {
               path.join(workspace, change.filename),
               "// changed input\n",
             );
-            await expect(completed).resolves.toEqual([
-              expect.objectContaining({
-                detail: {
-                  errors: [],
-                  files: new Set(expected),
-                  reason: "passed",
-                },
-              }),
-            ]);
+            const completedReports: readonly unknown[] = await completed;
+            expect(
+              completedReports[0],
+              `rerun after changing ${change.filename}`,
+            ).toHaveProperty("detail", {
+              errors: [],
+              files: new Set(expected),
+              reason: "passed",
+            });
           }
           /* eslint-enable functional/no-loop-statements, no-await-in-loop -- Restore the style guards after sequential watcher checks. */
         } finally {

@@ -117,7 +117,11 @@ exit status, both output streams, UTF-8 decoding, and output limits.
 
 POSIX commands run in process groups. Disposal must terminate descendants even
 after the leader exits, escalate after the grace period, and close streams before
-workspace cleanup. The existing Windows adapter path remains; Windows execution
+workspace cleanup. A signal-zero probe returning `EPERM` still indicates an
+existing group; Darwin can retain a zombie-only group until reaping completes.
+Denied group signals wait for reaping within the cleanup grace period, then
+preserve the permission error if the group still exists.
+The existing Windows adapter path remains; Windows execution
 is unverified. Real subprocess regressions use `it.live` or a suite excluding test
 services so deadlines use a live clock. Do not substitute a virtual test clock
 for operating-system process timing.
