@@ -2,17 +2,17 @@
 
 ## Ownership and package contracts
 
-| Area                  | Owner                                                                                           | Contract                                                                                        |
-| --------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Runtime configuration | [index.mjs](../index.mjs)                                                                       | Published ESM object, consumed directly without compilation                                     |
-| Public declarations   | [index.d.ts](../index.d.ts)                                                                     | Required `plugins`, `overrides`, and `singleAttributePerLine`; consumers can extend/spread them |
-| Repository formatting | [prettier.config.mjs](../prettier.config.mjs)                                                   | Reuses the published runtime                                                                    |
-| Formatting behavior   | [config tests](../tests/config.test.ts), [format tests](../tests/format.test.ts)                | Defaults, parser selection, resolution, ordering, outputs, and reviewed snapshots               |
-| Packed consumers      | [package tests](../tests/package.smoke.test.ts), [programs](../tests/consumers/)                | Real npm installations with consumer-local plugins and tools                                    |
-| Resource lifetime     | [package harness](../tests/helpers/package-smoke.ts)                                            | Effect scopes release shared workspaces on success, failure, and interruption                   |
-| Native processes      | [command adapter](../tests/helpers/node-command.ts)                                             | Process events, bounded buffers, process-tree disposal, and typed failures                      |
-| Development tools     | [scripts](../scripts/), [lint config](../eslint.config.js), [compiler config](../tsconfig.json) | Typed owned code, stable API restrictions, decoded external data                                |
-| CI and release        | [workflows](../.github/workflows/), [package scripts](../package.json)                          | Required statuses and complete local/publishing validation                                      |
+| Area                  | Owner                                                                                           | Contract                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Runtime configuration | [index.mjs](../index.mjs)                                                                       | Published ESM object, consumed directly without compilation                                                          |
+| Public declarations   | [index.d.ts](../index.d.ts)                                                                     | Required `plugins`, `overrides`, `singleAttributePerLine`, and `tailwindFunctions`; consumers can extend/spread them |
+| Repository formatting | [prettier.config.mjs](../prettier.config.mjs)                                                   | Reuses the published runtime                                                                                         |
+| Formatting behavior   | [config tests](../tests/config.test.ts), [format tests](../tests/format.test.ts)                | Defaults, parser selection, resolution, ordering, outputs, and reviewed snapshots                                    |
+| Packed consumers      | [package tests](../tests/package.smoke.test.ts), [programs](../tests/consumers/)                | Real npm installations with consumer-local plugins and tools                                                         |
+| Resource lifetime     | [package harness](../tests/helpers/package-smoke.ts)                                            | Effect scopes release shared workspaces on success, failure, and interruption                                        |
+| Native processes      | [command adapter](../tests/helpers/node-command.ts)                                             | Process events, bounded buffers, process-tree disposal, and typed failures                                           |
+| Development tools     | [scripts](../scripts/), [lint config](../eslint.config.js), [compiler config](../tsconfig.json) | Typed owned code, stable API restrictions, decoded external data                                                     |
+| CI and release        | [workflows](../.github/workflows/), [package scripts](../package.json)                          | Required statuses and complete local/publishing validation                                                           |
 
 The runtime is a small synchronous configuration object. Publishing it directly
 avoids a build artifact that could drift from the tested source. Effect belongs
@@ -24,6 +24,11 @@ JavaScript and `oxc-ts` TypeScript overrides, absolute plugin paths, and Tailwin
 last. Optional plugins may be absent. A broken installed optional package must
 propagate its original resolution error; package-presence inspection runs only
 after failed optional resolution.
+
+`tailwindFunctions` configures class sorting in `clsx`, `cn`, `cva`, `classNames`,
+`classnames`, and `tv` when the Tailwind plugin is installed. Its required public
+array can be spread to add consumer-specific helper names without importing
+optional plugin types.
 
 The five published files are `index.mjs`, `index.d.ts`, `package.json`, `README.md`,
 and `LICENSE`. Keep existing export paths, required public properties, dependency
@@ -101,7 +106,7 @@ imports, and checks static/re-export/dynamic-literal forms. It distinguishes
 decoded data from API namespaces and rejects nonliteral module loading and
 namespace access. CommonJS Effect loading loses symbol types and is rejected;
 use typed ESM. Arbitrary runtime indirection is not statically proven safe.
-`npm run check:effect` separately catches unobserved Effects.
+`npm run effect:check` separately catches unobserved Effects.
 
 The native command adapter is intentional: upstream Effect process modules and
 the corresponding platform spawner are unstable at the current pin. Effect
@@ -112,7 +117,11 @@ exit status, both output streams, UTF-8 decoding, and output limits.
 
 POSIX commands run in process groups. Disposal must terminate descendants even
 after the leader exits, escalate after the grace period, and close streams before
-workspace cleanup. The existing Windows adapter path remains; Windows execution
+workspace cleanup. A signal-zero probe returning `EPERM` still indicates an
+existing group; Darwin can retain a zombie-only group until reaping completes.
+Denied group signals wait for reaping within the cleanup grace period, then
+preserve the permission error if the group still exists.
+The existing Windows adapter path remains; Windows execution
 is unverified. Real subprocess regressions use `it.live` or a suite excluding test
 services so deadlines use a live clock. Do not substitute a virtual test clock
 for operating-system process timing.
@@ -168,7 +177,7 @@ for the specific failure/deadline/interruption case. Run:
 
 ```bash
 npx vitest run tests/package-smoke-harness.test.ts
-npm run check:effect
+npm run effect:check
 npx vitest run tests/tooling-guards.test.ts
 npm run test:package
 ```
@@ -183,11 +192,11 @@ tag, and full commit together. Dependabot groups these packages; the independent
 versioned language service stays separate. Preserve an old checkout by moving it
 aside yourself before setup; never reset or clean user content automatically.
 
-Run `npm run check:effect-reference` offline, then explicitly run
+Run `npm run effect:check-reference` offline, then explicitly run
 `npm run setup:effect-reference` to verify the actual source commit and contents.
 Read the new `LLMS.md` and re-audit APIs before adopting them. Run
 `npx vitest run tests/effect-reference.test.ts tests/tooling-guards.test.ts` and
-`npm run check:effect`. Decode external JSON through the stable Schema helper in
+`npm run effect:check`. Decode external JSON through the stable Schema helper in
 `scripts/manifest.mjs`, retaining file/phase context.
 
 ### CI changes
@@ -209,7 +218,7 @@ retaining behavior on each supported runtime.
 
 | Commands/checks                                       | CI owner                                  | Coverage                                                                         |
 | ----------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
-| `check:effect-reference`, `typecheck`, `check:effect` | Shared static checks, Linux Node 24       | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
+| `effect:check-reference`, `typecheck`, `effect:check` | Shared static checks, Linux Node 24       | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
 | `lint`, `format:check`, `lint:workflows`              | Shared static checks, Linux Node 24       | Typed rules, test/API guards, repository formatting, pinned actionlint           |
 | `lint:package`, `typecheck:package`                   | Shared static checks, Linux Node 24       | Publint and ATTW's ESM package profile                                           |
 | `test`                                                | Node.js 22/24/26 on Linux                 | Behavior, negative tooling fixtures, native process lifecycle                    |

@@ -24,6 +24,12 @@ assert.deepEqual(
 
 const examples = [
   {
+    expected: 'clsx("text-white p-4 flex");\n',
+    filename: "src/tailwind-functions.js",
+    parser: "oxc",
+    source: 'clsx("text-white p-4 flex")',
+  },
+  {
     expected: "<config><item name='fixture' /></config>\n",
     filename: "nested/config.xml",
     source: "<config><item name='fixture'/></config>",

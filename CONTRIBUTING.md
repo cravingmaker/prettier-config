@@ -1,5 +1,8 @@
 # Contributing
 
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) in all project
+interactions.
+
 ## Setup
 
 Development requires Node.js 22.22.1 or newer. The published configuration
@@ -67,7 +70,7 @@ coordinated packages and offline consistency checks.
 
 Workspace Zed settings use local TypeScript through `vtsls` and hide `repos/`
 from scans and auto-imports. The Effect plugin supplies editor diagnostics;
-`npm run check:effect` runs them in the terminal because ordinary `tsc` does not
+`npm run effect:check` runs them in the terminal because ordinary `tsc` does not
 run editor plugins. `local/effect-stability` checks installed declarations during
 linting, so normal validation works without a cloned reference.
 
@@ -155,6 +158,88 @@ validation and CI include the workflow command. Review
 
 The pre-commit hook runs ESLint fixes and Prettier on staged files. Full
 typechecking and tests run through `npm run validate` and in CI.
+
+### Interactive test UI
+
+Use [Vitest UI](https://vitest.dev/guide/ui) to browse results, inspect timings and
+snapshot diffs, and rerun individual tests while developing:
+
+```bash
+npm run test:ui
+```
+
+This watches the same regular tests as `npm test`. Installed-consumer tests have
+their own opt-in command because each run packs the package and creates temporary
+npm installations:
+
+```bash
+npm run test:package:ui
+```
+
+Open the URL printed in the terminal, normally
+`http://localhost:51204/__vitest__/`, including its token when present. Use
+`-- --no-open` to prevent automatic browser opening. To run both commands at once,
+give the second command a different port, for example:
+
+```bash
+npm run test:package:ui -- --api.port=51205
+```
+
+File and test-name filters also work with the UI:
+
+```bash
+npm run test:ui -- tests/format.test.ts -t "TypeScript"
+```
+
+The watch mappings in `vitest.config.ts` rerun affected tests when runtime files,
+public declarations, raw fixtures, or consumer programs change. These inputs are
+read through the filesystem or subprocesses rather than ordinary test imports.
+The regular UI continues to exclude package tests, and the package UI stays
+limited to installed consumers. Verify mapping changes with
+`npx vitest run tests/vitest-watch.test.ts`.
+
+Review snapshot changes before accepting them. Keep `vitest` and `@vitest/ui` on
+the same exact version; Dependabot groups their updates. The UI is a development
+tool; finish with `npm run validate` and `git diff --check`. CI and publishing
+continue to use the existing complete validation commands.
+
+### Dependency inspection
+
+Use [Node Modules Inspector](https://github.com/antfu/node-modules-inspector) to
+explore the installed dependency tree, filter production and development
+dependencies, and inspect package sizes:
+
+```bash
+npm run deps:inspect
+```
+
+Open the URL printed in the terminal, normally `http://localhost:9999/`. The
+command leaves browser opening to you; use `-- --open` to open it automatically.
+To select another port, use `npm run deps:inspect -- --port=10000`.
+
+Run reports without starting the UI:
+
+```bash
+npm run deps:report-duplicates
+npm run deps:report-sizes -- --limit 10
+```
+
+Both reports cover the installed tree, including development dependencies. UI
+filters do not limit the CLI reports. For machine-readable JSON, use `--silent`
+to keep npm's script banner out of stdout:
+
+```bash
+npm run --silent deps:report-duplicates -- --json
+npm run --silent deps:report-sizes -- --json --limit 10
+```
+
+Registry metadata is fetched by default and cached under
+`node_modules/.cache/node-modules-inspector/`. For local analysis without metadata
+requests, supply an inspector configuration with `fetchNpmMeta: false` using
+`-- --config /path/to/config.mjs`.
+
+Use these tools when reviewing dependency updates. Finish changes with the
+required `npm run validate` checks.
 
 ## Releases
 

@@ -91,19 +91,10 @@ const startCommand = (spec: CommandSpec) => {
       process.kill(-child.pid, 0);
       return true;
     } catch (error) {
-      if (error instanceof Error && "code" in error && error.code === "ESRCH") {
-        return false;
-      }
-      throw error;
-    }
-  };
-  const signal = (name: NodeJS.Signals) => {
-    if (child.pid === undefined) return;
-    try {
-      process.kill(-child.pid, name);
-    } catch (error) {
-      if (error instanceof Error && "code" in error && error.code === "ESRCH") {
-        return;
+      if (error instanceof Error && "code" in error) {
+        if (error.code === "ESRCH") return false;
+        // Darwin can retain a zombie-only group while its members are reaped.
+        if (error.code === "EPERM") return true;
       }
       throw error;
     }
@@ -114,6 +105,22 @@ const startCommand = (spec: CommandSpec) => {
     while (!hasStopped() && performance.now() < deadline) {
       // eslint-disable-next-line no-await-in-loop -- Poll process state between delays until cleanup completes or its grace period expires.
       await delay(10);
+    }
+  };
+  const signal = async (name: NodeJS.Signals) => {
+    if (child.pid === undefined) return;
+    try {
+      process.kill(-child.pid, name);
+    } catch (error) {
+      if (error instanceof Error && "code" in error) {
+        if (error.code === "ESRCH") return;
+        if (error.code === "EPERM") {
+          // Reaping can briefly deny group signals; preserve genuine permission failures.
+          await waitForExit();
+          if (!isAlive()) return;
+        }
+      }
+      throw error;
     }
   };
   const dispose = async () => {
@@ -130,9 +137,9 @@ const startCommand = (spec: CommandSpec) => {
           }
         }
       } else {
-        signal("SIGTERM");
+        await signal("SIGTERM");
         await waitForExit();
-        if (isAlive()) signal("SIGKILL");
+        if (isAlive()) await signal("SIGKILL");
       }
       await waitForExit();
       if (!closed) {

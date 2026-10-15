@@ -19,6 +19,11 @@ updates:
           - effect
           - "@effect/platform-node-shared"
           - "@effect/vitest"
+      # Vitest and its UI require matching exact versions.
+      vitest:
+        patterns:
+          - vitest
+          - "@vitest/ui"
     # Update scripts/effect-reference.json with grouped Effect version changes.
     # @effect/language-service has an independent version and stays separate.
     ignore:
