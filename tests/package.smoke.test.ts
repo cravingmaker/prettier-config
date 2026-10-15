@@ -1,6 +1,5 @@
-import { Context, Effect, Layer } from "effect";
-import { layer } from "@effect/vitest";
-import { expect } from "vitest";
+import { Context, Effect, Layer, ManagedRuntime } from "effect";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import {
   consumerNode,
@@ -8,6 +7,7 @@ import {
   packageSmokeLayer,
 } from "./helpers/package-smoke.js";
 import { peerScenario } from "./helpers/peer-scenarios.js";
+import { runRuntimeEffect } from "./helpers/test-effect.js";
 import packageJson from "../package.json" with { type: "json" };
 
 class BaseConsumer extends Context.Service<BaseConsumer, string>()(
@@ -64,119 +64,148 @@ const optionalConsumerLayer = Layer.effect(
   }),
 );
 
-layer(packageSmokeLayer, { excludeTestServices: true, timeout: "60 seconds" })(
-  `Published Package (${peerScenario.name} peers, Prettier ${peerScenario.prettier})`,
-  (it) => {
-    it.effect(
-      "ships the runtime and public types without build artifacts",
-      () =>
+describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario.prettier})`, () => {
+  const runtime = ManagedRuntime.make(packageSmokeLayer);
+  beforeAll(async () => {
+    await runtime.runPromise(Effect.void);
+  }, 60_000);
+  afterAll(async () => {
+    await runtime.dispose();
+  }, 30_000);
+  it("ships the runtime and public types without build artifacts", async (context) => {
+    await runRuntimeEffect(
+      context,
+      runtime,
+      Effect.gen(function* () {
+        const smoke = yield* PackageSmoke;
+        const output = yield* smoke.run({
+          args: ["-tzf", smoke.tarball],
+          cwd: smoke.workspace,
+          executable: "tar",
+          phase: "list tarball",
+          timeoutMs: 30_000,
+        });
+        const entries = output.trim().split("\n");
+        expect(entries).toHaveLength(5);
+        expect(entries).toEqual(
+          expect.arrayContaining([
+            "package/LICENSE",
+            "package/README.md",
+            "package/index.d.ts",
+            "package/index.mjs",
+            "package/package.json",
+          ]),
+        );
+      }),
+    );
+  }, 60_000);
+
+  describe("with an npm-installed base consumer", () => {
+    const baseRuntime = ManagedRuntime.make(
+      baseConsumerLayer.pipe(Layer.provideMerge(packageSmokeLayer)),
+      { memoMap: runtime.memoMap },
+    );
+    beforeAll(async () => {
+      await baseRuntime.runPromise(Effect.void);
+    }, 180_000);
+    afterAll(async () => {
+      await baseRuntime.dispose();
+    }, 30_000);
+    it("installs a real package and checks optional resolution and public types", async (context) => {
+      await runRuntimeEffect(
+        context,
+        baseRuntime,
         Effect.gen(function* () {
           const smoke = yield* PackageSmoke;
-          const output = yield* smoke.run({
-            args: ["-tzf", smoke.tarball],
-            cwd: smoke.workspace,
-            executable: "tar",
-            phase: "list tarball",
+          const consumer = yield* BaseConsumer;
+          expect(yield* smoke.isInstalledPackageSymlink(consumer)).toBe(false);
+          expect(
+            yield* smoke.run({
+              args: ["resolution.mjs"],
+              cwd: consumer,
+              executable: consumerNode,
+              phase: "check optional resolution",
+              timeoutMs: 30_000,
+            }),
+          ).toBe("ok");
+          // TypeScript runs on the development runtime; only consumers select the minimum Node.
+          yield* smoke.run({
+            args: [
+              "node_modules/typescript/bin/tsc",
+              "--project",
+              "tsconfig.json",
+            ],
+            cwd: consumer,
+            executable: process.execPath,
+            phase: "check installed types",
             timeoutMs: 30_000,
           });
-          const entries = output.trim().split("\n");
-          expect(entries).toHaveLength(5);
-          expect(entries).toEqual(
-            expect.arrayContaining([
-              "package/LICENSE",
-              "package/README.md",
-              "package/index.d.ts",
-              "package/index.mjs",
-              "package/package.json",
-            ]),
-          );
         }),
-      60_000,
-    );
-
-    it.layer(baseConsumerLayer, { timeout: "180 seconds" })(
-      "with an npm-installed base consumer",
-      (baseTests) => {
-        baseTests.effect(
-          "installs a real package and checks optional resolution and public types",
-          () =>
-            Effect.gen(function* () {
-              const smoke = yield* PackageSmoke;
-              const consumer = yield* BaseConsumer;
-              expect(yield* smoke.isInstalledPackageSymlink(consumer)).toBe(
-                false,
-              );
-              expect(
-                yield* smoke.run({
-                  args: ["resolution.mjs"],
-                  cwd: consumer,
-                  executable: consumerNode,
-                  phase: "check optional resolution",
-                  timeoutMs: 30_000,
-                }),
-              ).toBe("ok");
-              // TypeScript runs on the development runtime; only consumers select the minimum Node.
-              yield* smoke.run({
-                args: [
-                  "node_modules/typescript/bin/tsc",
-                  "--project",
-                  "tsconfig.json",
-                ],
-                cwd: consumer,
-                executable: process.execPath,
-                phase: "check installed types",
-                timeoutMs: 30_000,
-              });
-            }),
-          60_000,
-        );
-        baseTests.effect.each([false, true])(
-          "retains base formatting without optional plugins (external cwd: %s)",
-          (externalCwd) =>
-            Effect.gen(function* () {
-              const smoke = yield* PackageSmoke;
-              const consumer = yield* BaseConsumer;
-              expect(
-                yield* smoke.runConsumer(
-                  consumer,
-                  "installed.mjs",
-                  externalCwd,
-                ),
-              ).toBe("ok");
-            }),
-          60_000,
+      );
+    }, 60_000);
+    it.for([false, true])(
+      "retains base formatting without optional plugins (external cwd: %s)",
+      { timeout: 60_000 },
+      async (externalCwd, context) => {
+        await runRuntimeEffect(
+          context,
+          baseRuntime,
+          Effect.gen(function* () {
+            const smoke = yield* PackageSmoke;
+            const consumer = yield* BaseConsumer;
+            expect(
+              yield* smoke.runConsumer(consumer, "installed.mjs", externalCwd),
+            ).toBe("ok");
+          }),
         );
       },
     );
+  });
 
-    it.layer(optionalConsumerLayer, { timeout: "180 seconds" })(
-      "with npm-installed optional plugins",
-      (optionalTests) => {
-        optionalTests.effect.each([false, true])(
-          "resolves custom Tailwind stylesheet relative to config (external cwd: %s)",
-          (externalCwd) =>
-            Effect.gen(function* () {
-              const smoke = yield* PackageSmoke;
-              const consumer = yield* OptionalConsumer;
-              expect(
-                yield* smoke.runConsumer(consumer, "tailwind.mjs", externalCwd),
-              ).toBe("ok");
-            }),
-          60_000,
-        );
-        optionalTests.effect.each([false, true])(
-          "loads optional plugins from the consumer (external cwd: %s)",
-          (externalCwd) =>
-            Effect.gen(function* () {
-              const smoke = yield* PackageSmoke;
-              const consumer = yield* OptionalConsumer;
-              expect(
-                yield* smoke.runConsumer(consumer, "optional.mjs", externalCwd),
-              ).toBe("ok");
-            }),
-          60_000,
+  describe("with npm-installed optional plugins", () => {
+    const optionalRuntime = ManagedRuntime.make(
+      optionalConsumerLayer.pipe(Layer.provideMerge(packageSmokeLayer)),
+      { memoMap: runtime.memoMap },
+    );
+    beforeAll(async () => {
+      await optionalRuntime.runPromise(Effect.void);
+    }, 180_000);
+    afterAll(async () => {
+      await optionalRuntime.dispose();
+    }, 30_000);
+    it.for([false, true])(
+      "resolves custom Tailwind stylesheet relative to config (external cwd: %s)",
+      { timeout: 60_000 },
+      async (externalCwd, context) => {
+        await runRuntimeEffect(
+          context,
+          optionalRuntime,
+          Effect.gen(function* () {
+            const smoke = yield* PackageSmoke;
+            const consumer = yield* OptionalConsumer;
+            expect(
+              yield* smoke.runConsumer(consumer, "tailwind.mjs", externalCwd),
+            ).toBe("ok");
+          }),
         );
       },
     );
-  },
-);
+    it.for([false, true])(
+      "loads optional plugins from the consumer (external cwd: %s)",
+      { timeout: 60_000 },
+      async (externalCwd, context) => {
+        await runRuntimeEffect(
+          context,
+          optionalRuntime,
+          Effect.gen(function* () {
+            const smoke = yield* PackageSmoke;
+            const consumer = yield* OptionalConsumer;
+            expect(
+              yield* smoke.runConsumer(consumer, "optional.mjs", externalCwd),
+            ).toBe("ok");
+          }),
+        );
+      },
+    );
+  });
+});

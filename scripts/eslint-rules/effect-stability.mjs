@@ -9,6 +9,16 @@ const isEffectModule = (name) =>
 /** @param {string} filename */
 const isEffectSource = (filename) =>
   /\/node_modules\/(?:effect\/|@effect\/)/.test(filename.replaceAll("\\", "/"));
+/** @param {ts.Node} node @returns {boolean} */
+const insideGlobalAugmentation = (node) =>
+  (ts.isModuleDeclaration(node) &&
+    // eslint-disable-next-line no-bitwise -- TypeScript marks global augmentation with a NodeFlags bit.
+    (node.flags & ts.NodeFlags.GlobalAugmentation) !== 0) ||
+  (node.parent !== undefined && insideGlobalAugmentation(node.parent));
+/** @param {ts.Declaration} declaration */
+const isEffectDeclaration = (declaration) =>
+  isEffectSource(declaration.getSourceFile().fileName) &&
+  !insideGlobalAugmentation(declaration);
 /** @param {string} name */
 const restrictedPath = (name) =>
   /^(?:effect\/(?:process|unstable)(?:\/|$)|@effect\/experimental(?:\/|$)|@effect\/platform-node-shared\/NodeChildProcessSpawner$)/.test(
@@ -71,9 +81,7 @@ const effectStability = {
     const belongsToEffect = (symbol) =>
       originalSymbol(symbol)
         .getDeclarations()
-        ?.some((declaration) =>
-          isEffectSource(declaration.getSourceFile().fileName),
-        ) ?? false;
+        ?.some((declaration) => isEffectDeclaration(declaration)) ?? false;
 
     /** @param {ts.Symbol} symbol */
     const unsupportedSymbol = (symbol) => {

@@ -78,6 +78,7 @@ describe("repository tooling guards", () => {
   }, 40_000);
   it.each([
     'import { it, expect } from "vitest"; it("complete", () => { expect(1).toBe(1); });',
+    'import { it, expect } from "vitest"; it.for([1])("complete %s", (value) => { expect(value).toBe(1); });',
     'import { it } from "@effect/vitest"; import { Effect } from "effect"; it.live.each([1])("live %s", () => Effect.void);',
     'import { layer } from "@effect/vitest"; import { Effect, Layer } from "effect"; layer(Layer.empty)("suite", checks => { checks.effect.each([1])("effect %s", () => Effect.void); });',
     'import { it } from "vitest"; it("normal", { only: false, skip: false }, () => {});',
@@ -166,6 +167,16 @@ describe("repository tooling guards", () => {
     },
     {
       ruleId: "local/test-modes",
+      source:
+        'import { it } from "vitest"; it.for([1])("focused %s", { only: true }, () => {});',
+    },
+    {
+      ruleId: "local/test-modes",
+      source:
+        'import { it } from "vitest"; it.for([1])("disabled %s", { skip: true }, () => {});',
+    },
+    {
+      ruleId: "local/test-modes",
       source: 'import { it } from "vitest"; it.todo("pending test");',
     },
     {
@@ -206,6 +217,11 @@ describe("repository tooling guards", () => {
     'export { MacAddress as M } from "effect/Schema";',
     'export * from "effect/Schema";',
     'import type { API } from "@effect/vitest"; type Test = API;',
+    'import { it, layer } from "@effect/vitest"; void it.live; void it.effect; void layer;',
+    'import { FileSystem, Path } from "effect"; void FileSystem.FileSystem; void Path.Path;',
+    'import { layer } from "@effect/platform-node-shared/NodeFileSystem"; void layer;',
+    'import { layer } from "@effect/platform-node-shared/NodePath"; void layer;',
+    'import { ErrorReporter } from "effect"; void ErrorReporter.make;',
     'const target = "effect/Schema"; await import(target);',
     'import { Schema } from "effect"; const key = "String"; void Schema[key];',
     'import { Schema } from "../repos/effect/packages/effect/src/index.ts"; void Schema;',
@@ -229,7 +245,8 @@ describe("repository tooling guards", () => {
     'import { Effect, Schema } from "effect"; void Effect.succeed; void Schema.String;',
     'import * as S from "effect/Schema"; void S["String"];',
     'import { String as S } from "effect/Schema"; void S;',
-    'import { it, layer } from "@effect/vitest"; void it.live; void it.effect; void layer;',
+    'const error = new Error("native"); class NativeError extends Error {} void error.message; void NativeError;',
+    'import path from "node:path"; import fs from "node:fs/promises"; void path.join; void fs.readFile;',
     'await import("effect/Schema");',
     'import { Schema } from "effect"; const record = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.String))({ one: "value" }); const key = "one"; void record[key];',
   ])("permits stable Effect APIs: %s", async (source) => {
