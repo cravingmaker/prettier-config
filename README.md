@@ -155,7 +155,9 @@ Reference acquisition is explicit: installation and validation do not clone
 ## Contributing and security
 
 See [CONTRIBUTING.md](https://github.com/cravingmaker/prettier-config/blob/main/CONTRIBUTING.md)
-for contribution and pull request guidance. Report vulnerabilities privately
+for contribution and pull request guidance, and follow the
+[Code of Conduct](https://github.com/cravingmaker/prettier-config/blob/main/CODE_OF_CONDUCT.md)
+when participating in the project. Report vulnerabilities privately
 as described in [SECURITY.md](https://github.com/cravingmaker/prettier-config/blob/main/SECURITY.md).
 
 ## License

@@ -1,5 +1,8 @@
 # Contributing
 
+Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) in all project
+interactions.
+
 ## Setup
 
 Development requires Node.js 22.22.1 or newer. The published configuration
