@@ -177,7 +177,11 @@ const config = [
     },
   },
   {
-    files: ["tests/helpers/package-smoke.ts", "tests/helpers/node-command.ts"],
+    files: [
+      "tests/helpers/package-smoke.ts",
+      "tests/helpers/node-command.ts",
+      "tests/helpers/test-effect.ts",
+    ],
     rules: {
       "functional/no-mixed-types": "off",
       "functional/prefer-immutable-types": "off",
@@ -201,6 +205,14 @@ const config = [
       "scripts/effect-reference-metadata.mjs",
       "scripts/actionlint.mjs",
     ],
+    rules: {
+      "functional/no-promise-reject": "off",
+      "security/detect-non-literal-fs-filename": "off",
+    },
+  },
+  {
+    // The native filesystem bridge rejects genuine Node I/O failures.
+    files: ["tests/helpers/node-files.ts"],
     rules: {
       "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",

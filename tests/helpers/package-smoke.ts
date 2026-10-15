@@ -1,22 +1,13 @@
 import type { CommandError, CommandSpec } from "./node-command.js";
 
 import nativeFs from "node:fs/promises";
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  Context,
-  Effect,
-  Exit,
-  FileSystem,
-  Layer,
-  Path,
-  Schema,
-  Scope,
-} from "effect";
-import { layer as nodeFileSystemLayer } from "@effect/platform-node-shared/NodeFileSystem";
-import { layer as nodePathLayer } from "@effect/platform-node-shared/NodePath";
+import { Context, Effect, Exit, Layer, Schema, Scope } from "effect";
 
 import { runCommand } from "./node-command.js";
+import { nodeFileSystem } from "./node-files.js";
 import packageJson from "../../package.json" with { type: "json" };
 import { peerScenario } from "./peer-scenarios.js";
 
@@ -44,8 +35,6 @@ class SmokeFileSystemError extends Schema.TaggedError<SmokeFileSystemError>()(
     phase: Schema.String,
   },
 ) {}
-
-const nodeServices = Layer.merge(nodeFileSystemLayer, nodePathLayer);
 
 const withFileContext = <A, E>(
   phase: string,
@@ -93,12 +82,9 @@ class PackageSmoke extends Context.Service<PackageSmoke, SmokeHarness>()(
 ) {}
 
 const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
-  pack?: (
-    workspace: string,
-  ) => Effect.Effect<void, SmokeError, FileSystem.FileSystem>,
+  pack?: (workspace: string) => Effect.Effect<void, SmokeError>,
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
+  const fs = nodeFileSystem;
   const scope = yield* Scope.fork(yield* Effect.scope);
   const run = runCommand;
 
@@ -258,15 +244,12 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
   );
 });
 
-const packageSmokeLayer = Layer.effect(PackageSmoke, createPackageSmoke()).pipe(
-  Layer.provideMerge(nodeServices),
-);
+const packageSmokeLayer = Layer.effect(PackageSmoke, createPackageSmoke());
 
 export {
   consumerNode,
   createPackageSmoke,
   InvalidTarballCount,
-  nodeServices,
   PackageSmoke,
   packageSmokeLayer,
   projectDirectory,

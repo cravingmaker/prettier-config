@@ -109,7 +109,13 @@ use typed ESM. Arbitrary runtime indirection is not statically proven safe.
 `npm run effect:check` separately catches unobserved Effects.
 
 The native command adapter is intentional: upstream Effect process modules and
-the corresponding platform spawner are unstable at the current pin. Effect
+the corresponding platform spawner are unstable at the current pin. The filesystem,
+path, Node platform layers, and Vitest integration are also explicitly unstable in
+Effect 4.0.2. The harness uses native Node filesystem/path APIs and ordinary Vitest
+hooks instead. A stable `ManagedRuntime` shares layers and owns their disposal;
+test abort signals interrupt scoped effects and Vitest waits for their finalizers.
+The [native filesystem bridge](../tests/helpers/node-files.ts) waits for in-flight
+I/O before a scope removes its workspace. Effect
 owns acquisition, release, deadlines, and interruption. Native Node owns process
 listeners and mutable output buffers. Keep scoped finalizers awaited before
 returning an error or deleting a workspace. Preserve command/phase/cwd context,
@@ -121,10 +127,9 @@ workspace cleanup. A signal-zero probe returning `EPERM` still indicates an
 existing group; Darwin can retain a zombie-only group until reaping completes.
 Denied group signals wait for reaping within the cleanup grace period, then
 preserve the permission error if the group still exists.
-The existing Windows adapter path remains; Windows execution
-is unverified. Real subprocess regressions use `it.live` or a suite excluding test
-services so deadlines use a live clock. Do not substitute a virtual test clock
-for operating-system process timing.
+The existing Windows adapter path remains; Windows execution is unverified.
+Real subprocess regressions run through ordinary Vitest tests and the live Effect
+runtime. Do not substitute a virtual test clock for operating-system process timing.
 
 Foreign Git commands clear Git's repository-specific environment variables, as
 specified in the [Git hook documentation](https://git-scm.com/docs/githooks).
