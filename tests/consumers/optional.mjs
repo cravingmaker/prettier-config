@@ -1,3 +1,4 @@
+import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
@@ -50,6 +51,26 @@ if (!/class=["']flex p-4["']/.test(svelte)) {
 if (!/class=["']flex p-4["']/.test(astro)) {
   throw new Error(`Tailwind did not sort Astro classes: ${astro}`);
 }
+
+await Promise.all(
+  ["clsx", "cn", "cva", "classNames", "classnames", "tv"].flatMap((name) =>
+    [
+      { extension: "js", parser: "oxc" },
+      { extension: "ts", parser: "oxc-ts" },
+    ].map(async ({ extension, parser }) => {
+      const argument =
+        name === "tv"
+          ? '{base:"text-white p-4 flex"}'
+          : '"text-white p-4 flex"';
+      const formatted = await format(
+        `tailwind-functions/${name}.${extension}`,
+        `${name}(${argument})`,
+        parser,
+      );
+      assert.ok(formatted.includes('"flex p-4 text-white"'), formatted);
+    }),
+  ),
+);
 
 const vue = await format(
   "tailwind.vue",
