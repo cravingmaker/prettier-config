@@ -105,4 +105,4 @@ const checkEffectReference = async (projectDirectory) => {
   return reference;
 };
 
-export { checkEffectReference, effectPackages };
+export { checkEffectReference, effectPackages, referenceSchema };

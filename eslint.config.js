@@ -24,7 +24,7 @@
  * filesystem paths from controlled fixture names and temporary directories. The paths are dynamic
  * by design but are not derived from untrusted input.
  *
- * scripts/setup-effect-reference.mjs and tests/consumers/*.mjs
+ * Native asynchronous setup, Dependabot synchronization, and consumer programs
  *
  * functional/no-promise-reject — disabled for native async programs that reject
  * when setup or consumer invariants fail.
@@ -204,6 +204,16 @@ const config = [
     rules: {
       "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",
+    },
+  },
+  {
+    // Trusted automation uses native promises and rejects invalid API data.
+    files: [
+      "scripts/dependabot-effect-reference.mjs",
+      "scripts/sync-dependabot-effect-reference.mjs",
+    ],
+    rules: {
+      "functional/no-promise-reject": "off",
     },
   },
   {
