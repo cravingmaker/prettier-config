@@ -86,7 +86,7 @@
     "effect": "4.0.0",
     "eslint": "10.11.0",
     "husky": "9.1.7",
-    "lint-staged": "17.5.1",
+    "lint-staged": "17.6.0",
     "node-modules-inspector": "2.7.0",
     "prettier": "3.9.9",
     "prettier-plugin-astro": "0.14.1",
