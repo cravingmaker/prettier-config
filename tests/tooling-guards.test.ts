@@ -78,9 +78,7 @@ describe("repository tooling guards", () => {
       expect(
         result?.messages.filter(
           (message) =>
-            message.ruleId === "local/test-modes" ||
-            (message.ruleId?.startsWith("vitest/") ?? false) ||
-            message.ruleId === null,
+            message.ruleId === "local/test-modes" || (message.ruleId?.startsWith("vitest/") ?? false) || message.ruleId === null,
         ),
       ).toEqual([]);
     },
@@ -208,9 +206,7 @@ describe("repository tooling guards", () => {
       const [result] = await eslint.lintText(source, {
         filePath: "tests/helpers/package-smoke.ts",
       });
-      expect(result?.messages).toEqual(
-        expect.arrayContaining([expect.objectContaining({ ruleId: "local/effect-stability" })]),
-      );
+      expect(result?.messages).toEqual(expect.arrayContaining([expect.objectContaining({ ruleId: "local/effect-stability" })]));
     },
     15_000,
   );
@@ -234,9 +230,9 @@ describe("repository tooling guards", () => {
     expect(await eslint.isPathIgnored("repos/effect/example.ts")).toBe(true);
     expect(await eslint.isPathIgnored("tests/fixtures/example.js")).toBe(true);
     const parsed = parseProject(path.join(directory, "tsconfig.json"));
-    expect(
-      parsed.fileNames.some((filename) => filename.includes("/repos/") || filename.includes("/tests/fixtures/")),
-    ).toBe(false);
+    expect(parsed.fileNames.some((filename) => filename.includes("/repos/") || filename.includes("/tests/fixtures/"))).toBe(
+      false,
+    );
   });
 
   it("rejects an unobserved Effect through the configured language service", async () => {
@@ -319,13 +315,9 @@ describe("repository tooling guards", () => {
           ? ts.createSourceFile(requested, source.replace("  plugins,\n", ""), languageVersion, true, ts.ScriptKind.JS)
           : host.getSourceFile(requested, languageVersion, onError, shouldCreateNewSourceFile),
     });
-    const diagnostics = ts
-      .getPreEmitDiagnostics(program)
-      .filter((diagnostic) => diagnostic.file?.fileName === filename);
+    const diagnostics = ts.getPreEmitDiagnostics(program).filter((diagnostic) => diagnostic.file?.fileName === filename);
     expect(
-      diagnostics.some((diagnostic) =>
-        ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n").includes("plugins"),
-      ),
+      diagnostics.some((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n").includes("plugins")),
     ).toBe(true);
   });
 });

@@ -11,9 +11,7 @@ const oxc = await import("@prettier/plugin-oxc");
 assert.equal(config.plugins[0], oxc.default);
 const optionalPlugins = ["prettier-plugin-astro", "prettier-plugin-svelte", "prettier-plugin-tailwindcss"];
 assert.deepEqual(
-  optionalPlugins.filter((name) =>
-    config.plugins.some((plugin) => typeof plugin === "string" && plugin.includes(name)),
-  ),
+  optionalPlugins.filter((name) => config.plugins.some((plugin) => typeof plugin === "string" && plugin.includes(name))),
   [],
 );
 
@@ -37,10 +35,11 @@ const examples = [
   },
   {
     expected:
-      'const message = createMessage("Hello from the shared Prettier config", "This call fits within 120 columns");\n',
+      'const message = createMessage("Hello from the shared Prettier config", "This call fits within 130 columns across projects");\n',
     filename: "nested/width.js",
     parser: "oxc",
-    source: 'const message=createMessage("Hello from the shared Prettier config","This call fits within 120 columns")',
+    source:
+      'const message=createMessage("Hello from the shared Prettier config","This call fits within 130 columns across projects")',
   },
   {
     expected: 'const greeting: string = "hello";\n',

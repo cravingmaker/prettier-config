@@ -24,8 +24,7 @@ const hasUnsupportedTags = (tags) =>
   tags.some(
     (tag) =>
       tag.name === "experimental" ||
-      (tag.name === "stability" &&
-        /\b(?:experimental|unstable)\b/i.test(tag.text?.map((part) => part.text).join("") ?? "")),
+      (tag.name === "stability" && /\b(?:experimental|unstable)\b/i.test(tag.text?.map((part) => part.text).join("") ?? "")),
   );
 
 /** @param {ts.Declaration} declaration */
@@ -129,10 +128,7 @@ const effectStability = {
       }
       if (ts.isImportTypeNode(node) && ts.isLiteralTypeNode(node.argument) && ts.isStringLiteral(node.argument.literal))
         checkModule(node.argument.literal);
-      if (
-        ts.isCallExpression(node) &&
-        (node.expression.kind === ts.SyntaxKind.ImportKeyword || isRequire(node.expression))
-      ) {
+      if (ts.isCallExpression(node) && (node.expression.kind === ts.SyntaxKind.ImportKeyword || isRequire(node.expression))) {
         const target = node.arguments[0];
         if (target) {
           checkModule(target);

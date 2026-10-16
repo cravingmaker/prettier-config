@@ -67,7 +67,7 @@ const config = {
     },
   ],
   plugins,
-  printWidth: 120,
+  printWidth: 130,
   singleAttributePerLine: true,
   tailwindFunctions: ["clsx", "cn", "cva", "classNames", "classnames", "tv"],
 };

@@ -56,15 +56,12 @@ const checkEffectReference = async (projectDirectory) => {
   // eslint-disable-next-line functional/no-loop-statements -- Validate each coordinated pin with its own actionable diagnostic.
   for (const { name } of effectPackages) {
     if (declared.get(name) !== reference.version)
-      throw new Error(
-        `${manifestPath}: update the source pin to match the exact ${name} dependency (${reference.version})`,
-      );
+      throw new Error(`${manifestPath}: update the source pin to match the exact ${name} dependency (${reference.version})`);
     if (locked.get(name) !== reference.version)
       throw new Error(`${lockPath}: root lockfile ${name} pin differs from ${reference.version}`);
     const key = `node_modules/${name}`;
     const installed = decodeValue(installedSchema, installedPackages.get(key), lockPath, `validate ${key}`);
-    if (installed.version !== reference.version)
-      throw new Error(`${lockPath}: ${key} version differs from ${reference.version}`);
+    if (installed.version !== reference.version) throw new Error(`${lockPath}: ${key} version differs from ${reference.version}`);
   }
   return reference;
 };

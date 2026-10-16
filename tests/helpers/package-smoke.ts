@@ -76,15 +76,9 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
 
   return yield* Effect.gen(function* () {
     const workspace = yield* Effect.acquireRelease(
-      withFileContext(
-        "allocate workspace",
-        "temporary directory",
-        fs.makeTempDirectory({ prefix: "prettier-config-package-" }),
-      ),
+      withFileContext("allocate workspace", "temporary directory", fs.makeTempDirectory({ prefix: "prettier-config-package-" })),
       (directory) =>
-        withFileContext("remove workspace", directory, fs.remove(directory, { force: true, recursive: true })).pipe(
-          Effect.orDie,
-        ),
+        withFileContext("remove workspace", directory, fs.remove(directory, { force: true, recursive: true })).pipe(Effect.orDie),
     );
     yield* pack
       ? pack(workspace)

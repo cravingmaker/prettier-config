@@ -43,7 +43,7 @@ const testFixture = async (filename: string, directory: string, prettierConfigPa
         parser: resolvedConfig.parser,
       }),
       plugins: resolvedConfig?.plugins ?? [],
-      printWidth: 120,
+      printWidth: 130,
       singleAttributePerLine: true,
     }),
   );
@@ -53,11 +53,7 @@ const testFixture = async (filename: string, directory: string, prettierConfigPa
   return formatted;
 };
 
-await fs.writeFile(
-  configPath,
-  `export { default } from ${JSON.stringify(pathToFileURL(runtimeConfig).href)};\n`,
-  "utf8",
-);
+await fs.writeFile(configPath, `export { default } from ${JSON.stringify(pathToFileURL(runtimeConfig).href)};\n`, "utf8");
 
 describe("Format Integration", () => {
   afterAll(async () => {
@@ -119,7 +115,7 @@ describe("Format Integration", () => {
   it.each([
     { filename: "width.js", parser: "oxc" },
     { filename: "width.ts", parser: "oxc-ts" },
-  ])("wraps at 120 columns with $parser", async ({ filename, parser }) => {
+  ])("wraps at 130 columns with $parser", async ({ filename, parser }) => {
     const filePath = await prepareFixture(`nested/${filename}`, temporaryDirectory, "width.js");
     const source = await fs.readFile(filePath, "utf8");
     const resolved = await prettier.resolveConfig(filePath, {
@@ -130,17 +126,17 @@ describe("Format Integration", () => {
     const formatted = await prettier.format(source, options);
 
     expect(resolved?.parser).toBe(parser);
-    expect(resolved?.printWidth).toBe(120);
     expect(formatted).toBe(
       [
-        'const message = createMessage("Hello from the shared Prettier config", "This call fits within 120 columns");',
+        'const message = createMessage("Hello from the shared Prettier config", "This call fits within 130 columns across projects");',
         "const detailedMessage = createMessage(",
         '  "Hello from the shared Prettier config",',
-        '  "This longer call should wrap because it exceeds 120 columns",',
+        '  "This longer call should wrap because it exceeds 130 columns",',
         ");",
         "",
       ].join("\n"),
     );
+    expect(resolved?.printWidth).toBe(130);
     expect(await prettier.format(formatted, options)).toBe(formatted);
   });
 
@@ -198,9 +194,7 @@ describe("Format Integration", () => {
   it("sorts Tailwind classes in Vue attributes, bindings, and scoped styles", async () => {
     const formatted = await testFixture("tailwind.vue", temporaryDirectory, configPath);
 
-    expect(formatted).toContain(
-      'class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"',
-    );
+    expect(formatted).toContain('class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"');
     expect(formatted).toContain("'px-6 py-3 text-lg font-bold'");
     expect(formatted).toContain("'px-4 py-2 text-sm font-normal'");
     expect(formatted).toContain(`v-bind:class="['flex justify-center', { 'bg-black text-white': active }]"`);
@@ -212,17 +206,14 @@ describe("Format Integration", () => {
     { declaration: "color: var(--accent);", filename: "tailwind.css" },
     { declaration: "color: $accent;", filename: "tailwind.scss" },
     { declaration: "color: @accent;", filename: "tailwind.less" },
-  ])(
-    "sorts Tailwind @apply utilities while preserving stylesheet syntax in $filename",
-    async ({ declaration, filename }) => {
-      const formatted = await testFixture(filename, temporaryDirectory, configPath);
+  ])("sorts Tailwind @apply utilities while preserving stylesheet syntax in $filename", async ({ declaration, filename }) => {
+    const formatted = await testFixture(filename, temporaryDirectory, configPath);
 
-      expect(formatted).toContain("@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;");
-      expect(formatted).toContain("@apply flex items-center px-4 py-2 !important;");
-      expect(formatted).toContain(declaration);
-      expect(formatted).toContain("/* Keep component styles */");
-    },
-  );
+    expect(formatted).toContain("@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;");
+    expect(formatted).toContain("@apply flex items-center px-4 py-2 !important;");
+    expect(formatted).toContain(declaration);
+    expect(formatted).toContain("/* Keep component styles */");
+  });
 
   it("09. formats Markdown correctly", async () => {
     await testFixture("sample.md", temporaryDirectory, configPath);
@@ -279,16 +270,13 @@ describe("Format Integration", () => {
     expect(formatted).toContain("disabled={enabled}");
   });
 
-  it.each(["embedded.md", "embedded.mdx"])(
-    "inherits the shared width and JavaScript quotes inside %s",
-    async (filename) => {
-      const formatted = await testFixture(filename, temporaryDirectory, configPath);
+  it.each(["embedded.md", "embedded.mdx"])("inherits the shared width and JavaScript quotes inside %s", async (filename) => {
+    const formatted = await testFixture(filename, temporaryDirectory, configPath);
 
-      expect(formatted).toContain(
-        'const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };',
-      );
-    },
-  );
+    expect(formatted).toContain(
+      'const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };',
+    );
+  });
 
   it.each(["quotes.yaml", "quotes.yml"])("uses double quotes for quoted YAML values in %s", async (filename) => {
     const formatted = await testFixture(filename, temporaryDirectory, configPath);
@@ -325,7 +313,7 @@ describe("Format Integration", () => {
     expect(formatted).toContain('<![CDATA[if (a < b) { value = "x & y"; }]]>');
   });
 
-  it("uses the 120-column print width for XML in nested directories", async () => {
+  it("uses the 130-column print width for XML in nested directories", async () => {
     const filePath = await prepareFixture("nested/width.xml", temporaryDirectory, "width.xml");
     const source = await fs.readFile(filePath, "utf8");
     const resolved = await prettier.resolveConfig(filePath, {
@@ -335,9 +323,9 @@ describe("Format Integration", () => {
     const options = { ...resolved, filepath: filePath };
     const formatted = await prettier.format(source, options);
 
-    expect(resolved?.printWidth).toBe(120);
+    expect(resolved?.printWidth).toBe(130);
     expect(formatted.trim()).not.toContain("\n");
-    expect(formatted).toBe(await prettier.format(source, { ...options, printWidth: 120 }));
+    expect(formatted).toBe(await prettier.format(source, { ...options, printWidth: 130 }));
     expect(formatted).not.toBe(await prettier.format(source, { ...options, printWidth: 80 }));
     expect(await prettier.format(formatted, options)).toBe(formatted);
   });

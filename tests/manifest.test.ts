@@ -5,12 +5,7 @@ import { decodeJson, packageManifestSchema } from "../scripts/manifest.mjs";
 describe("external manifests", () => {
   it("decodes the fields used by source verification", () => {
     expect(
-      decodeJson(
-        packageManifestSchema,
-        '{"name":"effect","version":"4.0.0","unused":true}',
-        "package.json",
-        "verify package",
-      ),
+      decodeJson(packageManifestSchema, '{"name":"effect","version":"4.0.0","unused":true}', "package.json", "verify package"),
     ).toEqual({ name: "effect", version: "4.0.0" });
   });
 
