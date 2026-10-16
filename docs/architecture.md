@@ -240,6 +240,7 @@ retaining behavior on each supported runtime.
 | ----------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
 | `effect:check-reference`, `typecheck`, `effect:check` | Shared static checks, Linux Node 24       | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
 | `lint`, `format:check`, `lint:workflows`              | Shared static checks, Linux Node 24       | Typed rules, test/API guards, repository formatting, pinned actionlint           |
+| `lint:unused`                                         | Shared static checks, Linux Node 24       | Knip unused files, exports, dependencies, and unresolved imports                 |
 | `lint:package`, `typecheck:package`                   | Shared static checks, Linux Node 24       | Publint and ATTW's ESM package profile                                           |
 | `test:tooling`                                        | Shared static checks, Linux Node 24       | Negative ESLint and compiler fixtures, focused-test guards                       |
 | `test:runtime`                                        | Node.js 22/24/26 on Linux                 | Runtime behavior, native process lifecycle, reference and workflow tooling       |
