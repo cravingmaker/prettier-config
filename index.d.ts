@@ -2,7 +2,7 @@ import type { Config } from "prettier";
 
 // The shared config always sets these keys, so consumers can spread them without a fallback.
 declare const config: Config &
-  Required<Pick<Config, "overrides" | "plugins" | "singleAttributePerLine">> & {
+  Required<Pick<Config, "overrides" | "plugins" | "printWidth" | "singleAttributePerLine">> & {
     tailwindFunctions: string[];
   };
 

@@ -18,6 +18,9 @@ void customized;
 const singleAttributePerLine: boolean = config.singleAttributePerLine;
 void singleAttributePerLine;
 
+const printWidth: number = config.printWidth;
+void printWidth;
+
 // @ts-expect-error The published configuration must be typed, not any.
 const invalidWidth: typeof config.printWidth = "wide";
 void invalidWidth;

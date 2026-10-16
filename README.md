@@ -28,7 +28,8 @@ bun add --dev --exact prettier @cravingmaker/prettier-config
 
 ## Usage
 
-The config uses Prettier's formatting defaults with `singleAttributePerLine: true`.
+The config sets `printWidth: 120` and `singleAttributePerLine: true` and otherwise
+uses Prettier's formatting defaults.
 JavaScript and TypeScript files use the bundled Oxc parsers.
 Flow syntax is not supported.
 

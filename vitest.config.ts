@@ -20,17 +20,11 @@ export default defineConfig({
       },
       {
         pattern: /(?:^|\/)index\.d\.ts$/,
-        testsToRun: (_filename) => [
-          "tests/package.smoke.test.ts",
-          "tests/tooling-guards.test.ts",
-        ],
+        testsToRun: (_filename) => ["tests/package.smoke.test.ts", "tests/tooling-guards.test.ts"],
       },
       {
         pattern: /(?:^|\/)tests\/fixtures\//,
-        testsToRun: (_filename) => [
-          "tests/format.test.ts",
-          "tests/package.smoke.test.ts",
-        ],
+        testsToRun: (_filename) => ["tests/format.test.ts", "tests/package.smoke.test.ts"],
       },
       {
         pattern: /(?:^|\/)tests\/consumers\//,

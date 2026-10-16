@@ -11,11 +11,7 @@ import { format as formatSource, resolveConfig, version } from "prettier";
 // eslint-disable-next-line unicorn/prefer-import-meta-properties -- import.meta.dirname is not stable on the minimum Node.js 22.12 runtime.
 const consumerDirectory = path.dirname(fileURLToPath(import.meta.url));
 const verifyPrettierVersion = () => {
-  assert.equal(
-    version,
-    process.argv[2],
-    "The installed Prettier must match the selected peer scenario",
-  );
+  assert.equal(version, process.argv[2], "The installed Prettier must match the selected peer scenario");
 };
 
 /**
@@ -36,7 +32,7 @@ const format = async (filename, source, parser) => {
   }
   assert.equal(resolved.parser, parser, filename);
   assert.equal(resolved.singleAttributePerLine, true, filename);
-  assert.equal(resolved.printWidth, undefined, filename);
+  assert.equal(resolved.printWidth, 120, filename);
 
   const options = { ...resolved, filepath: filePath };
   const formatted = await formatSource(source, options);
@@ -48,9 +44,7 @@ const format = async (filename, source, parser) => {
 };
 
 const verifyPluginPaths = async () => {
-  const modules = await fs.realpath(
-    path.join(consumerDirectory, "node_modules"),
-  );
+  const modules = await fs.realpath(path.join(consumerDirectory, "node_modules"));
   const require = createRequire(path.join(consumerDirectory, "package.json"));
   const pluginPaths = [
     require.resolve("@prettier/plugin-oxc"),

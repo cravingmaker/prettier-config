@@ -19,9 +19,7 @@ const isOptionalPackageAbsent = (name) =>
     } catch (error) {
       // A directory entry (including a dangling symlink) means the installation
       // is present. Only ENOENT proves absence; other failures preserve resolution's error.
-      return (
-        error instanceof Error && "code" in error && error.code === "ENOENT"
-      );
+      return error instanceof Error && "code" in error && error.code === "ENOENT";
     }
   }) ?? false;
 
@@ -69,6 +67,7 @@ const config = {
     },
   ],
   plugins,
+  printWidth: 120,
   singleAttributePerLine: true,
   tailwindFunctions: ["clsx", "cn", "cva", "classNames", "classnames", "tv"],
 };

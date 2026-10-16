@@ -3,26 +3,16 @@ import process from "node:process";
 
 import config from "@cravingmaker/prettier-config";
 
-import {
-  format,
-  verifyPluginPaths,
-  verifyPrettierVersion,
-} from "./helpers.mjs";
+import { format, verifyPluginPaths, verifyPrettierVersion } from "./helpers.mjs";
 
 verifyPrettierVersion();
 await verifyPluginPaths();
 const oxc = await import("@prettier/plugin-oxc");
 assert.equal(config.plugins[0], oxc.default);
-const optionalPlugins = [
-  "prettier-plugin-astro",
-  "prettier-plugin-svelte",
-  "prettier-plugin-tailwindcss",
-];
+const optionalPlugins = ["prettier-plugin-astro", "prettier-plugin-svelte", "prettier-plugin-tailwindcss"];
 assert.deepEqual(
   optionalPlugins.filter((name) =>
-    config.plugins.some(
-      (plugin) => typeof plugin === "string" && plugin.includes(name),
-    ),
+    config.plugins.some((plugin) => typeof plugin === "string" && plugin.includes(name)),
   ),
   [],
 );
@@ -44,6 +34,13 @@ const examples = [
     filename: "src/example.js",
     parser: "oxc",
     source: 'const greeting="hello"',
+  },
+  {
+    expected:
+      'const message = createMessage("Hello from the shared Prettier config", "This call fits within 120 columns");\n',
+    filename: "nested/width.js",
+    parser: "oxc",
+    source: 'const message=createMessage("Hello from the shared Prettier config","This call fits within 120 columns")',
   },
   {
     expected: 'const greeting: string = "hello";\n',
@@ -73,11 +70,9 @@ const examples = [
     source: '{"version":"1.0.0","name":"fixture"}',
   },
   {
-    expected:
-      '[project]\nname = "fixture"\nversion = "1.0.0"\ndependencies = ["alpha", "beta"]\n',
+    expected: '[project]\nname = "fixture"\nversion = "1.0.0"\ndependencies = ["alpha", "beta"]\n',
     filename: "pyproject.toml",
-    source:
-      '[project]\nname="fixture"\nversion="1.0.0"\ndependencies=["alpha","beta"]\n',
+    source: '[project]\nname="fixture"\nversion="1.0.0"\ndependencies=["alpha","beta"]\n',
   },
   {
     expected: '[project]\nname = "fixture"\n',

@@ -18,29 +18,19 @@ const consumerNode =
 
 type SmokeError = CommandError | InvalidTarballCount | SmokeFileSystemError;
 
-class InvalidTarballCount extends Schema.TaggedError<InvalidTarballCount>()(
-  "InvalidTarballCount",
-  {
-    count: Schema.Number,
-    message: Schema.String,
-    workspace: Schema.String,
-  },
-) {}
-class SmokeFileSystemError extends Schema.TaggedError<SmokeFileSystemError>()(
-  "SmokeFileSystemError",
-  {
-    cause: Schema.Defect(),
-    message: Schema.String,
-    path: Schema.String,
-    phase: Schema.String,
-  },
-) {}
+class InvalidTarballCount extends Schema.TaggedError<InvalidTarballCount>()("InvalidTarballCount", {
+  count: Schema.Number,
+  message: Schema.String,
+  workspace: Schema.String,
+}) {}
+class SmokeFileSystemError extends Schema.TaggedError<SmokeFileSystemError>()("SmokeFileSystemError", {
+  cause: Schema.Defect(),
+  message: Schema.String,
+  path: Schema.String,
+  phase: Schema.String,
+}) {}
 
-const withFileContext = <A, E>(
-  phase: string,
-  filename: string,
-  operation: Effect.Effect<A, E>,
-) =>
+const withFileContext = <A, E>(phase: string, filename: string, operation: Effect.Effect<A, E>) =>
   operation.pipe(
     Effect.mapError(
       (cause) =>
@@ -54,9 +44,7 @@ const withFileContext = <A, E>(
   );
 
 type SmokeHarness = {
-  readonly checkInstalledPackageSymlink: (
-    consumer: string,
-  ) => Effect.Effect<boolean, SmokeFileSystemError>;
+  readonly checkInstalledPackageSymlink: (consumer: string) => Effect.Effect<boolean, SmokeFileSystemError>;
   readonly copyFixtures: (
     consumer: string,
     source: readonly string[],
@@ -77,9 +65,7 @@ type SmokeHarness = {
   readonly workspace: string;
 };
 
-class PackageSmoke extends Context.Service<PackageSmoke, SmokeHarness>()(
-  "prettier-config/tests/PackageSmoke",
-) {}
+class PackageSmoke extends Context.Service<PackageSmoke, SmokeHarness>()("prettier-config/tests/PackageSmoke") {}
 
 const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
   pack?: (workspace: string) => Effect.Effect<void, SmokeError>,
@@ -96,11 +82,9 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
         fs.makeTempDirectory({ prefix: "prettier-config-package-" }),
       ),
       (directory) =>
-        withFileContext(
-          "remove workspace",
-          directory,
-          fs.remove(directory, { force: true, recursive: true }),
-        ).pipe(Effect.orDie),
+        withFileContext("remove workspace", directory, fs.remove(directory, { force: true, recursive: true })).pipe(
+          Effect.orDie,
+        ),
     );
     yield* pack
       ? pack(workspace)
@@ -111,11 +95,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
           phase: "pack",
           timeoutMs: 30_000,
         });
-    const files = yield* withFileContext(
-      "find tarball",
-      workspace,
-      fs.readDirectory(workspace),
-    );
+    const files = yield* withFileContext("find tarball", workspace, fs.readDirectory(workspace));
     const tarballs = files.filter((filename) => filename.endsWith(".tgz"));
     const [filename] = tarballs;
     if (tarballs.length !== 1 || filename === undefined) {
@@ -151,56 +131,43 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
           withFileContext(
             "copy fixture",
             path.join(consumer, file),
-            fs.copyFile(
-              path.join(projectDirectory, ...source, file),
-              path.join(consumer, file),
-            ),
+            fs.copyFile(path.join(projectDirectory, ...source, file), path.join(consumer, file)),
           ),
         { concurrency: "unbounded", discard: true },
       );
     });
-    const installConsumer = Effect.fn("packageSmoke.installConsumer")(
-      function* (
-        name: string,
-        dependencies: readonly string[],
-        prettierVersion: string = peerScenario.prettier,
-      ) {
-        const consumer = path.join(workspace, name);
-        yield* withFileContext(
-          "create installed consumer",
-          consumer,
-          fs.makeDirectory(consumer),
-        );
-        yield* manifest(consumer);
-        yield* run({
-          args: [
-            "install",
-            "--ignore-scripts",
-            "--no-audit",
-            "--no-fund",
-            "--save-exact",
-            tarball,
-            `prettier@${prettierVersion}`,
-            ...dependencies,
-          ],
-          cwd: consumer,
-          executable: "npm",
-          phase: "install consumer",
-          timeoutMs: 120_000,
-        });
-        return consumer;
-      },
-    );
+    const installConsumer = Effect.fn("packageSmoke.installConsumer")(function* (
+      name: string,
+      dependencies: readonly string[],
+      prettierVersion: string = peerScenario.prettier,
+    ) {
+      const consumer = path.join(workspace, name);
+      yield* withFileContext("create installed consumer", consumer, fs.makeDirectory(consumer));
+      yield* manifest(consumer);
+      yield* run({
+        args: [
+          "install",
+          "--ignore-scripts",
+          "--no-audit",
+          "--no-fund",
+          "--save-exact",
+          tarball,
+          `prettier@${prettierVersion}`,
+          ...dependencies,
+        ],
+        cwd: consumer,
+        executable: "npm",
+        phase: "install consumer",
+        timeoutMs: 120_000,
+      });
+      return consumer;
+    });
     const runConsumer = Effect.fn("packageSmoke.runConsumer")(function* (
       consumer: string,
       script: "installed.mjs" | "optional.mjs" | "tailwind.mjs",
       isExternalCwd: boolean,
     ) {
-      yield* copyFixtures(
-        consumer,
-        ["tests", "consumers"],
-        [script, "helpers.mjs"],
-      );
+      yield* copyFixtures(consumer, ["tests", "consumers"], [script, "helpers.mjs"]);
       return yield* run({
         args: [path.join(consumer, script), peerScenario.prettier],
         cwd: isExternalCwd ? path.dirname(consumer) : consumer,
@@ -221,10 +188,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
               path: consumer,
               phase: "inspect installed package",
             }),
-          try: async () =>
-            await nativeFs.lstat(
-              path.join(consumer, "node_modules", packageJson.name),
-            ),
+          try: async () => await nativeFs.lstat(path.join(consumer, "node_modules", packageJson.name)),
         }).pipe(Effect.map((stat) => stat.isSymbolicLink())),
       );
     return PackageSmoke.of({
@@ -238,19 +202,11 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
     });
   }).pipe(
     Scope.provide(scope),
-    Effect.onExit((exit) =>
-      Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void,
-    ),
+    Effect.onExit((exit) => (Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void)),
   );
 });
 
 const packageSmokeLayer = Layer.effect(PackageSmoke, createPackageSmoke());
 
-export {
-  consumerNode,
-  createPackageSmoke,
-  PackageSmoke,
-  packageSmokeLayer,
-  SmokeFileSystemError,
-};
+export { consumerNode, createPackageSmoke, PackageSmoke, packageSmokeLayer, SmokeFileSystemError };
 export { runCommand } from "./node-command.js";

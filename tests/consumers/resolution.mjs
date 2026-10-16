@@ -13,11 +13,7 @@ import config from "@cravingmaker/prettier-config";
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const runtime = import.meta.resolve("@cravingmaker/prettier-config");
 const execute = promisify(execFile);
-const optionalPlugins = [
-  "prettier-plugin-astro",
-  "prettier-plugin-svelte",
-  "prettier-plugin-tailwindcss",
-];
+const optionalPlugins = ["prettier-plugin-astro", "prettier-plugin-svelte", "prettier-plugin-tailwindcss"];
 const cases = [
   { code: "MODULE_NOT_FOUND", label: "no entry point", metadata: "{}" },
   {
@@ -47,9 +43,7 @@ const cases = [
 for (const name of optionalPlugins) {
   const installed = path.join(directory, "node_modules", name);
   assert.equal(
-    config.plugins.some(
-      (plugin) => typeof plugin === "string" && plugin.includes(name),
-    ),
+    config.plugins.some((plugin) => typeof plugin === "string" && plugin.includes(name)),
     false,
     `${name}: confirmed absence is supported`,
   );
