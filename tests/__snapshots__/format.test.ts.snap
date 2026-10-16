@@ -214,34 +214,20 @@ exports[`Format Integration > formats XML structure, attributes, namespaces, and
 "
 `;
 
-exports[`Format Integration > inherits JavaScript quotes and trailing commas inside embedded.md 1`] = `
+exports[`Format Integration > inherits the shared width and JavaScript quotes inside embedded.md 1`] = `
 "# Embedded JavaScript
 
 \`\`\`js
-const options = {
-  first: "one",
-  second: "two",
-  third: "three",
-  fourth: "four",
-  fifth: "five",
-  sixth: "six",
-};
+const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };
 \`\`\`
 "
 `;
 
-exports[`Format Integration > inherits JavaScript quotes and trailing commas inside embedded.mdx 1`] = `
+exports[`Format Integration > inherits the shared width and JavaScript quotes inside embedded.mdx 1`] = `
 "# Embedded JavaScript
 
 \`\`\`js
-const options = {
-  first: "one",
-  second: "two",
-  third: "three",
-  fourth: "four",
-  fifth: "five",
-  sixth: "six",
-};
+const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };
 \`\`\`
 "
 `;
@@ -269,11 +255,8 @@ C:\\work\\project
 `;
 
 exports[`Format Integration > preserves XML mixed text, entities, CDATA, and explicit whitespace 1`] = `
-"<document><p>Hello <b>world</b> ! &amp; goodbye.</p><raw
-    xml:space='preserve'
-  >  keep  this
-  text </raw><script
-  ><![CDATA[if (a < b) { value = "x & y"; }]]></script></document>
+"<document><p>Hello <b>world</b> ! &amp; goodbye.</p><raw xml:space='preserve'>  keep  this
+  text </raw><script><![CDATA[if (a < b) { value = "x & y"; }]]></script></document>
 "
 `;
 
@@ -325,9 +308,7 @@ exports[`Format Integration > sorts Tailwind classes in Vue attributes, bindings
   <button
     id="save"
     class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"
-    :class="
-      active ? 'px-6 py-3 text-lg font-bold' : 'px-4 py-2 text-sm font-normal'
-    "
+    :class="active ? 'px-6 py-3 text-lg font-bold' : 'px-4 py-2 text-sm font-normal'"
   >
     Save
   </button>

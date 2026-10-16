@@ -11,12 +11,7 @@ import packageJson from "../package.json" with { type: "json" };
 
 const directory = fileURLToPath(new URL("..", import.meta.url));
 const packageTest = "tests/package.smoke.test.ts";
-const testFiles = [
-  "tests/config.test.ts",
-  "tests/format.test.ts",
-  packageTest,
-  "tests/tooling-guards.test.ts",
-];
+const testFiles = ["tests/config.test.ts", "tests/format.test.ts", packageTest, "tests/tooling-guards.test.ts"];
 const changes = [
   {
     filename: "tests/fixtures/sample.ts",
@@ -24,12 +19,7 @@ const changes = [
   },
   {
     filename: "index.mjs",
-    tests: [
-      "tests/config.test.ts",
-      "tests/format.test.ts",
-      packageTest,
-      "tests/tooling-guards.test.ts",
-    ],
+    tests: ["tests/config.test.ts", "tests/format.test.ts", packageTest, "tests/tooling-guards.test.ts"],
   },
   {
     filename: "index.d.ts",
@@ -47,9 +37,7 @@ const collectTestFiles = async (command: string) => {
   });
   try {
     const specifications = await runner.globTestSpecifications(filter);
-    return specifications.map((specification) =>
-      path.relative(directory, specification.moduleId),
-    );
+    return specifications.map((specification) => path.relative(directory, specification.moduleId));
   } finally {
     await runner.close();
   }
@@ -74,36 +62,18 @@ describe("Vitest watch dependencies", () => {
   it.each(["package", "regular"] as const)(
     "reruns tests for filesystem inputs within the %s command's scope",
     async (scenario) => {
-      const temporaryDirectory = await fs.mkdtemp(
-        path.join(os.tmpdir(), "prettier-watch-"),
-      );
+      const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-watch-"));
       const workspace = await fs.realpath(temporaryDirectory);
       const selectedTests = testFiles.filter((filename) =>
-        scenario === "package"
-          ? filename === packageTest
-          : filename !== packageTest,
+        scenario === "package" ? filename === packageTest : filename !== packageTest,
       );
       const reports = new EventTarget();
-      const { filter, options } = parseCLI(
-        packageJson.scripts[
-          scenario === "package" ? "test:package:ui" : "test:ui"
-        ],
-      );
+      const { filter, options } = parseCLI(packageJson.scripts[scenario === "package" ? "test:package:ui" : "test:ui"]);
 
       try {
-        await fs.copyFile(
-          path.join(directory, "vitest.config.ts"),
-          path.join(workspace, "vitest.config.ts"),
-        );
-        await fs.symlink(
-          path.join(directory, "node_modules"),
-          path.join(workspace, "node_modules"),
-          "junction",
-        );
-        await fs.writeFile(
-          path.join(workspace, "package.json"),
-          '{"type":"module"}',
-        );
+        await fs.copyFile(path.join(directory, "vitest.config.ts"), path.join(workspace, "vitest.config.ts"));
+        await fs.symlink(path.join(directory, "node_modules"), path.join(workspace, "node_modules"), "junction");
+        await fs.writeFile(path.join(workspace, "package.json"), '{"type":"module"}');
         await fs.mkdir(path.join(workspace, "tests"));
         await Promise.all(
           testFiles.map(async (filename) => {
@@ -129,11 +99,7 @@ describe("Vitest watch dependencies", () => {
           reporters: [
             {
               onTestRunEnd(modules, errors, reason) {
-                const files = new Set(
-                  modules.map((module) =>
-                    path.relative(workspace, module.moduleId),
-                  ),
-                );
+                const files = new Set(modules.map((module) => path.relative(workspace, module.moduleId)));
                 reports.dispatchEvent(
                   new CustomEvent("complete", {
                     detail: {
@@ -164,23 +130,15 @@ describe("Vitest watch dependencies", () => {
 
           /* eslint-disable functional/no-loop-statements, no-await-in-loop -- Each filesystem edit must finish its watcher run before the next input changes. */
           for (const change of changes) {
-            const expected = change.tests.filter((filename) =>
-              selectedTests.includes(filename),
-            );
+            const expected = change.tests.filter((filename) => selectedTests.includes(filename));
             if (expected.length === 0) continue;
 
             const completed = once(reports, "complete", {
               signal: AbortSignal.timeout(10_000),
             });
-            await fs.appendFile(
-              path.join(workspace, change.filename),
-              "// changed input\n",
-            );
+            await fs.appendFile(path.join(workspace, change.filename), "// changed input\n");
             const completedReports: readonly unknown[] = await completed;
-            expect(
-              completedReports[0],
-              `rerun after changing ${change.filename}`,
-            ).toHaveProperty("detail", {
+            expect(completedReports[0], `rerun after changing ${change.filename}`).toHaveProperty("detail", {
               errors: [],
               files: new Set(expected),
               reason: "passed",

@@ -18,15 +18,8 @@ describe("external manifests", () => {
     "reports malformed data with file and phase context: %s",
     (contents) => {
       expect(() =>
-        decodeJson(
-          packageManifestSchema,
-          contents,
-          "packages/effect/package.json",
-          "verify reference package",
-        ),
-      ).toThrow(
-        "verify reference package: invalid JSON data in packages/effect/package.json",
-      );
+        decodeJson(packageManifestSchema, contents, "packages/effect/package.json", "verify reference package"),
+      ).toThrow("verify reference package: invalid JSON data in packages/effect/package.json");
     },
   );
 });

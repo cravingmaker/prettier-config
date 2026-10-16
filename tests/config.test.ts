@@ -14,29 +14,17 @@ describe("Prettier Config", () => {
   it("should include basic plugins by default", async () => {
     const { default: config } = await import("../index.mjs");
     expect(config.plugins).toContain(prettierPluginOxc);
-    expect(config.plugins).toContain(
-      require.resolve("prettier-plugin-packagejson"),
-    );
+    expect(config.plugins).toContain(require.resolve("prettier-plugin-packagejson"));
     expect(config.plugins).toContain(require.resolve("prettier-plugin-toml"));
     expect(config.plugins).toContain(require.resolve("@prettier/plugin-xml"));
     expect(config.singleAttributePerLine).toBe(true);
-    expect(config.tailwindFunctions).toEqual([
-      "clsx",
-      "cn",
-      "cva",
-      "classNames",
-      "classnames",
-      "tv",
-    ]);
-    expect(config).not.toHaveProperty("printWidth");
+    expect(config.tailwindFunctions).toEqual(["clsx", "cn", "cva", "classNames", "classnames", "tv"]);
+    expect(config.printWidth).toBe(120);
     expect(config).not.toHaveProperty("singleQuote");
     expect(config).not.toHaveProperty("jsxSingleQuote");
     expect(config).not.toHaveProperty("tabWidth");
     expect(config).not.toHaveProperty("useTabs");
-    expect(config.overrides.map((override) => override.options)).toEqual([
-      { parser: "oxc-ts" },
-      { parser: "oxc" },
-    ]);
+    expect(config.overrides.map((override) => override.options)).toEqual([{ parser: "oxc-ts" }, { parser: "oxc" }]);
   });
 
   it.each([
@@ -48,40 +36,36 @@ describe("Prettier Config", () => {
     { installed: ["astro", "tailwindcss"], label: "Astro and Tailwind" },
     { installed: ["svelte", "tailwindcss"], label: "Svelte and Tailwind" },
     { installed: ["astro", "svelte", "tailwindcss"], label: "all" },
-  ])(
-    "includes exactly the installed optional plugins in order: $label",
-    async ({ installed }) => {
-      vi.doMock("node:module", () => ({
-        createRequire: () => ({
-          resolve: Object.assign(
-            (name: string) => {
-              if (name === "prettier-plugin-packagejson")
-                return "/plugins/packagejson.cjs";
-              if (name === "prettier-plugin-toml") return "/plugins/toml.mjs";
-              if (name === "@prettier/plugin-xml") return "/plugins/xml.mjs";
-              if (installed.includes(name.slice("prettier-plugin-".length))) {
-                return `/plugins/${name}.mjs`;
-              }
-              throw Object.assign(new Error("Not found"), {
-                code: "MODULE_NOT_FOUND",
-              });
-            },
-            { paths: () => [] },
-          ),
-        }),
-      }));
+  ])("includes exactly the installed optional plugins in order: $label", async ({ installed }) => {
+    vi.doMock("node:module", () => ({
+      createRequire: () => ({
+        resolve: Object.assign(
+          (name: string) => {
+            if (name === "prettier-plugin-packagejson") return "/plugins/packagejson.cjs";
+            if (name === "prettier-plugin-toml") return "/plugins/toml.mjs";
+            if (name === "@prettier/plugin-xml") return "/plugins/xml.mjs";
+            if (installed.includes(name.slice("prettier-plugin-".length))) {
+              return `/plugins/${name}.mjs`;
+            }
+            throw Object.assign(new Error("Not found"), {
+              code: "MODULE_NOT_FOUND",
+            });
+          },
+          { paths: () => [] },
+        ),
+      }),
+    }));
 
-      const { default: config } = await import("../index.mjs");
+    const { default: config } = await import("../index.mjs");
 
-      expect(config.plugins).toEqual([
-        prettierPluginOxc,
-        "/plugins/packagejson.cjs",
-        "/plugins/toml.mjs",
-        "/plugins/xml.mjs",
-        ...installed.map((plugin) => `/plugins/prettier-plugin-${plugin}.mjs`),
-      ]);
-    },
-  );
+    expect(config.plugins).toEqual([
+      prettierPluginOxc,
+      "/plugins/packagejson.cjs",
+      "/plugins/toml.mjs",
+      "/plugins/xml.mjs",
+      ...installed.map((plugin) => `/plugins/prettier-plugin-${plugin}.mjs`),
+    ]);
+  });
 
   it.each([
     { code: "ERR_INVALID_PACKAGE_CONFIG", label: "invalid package metadata" },
@@ -107,20 +91,13 @@ describe("Prettier Config", () => {
     await expect(import("../index.mjs")).rejects.toBe(failure);
   });
 
-  it.each([
-    "prettier-plugin-astro",
-    "prettier-plugin-svelte",
-    "prettier-plugin-tailwindcss",
-  ])(
+  it.each(["prettier-plugin-astro", "prettier-plugin-svelte", "prettier-plugin-tailwindcss"])(
     "preserves MODULE_NOT_FOUND when %s has a broken entry point",
     async (plugin) => {
-      const failure = Object.assign(
-        new Error("Cannot find the installed plugin entry point"),
-        {
-          code: "MODULE_NOT_FOUND",
-          path: `/plugins/${plugin}/package.json`,
-        },
-      );
+      const failure = Object.assign(new Error("Cannot find the installed plugin entry point"), {
+        code: "MODULE_NOT_FOUND",
+        path: `/plugins/${plugin}/package.json`,
+      });
       vi.doMock("node:module", () => ({
         createRequire: () => ({
           resolve(name: string) {

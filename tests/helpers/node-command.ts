@@ -30,28 +30,22 @@ type CommandSpec = {
 };
 type OutputBuffer = { chunks: Buffer[]; size: number };
 
-class CommandDeadline extends Schema.TaggedError<CommandDeadline>()(
-  "CommandDeadline",
-  { ...commandFields, timeoutMs: Schema.Number },
-) {}
-class CommandFailure extends Schema.TaggedError<CommandFailure>()(
-  "CommandFailure",
-  {
-    ...commandFields,
-    cause: Schema.Defect(),
-    exitCode: Schema.optional(Schema.Number),
-    stderr: Schema.optional(Schema.String),
-    stdout: Schema.optional(Schema.String),
-  },
-) {}
-class CommandOutputLimit extends Schema.TaggedError<CommandOutputLimit>()(
-  "CommandOutputLimit",
-  {
-    ...commandFields,
-    limit: Schema.Number,
-    stream: Schema.Literals(["stdout", "stderr"]),
-  },
-) {}
+class CommandDeadline extends Schema.TaggedError<CommandDeadline>()("CommandDeadline", {
+  ...commandFields,
+  timeoutMs: Schema.Number,
+}) {}
+class CommandFailure extends Schema.TaggedError<CommandFailure>()("CommandFailure", {
+  ...commandFields,
+  cause: Schema.Defect(),
+  exitCode: Schema.optional(Schema.Number),
+  stderr: Schema.optional(Schema.String),
+  stdout: Schema.optional(Schema.String),
+}) {}
+class CommandOutputLimit extends Schema.TaggedError<CommandOutputLimit>()("CommandOutputLimit", {
+  ...commandFields,
+  limit: Schema.Number,
+  stream: Schema.Literals(["stdout", "stderr"]),
+}) {}
 
 const outputLimit = 1024 * 1024;
 const terminationGraceMs = 1000;
@@ -147,35 +141,31 @@ const startCommand = (spec: CommandSpec) => {
         child.stderr.destroy();
         await waitForExit();
       }
-      if (!hasClosed)
-        throw new Error(`${spec.phase}: child process did not close`);
+      if (!hasClosed) throw new Error(`${spec.phase}: child process did not close`);
     })();
     await disposal;
   };
 
   // eslint-disable-next-line promise/avoid-new -- Node process events need one completion promise for the scoped Effect bridge.
-  const result = new Promise<
-    CommandFailure | CommandOutputLimit | CommandResult
-  >((resolve) => {
+  const result = new Promise<CommandFailure | CommandOutputLimit | CommandResult>((resolve) => {
     const stdout: OutputBuffer = { chunks: [], size: 0 };
     const stderr: OutputBuffer = { chunks: [], size: 0 };
-    const collect =
-      (name: "stderr" | "stdout", buffer: OutputBuffer) => (chunk: Buffer) => {
-        if (buffer.size > outputLimit) return;
-        buffer.size += chunk.byteLength;
-        if (buffer.size > outputLimit) {
-          resolve(
-            new CommandOutputLimit({
-              ...details,
-              limit: outputLimit,
-              message: `${spec.phase}: ${name} exceeds ${String(outputLimit)} bytes`,
-              stream: name,
-            }),
-          );
-        } else {
-          buffer.chunks.push(chunk);
-        }
-      };
+    const collect = (name: "stderr" | "stdout", buffer: OutputBuffer) => (chunk: Buffer) => {
+      if (buffer.size > outputLimit) return;
+      buffer.size += chunk.byteLength;
+      if (buffer.size > outputLimit) {
+        resolve(
+          new CommandOutputLimit({
+            ...details,
+            limit: outputLimit,
+            message: `${spec.phase}: ${name} exceeds ${String(outputLimit)} bytes`,
+            stream: name,
+          }),
+        );
+      } else {
+        buffer.chunks.push(chunk);
+      }
+    };
     child.stdout.on("data", collect("stdout", stdout));
     child.stderr.on("data", collect("stderr", stderr));
     const onError = (cause: unknown) => {
@@ -207,9 +197,7 @@ const startCommand = (spec: CommandSpec) => {
   return { dispose, result };
 };
 
-const runCommand = Effect.fn("packageSmoke.runCommand")(function* (
-  spec: CommandSpec,
-) {
+const runCommand = Effect.fn("packageSmoke.runCommand")(function* (spec: CommandSpec) {
   const details = {
     args: [...spec.args],
     cwd: spec.cwd,
@@ -230,17 +218,11 @@ const runCommand = Effect.fn("packageSmoke.runCommand")(function* (
       (handle) => Effect.promise(handle.dispose),
     );
     const result = yield* Effect.promise(async () => await command.result);
-    if (
-      result instanceof CommandFailure ||
-      result instanceof CommandOutputLimit
-    ) {
+    if (result instanceof CommandFailure || result instanceof CommandOutputLimit) {
       return yield* result;
     }
     if (result.code !== 0) {
-      const status =
-        result.code === null
-          ? `signal ${String(result.signal)}`
-          : String(result.code);
+      const status = result.code === null ? `signal ${String(result.signal)}` : String(result.code);
       return yield* new CommandFailure({
         ...details,
         cause: new Error(`Exit status ${status}`),

@@ -53,13 +53,7 @@ const baseConfig = await createConfig({
 const config = [
   ...baseConfig,
   {
-    files: [
-      "index.mjs",
-      "prettier.config.mjs",
-      "eslint.config.js",
-      "scripts/**/*.mjs",
-      "tests/consumers/**/*.mjs",
-    ],
+    files: ["index.mjs", "prettier.config.mjs", "eslint.config.js", "scripts/**/*.mjs", "tests/consumers/**/*.mjs"],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -100,11 +94,7 @@ const config = [
             i18nKey: true,
             tsconfigRootDir: true,
           },
-          ignore: [
-            String.raw`\.spec$`,
-            String.raw`\.test$`,
-            String.raw`\.e2e$`,
-          ],
+          ignore: [String.raw`\.spec$`, String.raw`\.test$`, String.raw`\.e2e$`],
           replacements: {
             ctx: false,
             e: { error: true, event: false },
@@ -139,8 +129,7 @@ const config = [
           paths: [
             {
               importNames: ["NodeChildProcessSpawner"],
-              message:
-                "Use the native Node command adapter; Effect's process API is unstable.",
+              message: "Use the native Node command adapter; Effect's process API is unstable.",
               name: "@effect/platform-node-shared",
             },
           ],
@@ -155,8 +144,7 @@ const config = [
                 "@effect/experimental/**",
                 "@effect/platform-node-shared/NodeChildProcessSpawner",
               ],
-              message:
-                "Use public, stable Effect APIs only; process execution belongs in the native Node adapter.",
+              message: "Use public, stable Effect APIs only; process execution belongs in the native Node adapter.",
             },
           ],
         },
@@ -209,11 +197,7 @@ const config = [
     },
   },
   {
-    files: [
-      "tests/helpers/package-smoke.ts",
-      "tests/helpers/node-command.ts",
-      "tests/package.smoke.test.ts",
-    ],
+    files: ["tests/helpers/package-smoke.ts", "tests/helpers/node-command.ts", "tests/package.smoke.test.ts"],
     name: "@cravingmaker/prettier-config/effect-classes",
     rules: {
       "functional/no-class-inheritance": "off",
@@ -221,11 +205,7 @@ const config = [
     },
   },
   {
-    files: [
-      "tests/helpers/package-smoke.ts",
-      "tests/helpers/node-command.ts",
-      "tests/helpers/test-effect.ts",
-    ],
+    files: ["tests/helpers/package-smoke.ts", "tests/helpers/node-command.ts", "tests/helpers/test-effect.ts"],
     name: "@cravingmaker/prettier-config/effect-services",
     rules: {
       "functional/no-mixed-types": "off",
@@ -246,11 +226,7 @@ const config = [
     },
   },
   {
-    files: [
-      "scripts/setup-effect-reference.mjs",
-      "scripts/effect-reference-metadata.mjs",
-      "scripts/actionlint.mjs",
-    ],
+    files: ["scripts/setup-effect-reference.mjs", "scripts/effect-reference-metadata.mjs", "scripts/actionlint.mjs"],
     name: "@cravingmaker/prettier-config/tooling-filesystem",
     rules: {
       "functional/no-promise-reject": "off",
@@ -268,10 +244,7 @@ const config = [
   },
   {
     // Trusted automation uses native promises and rejects invalid API data.
-    files: [
-      "scripts/dependabot-effect-reference.mjs",
-      "scripts/sync-dependabot-effect-reference.mjs",
-    ],
+    files: ["scripts/dependabot-effect-reference.mjs", "scripts/sync-dependabot-effect-reference.mjs"],
     name: "@cravingmaker/prettier-config/automation-promises",
     rules: {
       "functional/no-promise-reject": "off",

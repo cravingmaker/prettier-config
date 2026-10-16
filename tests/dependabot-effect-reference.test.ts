@@ -8,14 +8,8 @@ const head = "a".repeat(40);
 const commit = "b".repeat(40);
 const version = "4.0.2";
 const referencePath = "scripts/effect-reference.json";
-const names = [
-  "effect",
-  "@effect/platform-node-shared",
-  "@effect/vitest",
-] as const;
-const dependencies = Object.fromEntries<string>(
-  names.map((name) => [name, version]),
-);
+const names = ["effect", "@effect/platform-node-shared", "@effect/vitest"] as const;
+const dependencies = Object.fromEntries<string>(names.map((name) => [name, version]));
 const reference = {
   commit: "c".repeat(40),
   repository: "https://github.com/Effect-TS/effect.git",
@@ -23,8 +17,7 @@ const reference = {
   version: "4.0.0",
 };
 const expected = { ...reference, commit, tag: `effect@${version}`, version };
-const repositoryData = (fullName: string) =>
-  Object.fromEntries([["full_name", fullName]]);
+const repositoryData = (fullName: string) => Object.fromEntries([["full_name", fullName]]);
 const pull = {
   base: { ref: "main", repo: repositoryData(repository) },
   head: { ref: branch, repo: repositoryData(repository), sha: head },
@@ -34,10 +27,8 @@ const pull = {
 };
 const pullEndpoint = `/repos/${repository}/pulls?state=open&head=${encodeURIComponent(`cravingmaker:${branch}`)}&per_page=100`;
 const filesEndpoint = `/repos/${repository}/pulls/142/files?per_page=100`;
-const contentEndpoint = (filename: string) =>
-  `/repos/${repository}/contents/${filename}?ref=${head}`;
-const upstreamEndpoint = (filename: string) =>
-  `/repos/Effect-TS/effect/contents/${filename}?ref=${commit}`;
+const contentEndpoint = (filename: string) => `/repos/${repository}/contents/${filename}?ref=${head}`;
+const upstreamEndpoint = (filename: string) => `/repos/Effect-TS/effect/contents/${filename}?ref=${commit}`;
 const tagEndpoint = `/repos/Effect-TS/effect/git/ref/tags/effect%404.0.2`;
 const content = (value: unknown) => ({
   content: btoa(JSON.stringify(value)),
@@ -96,24 +87,18 @@ const fixture = (overrides: Readonly<Record<string, unknown>> = {}) => {
     ],
     ...Object.entries(overrides),
   ]);
-  const request = vi.fn(
-    async (
-      endpoint: string,
-      _body?: Readonly<Record<string, unknown>>,
-    ): Promise<unknown> => {
-      const response = await Promise.resolve(responses.get(endpoint));
-      // eslint-disable-next-line functional/no-promise-reject -- Reproduce a GitHub API failure.
-      if (response instanceof Error) throw response;
-      if (response === undefined)
-        // eslint-disable-next-line functional/no-promise-reject -- Unexpected requests must fail the test.
-        throw new Error(`Unexpected request: ${endpoint}`);
-      return response;
-    },
-  );
+  const request = vi.fn(async (endpoint: string, _body?: Readonly<Record<string, unknown>>): Promise<unknown> => {
+    const response = await Promise.resolve(responses.get(endpoint));
+    // eslint-disable-next-line functional/no-promise-reject -- Reproduce a GitHub API failure.
+    if (response instanceof Error) throw response;
+    if (response === undefined)
+      // eslint-disable-next-line functional/no-promise-reject -- Unexpected requests must fail the test.
+      throw new Error(`Unexpected request: ${endpoint}`);
+    return response;
+  });
   return {
     request,
-    run: async () =>
-      await syncEffectReference({ branch, head, repository, request }),
+    run: async () => await syncEffectReference({ branch, head, repository, request }),
     writes: () => request.mock.calls.filter(([, body]) => body !== undefined),
   };
 };
@@ -148,9 +133,10 @@ describe("Dependabot Effect reference synchronization", () => {
   it("does not create another commit when the reference is already synchronized", async () => {
     const test = fixture({
       [contentEndpoint(referencePath)]: content(expected),
-      [filesEndpoint]: ["package.json", "package-lock.json", referencePath].map(
-        (filename) => ({ filename, status: "modified" }),
-      ),
+      [filesEndpoint]: ["package.json", "package-lock.json", referencePath].map((filename) => ({
+        filename,
+        status: "modified",
+      })),
     });
     await expect(test.run()).resolves.toContain("already synchronized");
     expect(test.writes()).toEqual([]);
@@ -173,15 +159,12 @@ describe("Dependabot Effect reference synchronization", () => {
     { base: { ...pull.base, ref: "feature" } },
     { state: "closed" },
     { head: { ...pull.head, sha: "e".repeat(40) } },
-  ])(
-    "does not write for ineligible or stale pull requests: %j",
-    async (change) => {
-      const test = fixture({ [pullEndpoint]: [{ ...pull, ...change }] });
-      await expect(test.run()).resolves.toContain("Skipped");
-      expect(test.writes()).toEqual([]);
-      expect(test.request).toHaveBeenCalledTimes(1);
-    },
-  );
+  ])("does not write for ineligible or stale pull requests: %j", async (change) => {
+    const test = fixture({ [pullEndpoint]: [{ ...pull, ...change }] });
+    await expect(test.run()).resolves.toContain("Skipped");
+    expect(test.writes()).toEqual([]);
+    expect(test.request).toHaveBeenCalledTimes(1);
+  });
 
   it.each([
     { filename: "index.mjs", status: "modified" },
@@ -200,18 +183,14 @@ describe("Dependabot Effect reference synchronization", () => {
     });
     await expect(test.run()).rejects.toThrow("@effect/vitest");
     expect(test.writes()).toEqual([]);
-    expect(
-      test.request.mock.calls.some(([endpoint]) => endpoint === tagEndpoint),
-    ).toBe(false);
+    expect(test.request.mock.calls.some(([endpoint]) => endpoint === tagEndpoint)).toBe(false);
   });
 
   it.each([
     {
       packages: {
         ...lock.packages,
-        ...Object.fromEntries([
-          ["", { devDependencies: { ...dependencies, effect: "4.0.1" } }],
-        ]),
+        ...Object.fromEntries([["", { devDependencies: { ...dependencies, effect: "4.0.1" } }]]),
       },
     },
     {
@@ -255,20 +234,15 @@ describe("Dependabot Effect reference synchronization", () => {
         repository: "https://example.invalid/effect.git",
       }),
     },
-  ])(
-    "does not commit an unverified upstream reference: %j",
-    async (overrides) => {
-      const test = fixture(overrides);
-      await expect(test.run()).rejects.toThrow();
-      expect(test.writes()).toEqual([]);
-    },
-  );
+  ])("does not commit an unverified upstream reference: %j", async (overrides) => {
+    const test = fixture(overrides);
+    await expect(test.run()).rejects.toThrow();
+    expect(test.writes()).toEqual([]);
+  });
 
   it("surfaces a concurrent head change without retrying the write", async () => {
     const test = fixture({
-      ...Object.fromEntries([
-        ["/graphql", new Error("expectedHeadOid no longer matches")],
-      ]),
+      ...Object.fromEntries([["/graphql", new Error("expectedHeadOid no longer matches")]]),
     });
     await expect(test.run()).rejects.toThrow("expectedHeadOid");
     expect(test.writes()).toHaveLength(1);

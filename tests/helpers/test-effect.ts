@@ -7,10 +7,7 @@ type TestLifetime = {
   readonly signal: AbortSignal;
 };
 
-const withTestLifetime = async <A>(
-  context: TestLifetime,
-  start: (signal: AbortSignal) => Promise<A>,
-) => {
+const withTestLifetime = async <A>(context: TestLifetime, start: (signal: AbortSignal) => Promise<A>) => {
   const result = start(context.signal);
   // Vitest can report a timeout before the interrupted fiber finishes cleanup.
   context.onTestFinished(async () => {
@@ -23,25 +20,13 @@ const withTestLifetime = async <A>(
   return await result;
 };
 
-const runEffect = async <A, E>(
-  context: TestLifetime,
-  effect: Effect.Effect<A, E, Scope.Scope>,
-) =>
-  await withTestLifetime(
-    context,
-    async (signal) =>
-      await Effect.runPromise(Effect.scoped(effect), { signal }),
-  );
+const runEffect = async <A, E>(context: TestLifetime, effect: Effect.Effect<A, E, Scope.Scope>) =>
+  await withTestLifetime(context, async (signal) => await Effect.runPromise(Effect.scoped(effect), { signal }));
 
 const runRuntimeEffect = async <A, E, R, ER>(
   context: TestLifetime,
   runtime: ManagedRuntime.ManagedRuntime<R, ER>,
   effect: Effect.Effect<A, E, R | Scope.Scope>,
-) =>
-  await withTestLifetime(
-    context,
-    async (signal) =>
-      await runtime.runPromise(Effect.scoped(effect), { signal }),
-  );
+) => await withTestLifetime(context, async (signal) => await runtime.runPromise(Effect.scoped(effect), { signal }));
 
 export { runEffect, runRuntimeEffect };

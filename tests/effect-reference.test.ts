@@ -14,30 +14,16 @@ import { foreignGitEnvironment } from "../scripts/git-environment.mjs";
 
 const directory = fileURLToPath(new URL("..", import.meta.url));
 const environment = await foreignGitEnvironment();
-const names = [
-  "effect",
-  "@effect/platform-node-shared",
-  "@effect/vitest",
-] as const;
-const dependencies = Object.fromEntries(
-  names.map((name) => [name, reference.version]),
-);
+const names = ["effect", "@effect/platform-node-shared", "@effect/vitest"] as const;
+const dependencies = Object.fromEntries(names.map((name) => [name, reference.version]));
 const lockfile = {
   lockfileVersion: 3,
   packages: Object.fromEntries<unknown>([
     ["", { devDependencies: dependencies }],
-    ...names.map(
-      (name) =>
-        [`node_modules/${name}`, { version: reference.version }] as const,
-    ),
+    ...names.map((name) => [`node_modules/${name}`, { version: reference.version }] as const),
   ]),
 };
-const run = (
-  root: string,
-  arguments_: readonly string[],
-  executable = process.execPath,
-  environment_ = environment,
-) =>
+const run = (root: string, arguments_: readonly string[], executable = process.execPath, environment_ = environment) =>
   runCommand({
     args: arguments_,
     cwd: root,
@@ -55,23 +41,15 @@ const withProject = async (check: (root: string) => Promise<void>) => {
     await fs.cp(path.join(directory, "scripts"), path.join(root, "scripts"), {
       recursive: true,
     });
-    await fs.symlink(
-      path.join(directory, "node_modules"),
-      path.join(root, "node_modules"),
-      "junction",
-    );
+    await fs.symlink(path.join(directory, "node_modules"), path.join(root, "node_modules"), "junction");
     await writeJson(root, "package.json", {
       devDependencies: dependencies,
       scripts: Object.fromEntries(
         Object.entries(packageJson.scripts).map(([name, command]) => [
           name,
-          [
-            "effect:check-reference",
-            "prepublishOnly",
-            "validate",
-            "validate:behavior",
-            "validate:static",
-          ].includes(name)
+          ["effect:check-reference", "prepublishOnly", "validate", "validate:behavior", "validate:static"].includes(
+            name,
+          )
             ? command
             : 'node -e ""',
         ]),
@@ -84,26 +62,14 @@ const withProject = async (check: (root: string) => Promise<void>) => {
     await fs.rm(root, { force: true, recursive: true });
   }
 };
-const checkFailure = async (
-  root: string,
-  arguments_: readonly string[],
-  message: string,
-  executable?: string,
-) => {
-  const error = await Effect.runPromise(
-    run(root, arguments_, executable).pipe(Effect.flip),
-  );
+const checkFailure = async (root: string, arguments_: readonly string[], message: string, executable?: string) => {
+  const error = await Effect.runPromise(run(root, arguments_, executable).pipe(Effect.flip));
   expect(error).toMatchObject({ exitCode: 1, _tag: "CommandFailure" });
-  expect(error._tag === "CommandFailure" ? error.stderr : undefined).toContain(
-    message,
-  );
+  expect(error._tag === "CommandFailure" ? error.stderr : undefined).toContain(message);
 };
 
 const defaultManifest = { name: "effect", version: reference.version };
-const makeRepository = async (
-  root: string,
-  effectManifest: unknown = defaultManifest,
-) => {
+const makeRepository = async (root: string, effectManifest: unknown = defaultManifest) => {
   const repository = path.join(root, "source");
   await fs.mkdir(repository);
   await Promise.all(
@@ -111,18 +77,10 @@ const makeRepository = async (
       await fs.mkdir(path.dirname(path.join(repository, manifest)), {
         recursive: true,
       });
-      await writeJson(
-        repository,
-        manifest,
-        name === "effect"
-          ? effectManifest
-          : { name, version: reference.version },
-      );
+      await writeJson(repository, manifest, name === "effect" ? effectManifest : { name, version: reference.version });
     }),
   );
-  await Effect.runPromise(
-    run(repository, ["init", "--initial-branch=main"], "git"),
-  );
+  await Effect.runPromise(run(repository, ["init", "--initial-branch=main"], "git"));
   await Effect.runPromise(run(repository, ["add", "."], "git"));
   await Effect.runPromise(
     run(
@@ -143,9 +101,7 @@ const makeRepository = async (
       "git",
     ),
   );
-  const commit = await Effect.runPromise(
-    run(repository, ["rev-parse", "HEAD"], "git"),
-  );
+  const commit = await Effect.runPromise(run(repository, ["rev-parse", "HEAD"], "git"));
   await Effect.runPromise(run(repository, ["tag", reference.tag], "git"));
   await writeJson(root, "scripts/effect-reference.json", {
     ...reference,
@@ -158,11 +114,7 @@ const makeRepository = async (
 describe("Effect reference metadata", () => {
   it("checks consistent metadata offline without creating repos/", async () => {
     await withProject(async (root) => {
-      expect(
-        await Effect.runPromise(
-          run(root, ["scripts/check-effect-reference.mjs"]),
-        ),
-      ).toContain(
+      expect(await Effect.runPromise(run(root, ["scripts/check-effect-reference.mjs"]))).toContain(
         `Effect ${reference.version} dependency/reference metadata verified`,
       );
       await expect(fs.lstat(path.join(root, "repos"))).rejects.toMatchObject({
@@ -171,19 +123,16 @@ describe("Effect reference metadata", () => {
     });
   });
 
-  it.each(["validate", "prepublishOnly"])(
-    "makes %s reject drift before its other checks",
-    async (entry) => {
-      await withProject(async (root) => {
-        await writeJson(root, "scripts/effect-reference.json", {
-          ...reference,
-          tag: "effect@4.0.1",
-          version: "4.0.1",
-        });
-        await checkFailure(root, ["run", entry], "package.json", "npm");
+  it.each(["validate", "prepublishOnly"])("makes %s reject drift before its other checks", async (entry) => {
+    await withProject(async (root) => {
+      await writeJson(root, "scripts/effect-reference.json", {
+        ...reference,
+        tag: "effect@4.0.1",
+        version: "4.0.1",
       });
-    },
-  );
+      await checkFailure(root, ["run", entry], "package.json", "npm");
+    });
+  });
 
   it.each(names)("rejects a mismatched declared %s pin", async (name) => {
     await withProject(async (root) => {
@@ -194,25 +143,18 @@ describe("Effect reference metadata", () => {
     });
   });
 
-  it.each(names)(
-    "rejects a mismatched installed %s lock record",
-    async (name) => {
-      await withProject(async (root) => {
-        await writeJson(root, "package-lock.json", {
-          ...lockfile,
-          packages: {
-            ...lockfile.packages,
-            [`node_modules/${name}`]: { version: "4.0.1" },
-          },
-        });
-        await checkFailure(
-          root,
-          ["scripts/check-effect-reference.mjs"],
-          `node_modules/${name}`,
-        );
+  it.each(names)("rejects a mismatched installed %s lock record", async (name) => {
+    await withProject(async (root) => {
+      await writeJson(root, "package-lock.json", {
+        ...lockfile,
+        packages: {
+          ...lockfile.packages,
+          [`node_modules/${name}`]: { version: "4.0.1" },
+        },
       });
-    },
-  );
+      await checkFailure(root, ["scripts/check-effect-reference.mjs"], `node_modules/${name}`);
+    });
+  });
 
   it("rejects mismatched root lockfile dependency declarations", async () => {
     await withProject(async (root) => {
@@ -220,16 +162,10 @@ describe("Effect reference metadata", () => {
         ...lockfile,
         packages: {
           ...lockfile.packages,
-          ...Object.fromEntries<unknown>([
-            ["", { devDependencies: { ...dependencies, effect: "4.0.1" } }],
-          ]),
+          ...Object.fromEntries<unknown>([["", { devDependencies: { ...dependencies, effect: "4.0.1" } }]]),
         },
       });
-      await checkFailure(
-        root,
-        ["scripts/check-effect-reference.mjs"],
-        "root lockfile",
-      );
+      await checkFailure(root, ["scripts/check-effect-reference.mjs"], "root lockfile");
     });
   });
 
@@ -245,11 +181,7 @@ describe("Effect reference metadata", () => {
         ...reference,
         ...invalid,
       });
-      await checkFailure(
-        root,
-        ["scripts/check-effect-reference.mjs"],
-        "effect-reference.json",
-      );
+      await checkFailure(root, ["scripts/check-effect-reference.mjs"], "effect-reference.json");
     });
   });
 });
@@ -258,9 +190,7 @@ describe("Effect reference setup in disposable repositories", () => {
   it("ignores an inherited hook's repository and index variables", async () => {
     await withProject(async (root) => {
       const repository = await makeRepository(root);
-      const before = await Effect.runPromise(
-        run(repository, ["rev-parse", "HEAD"], "git"),
-      );
+      const before = await Effect.runPromise(run(repository, ["rev-parse", "HEAD"], "git"));
       const gitDirectory = path.join(repository, ".git");
       const hookEnvironment = Object.fromEntries([
         ["GIT_COMMON_DIR", gitDirectory],
@@ -275,35 +205,19 @@ describe("Effect reference setup in disposable repositories", () => {
         }),
       );
       expect(output).toContain("reference ready");
-      expect(
-        await Effect.runPromise(run(repository, ["rev-parse", "HEAD"], "git")),
-      ).toBe(before);
-      expect(
-        await Effect.runPromise(
-          run(repository, ["status", "--porcelain"], "git"),
-        ),
-      ).toBe("");
+      expect(await Effect.runPromise(run(repository, ["rev-parse", "HEAD"], "git"))).toBe(before);
+      expect(await Effect.runPromise(run(repository, ["status", "--porcelain"], "git"))).toBe("");
       expect(await fs.readdir(path.join(root, "repos"))).toEqual(["effect"]);
     });
   });
   it("clones and verifies the pinned local source without changing it", async () => {
     await withProject(async (root) => {
       const repository = await makeRepository(root);
-      expect(
-        await Effect.runPromise(
-          run(root, ["scripts/setup-effect-reference.mjs"]),
-        ),
-      ).toContain("reference ready");
-      expect(
-        await Effect.runPromise(
-          run(root, ["scripts/setup-effect-reference.mjs"]),
-        ),
-      ).toContain("reference verified");
-      expect(
-        await Effect.runPromise(
-          run(repository, ["status", "--porcelain"], "git"),
-        ),
-      ).toBe("");
+      expect(await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]))).toContain("reference ready");
+      expect(await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]))).toContain(
+        "reference verified",
+      );
+      expect(await Effect.runPromise(run(repository, ["status", "--porcelain"], "git"))).toBe("");
       expect(await fs.readdir(path.join(root, "repos"))).toEqual(["effect"]);
     });
   });
@@ -311,16 +225,10 @@ describe("Effect reference setup in disposable repositories", () => {
   it("preserves a dirty existing checkout", async () => {
     await withProject(async (root) => {
       await makeRepository(root);
-      await Effect.runPromise(
-        run(root, ["scripts/setup-effect-reference.mjs"]),
-      );
+      await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]));
       const marker = path.join(root, "repos/effect/user-work.txt");
       await fs.writeFile(marker, "keep this work");
-      await checkFailure(
-        root,
-        ["scripts/setup-effect-reference.mjs"],
-        "local changes",
-      );
+      await checkFailure(root, ["scripts/setup-effect-reference.mjs"], "local changes");
       expect(await fs.readFile(marker, "utf8")).toBe("keep this work");
     });
   });
@@ -328,9 +236,7 @@ describe("Effect reference setup in disposable repositories", () => {
   it("preserves a checkout at a different commit", async () => {
     await withProject(async (root) => {
       await makeRepository(root);
-      await Effect.runPromise(
-        run(root, ["scripts/setup-effect-reference.mjs"]),
-      );
+      await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]));
       const checkout = path.join(root, "repos/effect");
       await Effect.runPromise(
         run(
@@ -352,84 +258,50 @@ describe("Effect reference setup in disposable repositories", () => {
           "git",
         ),
       );
-      const head = await Effect.runPromise(
-        run(checkout, ["rev-parse", "HEAD"], "git"),
-      );
-      await checkFailure(
-        root,
-        ["scripts/setup-effect-reference.mjs"],
-        "commit differs",
-      );
-      expect(
-        await Effect.runPromise(run(checkout, ["rev-parse", "HEAD"], "git")),
-      ).toBe(head);
+      const head = await Effect.runPromise(run(checkout, ["rev-parse", "HEAD"], "git"));
+      await checkFailure(root, ["scripts/setup-effect-reference.mjs"], "commit differs");
+      expect(await Effect.runPromise(run(checkout, ["rev-parse", "HEAD"], "git"))).toBe(head);
     });
   });
 
   it("preserves a checkout with an unexpected origin", async () => {
     await withProject(async (root) => {
       await makeRepository(root);
-      await Effect.runPromise(
-        run(root, ["scripts/setup-effect-reference.mjs"]),
-      );
+      await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]));
       const checkout = path.join(root, "repos/effect");
       await Effect.runPromise(
-        run(
-          checkout,
-          ["remote", "set-url", "origin", "https://example.invalid/user.git"],
-          "git",
-        ),
+        run(checkout, ["remote", "set-url", "origin", "https://example.invalid/user.git"], "git"),
       );
-      await checkFailure(
-        root,
-        ["scripts/setup-effect-reference.mjs"],
-        "origin differs",
-      );
-      const origin = await Effect.runPromise(
-        run(checkout, ["remote", "get-url", "origin"], "git"),
-      );
+      await checkFailure(root, ["scripts/setup-effect-reference.mjs"], "origin differs");
+      const origin = await Effect.runPromise(run(checkout, ["remote", "get-url", "origin"], "git"));
       expect(origin.trim()).toBe("https://example.invalid/user.git");
     });
   });
 
-  it.each(["repos", "repos/effect"])(
-    "refuses a symlink at %s and preserves its target",
-    async (location) => {
-      await withProject(async (root) => {
-        const target = path.join(root, "user-directory");
-        await fs.mkdir(target);
-        await fs.writeFile(path.join(target, "marker"), "keep");
-        if (location === "repos/effect")
-          await fs.mkdir(path.join(root, "repos"));
-        await fs.symlink(target, path.join(root, location), "junction");
-        await checkFailure(
-          root,
-          ["scripts/setup-effect-reference.mjs"],
-          location === "repos"
-            ? "Expected a real directory"
-            : "Unexpected content",
-        );
-        expect(await fs.readFile(path.join(target, "marker"), "utf8")).toBe(
-          "keep",
-        );
-        const stat = await fs.lstat(path.join(root, location));
-        expect(stat.isSymbolicLink()).toBe(true);
-      });
-    },
-  );
+  it.each(["repos", "repos/effect"])("refuses a symlink at %s and preserves its target", async (location) => {
+    await withProject(async (root) => {
+      const target = path.join(root, "user-directory");
+      await fs.mkdir(target);
+      await fs.writeFile(path.join(target, "marker"), "keep");
+      if (location === "repos/effect") await fs.mkdir(path.join(root, "repos"));
+      await fs.symlink(target, path.join(root, location), "junction");
+      await checkFailure(
+        root,
+        ["scripts/setup-effect-reference.mjs"],
+        location === "repos" ? "Expected a real directory" : "Unexpected content",
+      );
+      expect(await fs.readFile(path.join(target, "marker"), "utf8")).toBe("keep");
+      const stat = await fs.lstat(path.join(root, location));
+      expect(stat.isSymbolicLink()).toBe(true);
+    });
+  });
 
   it("preserves a non-checkout directory", async () => {
     await withProject(async (root) => {
       await fs.mkdir(path.join(root, "repos/effect"), { recursive: true });
       await fs.writeFile(path.join(root, "repos/effect/marker"), "keep");
-      await checkFailure(
-        root,
-        ["scripts/setup-effect-reference.mjs"],
-        "standalone Git checkout",
-      );
-      expect(
-        await fs.readFile(path.join(root, "repos/effect/marker"), "utf8"),
-      ).toBe("keep");
+      await checkFailure(root, ["scripts/setup-effect-reference.mjs"], "standalone Git checkout");
+      expect(await fs.readFile(path.join(root, "repos/effect/marker"), "utf8")).toBe("keep");
     });
   });
 
@@ -439,11 +311,7 @@ describe("Effect reference setup in disposable repositories", () => {
         ...reference,
         repository: path.join(root, "missing-repository"),
       });
-      await checkFailure(
-        root,
-        ["scripts/setup-effect-reference.mjs"],
-        "does not exist",
-      );
+      await checkFailure(root, ["scripts/setup-effect-reference.mjs"], "does not exist");
       expect(await fs.readdir(path.join(root, "repos"))).toEqual([]);
     });
   });
@@ -456,11 +324,7 @@ describe("Effect reference setup in disposable repositories", () => {
         commit: "a".repeat(40),
         repository,
       });
-      await checkFailure(
-        root,
-        ["scripts/setup-effect-reference.mjs"],
-        "commit differs",
-      );
+      await checkFailure(root, ["scripts/setup-effect-reference.mjs"], "commit differs");
       expect(await fs.readdir(path.join(root, "repos"))).toEqual([]);
     });
   });
@@ -468,11 +332,7 @@ describe("Effect reference setup in disposable repositories", () => {
   it("reports malformed source manifests and cleans staging", async () => {
     await withProject(async (root) => {
       await makeRepository(root, { name: "effect", version: 4 });
-      await checkFailure(
-        root,
-        ["scripts/setup-effect-reference.mjs"],
-        "verify reference package: invalid JSON data",
-      );
+      await checkFailure(root, ["scripts/setup-effect-reference.mjs"], "verify reference package: invalid JSON data");
       expect(await fs.readdir(path.join(root, "repos"))).toEqual([]);
     });
   });

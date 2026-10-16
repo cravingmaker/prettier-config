@@ -1,18 +1,12 @@
 import { Context, Effect, Layer, ManagedRuntime } from "effect";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import {
-  consumerNode,
-  PackageSmoke,
-  packageSmokeLayer,
-} from "./helpers/package-smoke.js";
+import { consumerNode, PackageSmoke, packageSmokeLayer } from "./helpers/package-smoke.js";
 import { peerScenario } from "./helpers/peer-scenarios.js";
 import { runRuntimeEffect } from "./helpers/test-effect.js";
 import packageJson from "../package.json" with { type: "json" };
 
-class BaseConsumer extends Context.Service<BaseConsumer, string>()(
-  "prettier-config/tests/BaseConsumer",
-) {}
+class BaseConsumer extends Context.Service<BaseConsumer, string>()("prettier-config/tests/BaseConsumer") {}
 const baseConsumerLayer = Layer.effect(
   BaseConsumer,
   Effect.gen(function* () {
@@ -20,46 +14,25 @@ const baseConsumerLayer = Layer.effect(
     const consumer = yield* smoke.installConsumer("installed-consumer", [
       `typescript@${packageJson.devDependencies.typescript}`,
     ]);
-    yield* smoke.copyFixtures(
-      consumer,
-      ["tests", "consumers"],
-      ["resolution.mjs"],
-    );
-    yield* smoke.copyFixtures(
-      consumer,
-      ["tests", "fixtures", "installed-consumer"],
-      ["typecheck.ts", "tsconfig.json"],
-    );
+    yield* smoke.copyFixtures(consumer, ["tests", "consumers"], ["resolution.mjs"]);
+    yield* smoke.copyFixtures(consumer, ["tests", "fixtures", "installed-consumer"], ["typecheck.ts", "tsconfig.json"]);
     return consumer;
   }),
 );
 
-class OptionalConsumer extends Context.Service<OptionalConsumer, string>()(
-  "prettier-config/tests/OptionalConsumer",
-) {}
+class OptionalConsumer extends Context.Service<OptionalConsumer, string>()("prettier-config/tests/OptionalConsumer") {}
 const optionalConsumerLayer = Layer.effect(
   OptionalConsumer,
   Effect.gen(function* () {
     const smoke = yield* PackageSmoke;
-    const consumer = yield* smoke.installConsumer(
-      "installed-optional-consumer",
-      peerScenario.optionalDependencies,
-    );
+    const consumer = yield* smoke.installConsumer("installed-optional-consumer", peerScenario.optionalDependencies);
     yield* smoke.copyFixtures(
       consumer,
       ["tests", "fixtures"],
       ["tailwind.vue", "tailwind.css", "tailwind.scss", "tailwind.less"],
     );
-    yield* smoke.copyFixtures(
-      consumer,
-      ["tests", "consumers"],
-      ["tailwind-config.mjs"],
-    );
-    yield* smoke.copyFixtures(
-      consumer,
-      ["tests", "fixtures", "tailwind-stylesheet"],
-      ["theme.css"],
-    );
+    yield* smoke.copyFixtures(consumer, ["tests", "consumers"], ["tailwind-config.mjs"]);
+    yield* smoke.copyFixtures(consumer, ["tests", "fixtures", "tailwind-stylesheet"], ["theme.css"]);
     return consumer;
   }),
 );
@@ -101,10 +74,9 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
   }, 60_000);
 
   describe("with an npm-installed base consumer", () => {
-    const baseRuntime = ManagedRuntime.make(
-      baseConsumerLayer.pipe(Layer.provideMerge(packageSmokeLayer)),
-      { memoMap: runtime.memoMap },
-    );
+    const baseRuntime = ManagedRuntime.make(baseConsumerLayer.pipe(Layer.provideMerge(packageSmokeLayer)), {
+      memoMap: runtime.memoMap,
+    });
     beforeAll(async () => {
       await baseRuntime.runPromise(Effect.void);
     }, 180_000);
@@ -118,9 +90,7 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
         Effect.gen(function* () {
           const smoke = yield* PackageSmoke;
           const consumer = yield* BaseConsumer;
-          expect(yield* smoke.checkInstalledPackageSymlink(consumer)).toBe(
-            false,
-          );
+          expect(yield* smoke.checkInstalledPackageSymlink(consumer)).toBe(false);
           expect(
             yield* smoke.run({
               args: ["resolution.mjs"],
@@ -132,11 +102,7 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
           ).toBe("ok");
           // TypeScript runs on the development runtime; only consumers select the minimum Node.
           yield* smoke.run({
-            args: [
-              "node_modules/typescript/bin/tsc",
-              "--project",
-              "tsconfig.json",
-            ],
+            args: ["node_modules/typescript/bin/tsc", "--project", "tsconfig.json"],
             cwd: consumer,
             executable: process.execPath,
             phase: "check installed types",
@@ -155,9 +121,7 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
           Effect.gen(function* () {
             const smoke = yield* PackageSmoke;
             const consumer = yield* BaseConsumer;
-            expect(
-              yield* smoke.runConsumer(consumer, "installed.mjs", externalCwd),
-            ).toBe("ok");
+            expect(yield* smoke.runConsumer(consumer, "installed.mjs", externalCwd)).toBe("ok");
           }),
         );
       },
@@ -165,10 +129,9 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
   });
 
   describe("with npm-installed optional plugins", () => {
-    const optionalRuntime = ManagedRuntime.make(
-      optionalConsumerLayer.pipe(Layer.provideMerge(packageSmokeLayer)),
-      { memoMap: runtime.memoMap },
-    );
+    const optionalRuntime = ManagedRuntime.make(optionalConsumerLayer.pipe(Layer.provideMerge(packageSmokeLayer)), {
+      memoMap: runtime.memoMap,
+    });
     beforeAll(async () => {
       await optionalRuntime.runPromise(Effect.void);
     }, 180_000);
@@ -185,9 +148,7 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
           Effect.gen(function* () {
             const smoke = yield* PackageSmoke;
             const consumer = yield* OptionalConsumer;
-            expect(
-              yield* smoke.runConsumer(consumer, "tailwind.mjs", externalCwd),
-            ).toBe("ok");
+            expect(yield* smoke.runConsumer(consumer, "tailwind.mjs", externalCwd)).toBe("ok");
           }),
         );
       },
@@ -202,9 +163,7 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
           Effect.gen(function* () {
             const smoke = yield* PackageSmoke;
             const consumer = yield* OptionalConsumer;
-            expect(
-              yield* smoke.runConsumer(consumer, "optional.mjs", externalCwd),
-            ).toBe("ok");
+            expect(yield* smoke.runConsumer(consumer, "optional.mjs", externalCwd)).toBe("ok");
           }),
         );
       },

@@ -38,13 +38,8 @@ const testModes = {
     };
     /** @param {ts.Node} node */
     const visit = (node) => {
-      if (
-        ts.isPropertyAccessExpression(node) ||
-        ts.isElementAccessExpression(node)
-      ) {
-        const key = ts.isPropertyAccessExpression(node)
-          ? node.name
-          : node.argumentExpression;
+      if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
+        const key = ts.isPropertyAccessExpression(node) ? node.name : node.argumentExpression;
         if (
           (ts.isIdentifier(key) || ts.isStringLiteralLike(key)) &&
           ["only", "runIf", "skip", "skipIf", "todo"].includes(key.text) &&
@@ -57,16 +52,10 @@ const testModes = {
           .filter((argument) => ts.isObjectLiteralExpression(argument))
           .flatMap((argument) => argument.properties)
           .filter((property) => ts.isPropertyAssignment(property))
-          .filter(
-            (property) =>
-              property.initializer.kind !== ts.SyntaxKind.FalseKeyword,
-          )
+          .filter((property) => property.initializer.kind !== ts.SyntaxKind.FalseKeyword)
           .map((property) => {
             const key = property.name;
-            if (
-              (ts.isIdentifier(key) || ts.isStringLiteralLike(key)) &&
-              ["only", "skip", "todo"].includes(key.text)
-            )
+            if ((ts.isIdentifier(key) || ts.isStringLiteralLike(key)) && ["only", "skip", "todo"].includes(key.text))
               report(key, key.text);
             return property;
           });
@@ -82,14 +71,12 @@ const testModes = {
   defaultOptions: [],
   meta: {
     docs: {
-      description:
-        "Check typed Vitest and Effect test modes, including aliases and layer helpers.",
+      description: "Check typed Vitest and Effect test modes, including aliases and layer helpers.",
     },
     messages: {
       disabled:
         "Disabled or conditional tests require a local, explained rule exception. Keep ordinary validation's coverage intact.",
-      focused:
-        "Focused tests prevent full-suite coverage. Use explicit file or name filtering during development.",
+      focused: "Focused tests prevent full-suite coverage. Use explicit file or name filtering during development.",
     },
     schema: [],
     type: "problem",

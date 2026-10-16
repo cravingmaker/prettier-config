@@ -5,8 +5,7 @@ import path from "node:path";
 import { Effect } from "effect";
 
 // Native I/O must settle before a surrounding scope removes its workspace.
-const operation = <A>(run: () => Promise<A>) =>
-  Effect.tryPromise(run).pipe(Effect.uninterruptible);
+const operation = <A>(run: () => Promise<A>) => Effect.tryPromise(run).pipe(Effect.uninterruptible);
 
 const nodeFileSystem = {
   copyFile: (source: string, destination: string) =>
@@ -19,12 +18,7 @@ const nodeFileSystem = {
         await fs.access(filename);
         return true;
       } catch (error) {
-        if (
-          error instanceof Error &&
-          "code" in error &&
-          error.code === "ENOENT"
-        )
-          return false;
+        if (error instanceof Error && "code" in error && error.code === "ENOENT") return false;
         throw error;
       }
     }),
@@ -33,19 +27,11 @@ const nodeFileSystem = {
       await fs.mkdir(directory);
     }),
   makeTempDirectory: (options: { readonly prefix: string }) =>
-    operation(
-      async () => await fs.mkdtemp(path.join(os.tmpdir(), options.prefix)),
-    ),
-  readDirectory: (directory: string) =>
-    operation(async () => await fs.readdir(directory)),
-  readFileString: (filename: string) =>
-    operation(async () => await fs.readFile(filename, "utf8")),
-  realPath: (filename: string) =>
-    operation(async () => await fs.realpath(filename)),
-  remove: (
-    filename: string,
-    options: { readonly force: boolean; readonly recursive: boolean },
-  ) =>
+    operation(async () => await fs.mkdtemp(path.join(os.tmpdir(), options.prefix))),
+  readDirectory: (directory: string) => operation(async () => await fs.readdir(directory)),
+  readFileString: (filename: string) => operation(async () => await fs.readFile(filename, "utf8")),
+  realPath: (filename: string) => operation(async () => await fs.realpath(filename)),
+  remove: (filename: string, options: { readonly force: boolean; readonly recursive: boolean }) =>
     operation(async () => {
       await fs.rm(filename, options);
     }),

@@ -29,9 +29,7 @@ describe("pinned workflow tool", () => {
   it.each(["imaginary.field", "needs.absent.outputs.value"])(
     "rejects an invalid workflow expression: %s",
     async (expression) => {
-      const workspace = await fs.mkdtemp(
-        path.join(os.tmpdir(), "prettier-workflow-"),
-      );
+      const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-workflow-"));
       try {
         const filename = path.join(workspace, "invalid.yml");
         await fs.writeFile(
@@ -48,11 +46,9 @@ describe("pinned workflow tool", () => {
           }).pipe(Effect.flip),
         );
         expect(error).toMatchObject({ exitCode: 1, _tag: "CommandFailure" });
-        expect(
-          error._tag === "CommandFailure"
-            ? `${error.stdout ?? ""}\n${error.stderr ?? ""}`
-            : undefined,
-        ).toContain(expression);
+        expect(error._tag === "CommandFailure" ? `${error.stdout ?? ""}\n${error.stderr ?? ""}` : undefined).toContain(
+          expression,
+        );
       } finally {
         await fs.rm(workspace, { force: true, recursive: true });
       }
@@ -61,9 +57,7 @@ describe("pinned workflow tool", () => {
   );
 
   it("refuses altered cached tooling without replacing user content", async () => {
-    const workspace = await fs.mkdtemp(
-      path.join(os.tmpdir(), "prettier-workflow-cache-"),
-    );
+    const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-workflow-cache-"));
     try {
       const cache = path.join(
         workspace,
@@ -73,13 +67,9 @@ describe("pinned workflow tool", () => {
       const binary = path.join(cache, "actionlint");
       await fs.mkdir(cache, { recursive: true });
       await fs.writeFile(binary, "altered cached binary");
-      await expect(ensureActionlint(workspace)).rejects.toThrow(
-        "does not match the pinned binary",
-      );
+      await expect(ensureActionlint(workspace)).rejects.toThrow("does not match the pinned binary");
       expect(await fs.readFile(binary, "utf8")).toBe("altered cached binary");
-      expect(await fs.readdir(path.join(workspace, ".tools"))).toEqual([
-        path.basename(cache),
-      ]);
+      expect(await fs.readdir(path.join(workspace, ".tools"))).toEqual([path.basename(cache)]);
     } finally {
       await fs.rm(workspace, { force: true, recursive: true });
     }

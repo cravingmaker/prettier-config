@@ -24,9 +24,7 @@ try {
     Object.fromEntries(
       // eslint-disable-next-line n/no-process-env -- Filter credentials out before decoding workflow metadata.
       Object.entries(process.env).filter(([name]) =>
-        ["EFFECT_PR_BRANCH", "EFFECT_PR_HEAD", "GITHUB_REPOSITORY"].includes(
-          name,
-        ),
+        ["EFFECT_PR_BRANCH", "EFFECT_PR_HEAD", "GITHUB_REPOSITORY"].includes(name),
       ),
     ),
     "workflow environment",
@@ -34,38 +32,23 @@ try {
   );
   /** @type {import('./dependabot-effect-reference.mjs').GitHubRequest} */
   const request = async (endpoint, body) => {
-    const response = await globalThis.fetch(
-      `https://api.github.com${endpoint}`,
-      {
-        ...(body !== undefined && { body: JSON.stringify(body) }),
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${token}`,
-          "User-Agent": "prettier-config-effect-reference",
-          "X-GitHub-Api-Version": "2022-11-28",
-        },
-        method: body === undefined ? "GET" : "POST",
-        redirect: "error",
-        signal: globalThis.AbortSignal.timeout(30_000),
+    const response = await globalThis.fetch(`https://api.github.com${endpoint}`, {
+      ...(body !== undefined && { body: JSON.stringify(body) }),
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${token}`,
+        "User-Agent": "prettier-config-effect-reference",
+        "X-GitHub-Api-Version": "2022-11-28",
       },
-    );
-    if (!response.ok)
-      throw new Error(`GitHub ${endpoint}: HTTP ${String(response.status)}`);
-    const result = decodeJson(
-      Schema.Unknown,
-      await response.text(),
-      endpoint,
-      "read GitHub response",
-    );
+      method: body === undefined ? "GET" : "POST",
+      redirect: "error",
+      signal: globalThis.AbortSignal.timeout(30_000),
+    });
+    if (!response.ok) throw new Error(`GitHub ${endpoint}: HTTP ${String(response.status)}`);
+    const result = decodeJson(Schema.Unknown, await response.text(), endpoint, "read GitHub response");
     if (endpoint === "/graphql") {
-      const { errors } = decodeValue(
-        errorsSchema,
-        result,
-        endpoint,
-        "read GitHub mutation",
-      );
-      if (errors?.length)
-        throw new Error(errors.map((error) => error.message).join("\n"));
+      const { errors } = decodeValue(errorsSchema, result, endpoint, "read GitHub mutation");
+      if (errors?.length) throw new Error(errors.map((error) => error.message).join("\n"));
     }
     return result;
   };
@@ -78,8 +61,6 @@ try {
     })}\n`,
   );
 } catch (error) {
-  process.stderr.write(
-    `${error instanceof Error ? error.message : String(error)}\n`,
-  );
+  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;
 }
