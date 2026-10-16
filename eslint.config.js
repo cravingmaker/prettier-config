@@ -67,6 +67,7 @@ const config = [
         tsconfigRootDir: import.meta.dirname,
       },
     },
+    name: "@cravingmaker/prettier-config/type-aware-javascript",
     plugins: { "@typescript-eslint": tseslint.plugin },
     rules: {
       "@typescript-eslint/await-thenable": "error",
@@ -84,9 +85,11 @@ const config = [
       reportUnusedDisableDirectives: "error",
       reportUnusedInlineConfigs: "error",
     },
+    name: "@cravingmaker/prettier-config/linter-options",
   },
   {
     files: ["**/*.{js,mjs,ts}"],
+    name: "@cravingmaker/prettier-config/effect-stability",
     plugins: {
       local: {
         rules: { "effect-stability": effectStability, "test-modes": testModes },
@@ -126,6 +129,7 @@ const config = [
   },
   {
     files: ["tests/**/*.test.ts"],
+    name: "@cravingmaker/prettier-config/vitest",
     plugins: { vitest: plugin },
     rules: {
       "local/test-modes": "error",
@@ -139,6 +143,7 @@ const config = [
   },
   {
     files: ["tests/**/*.ts", "tests/consumers/**/*.mjs"],
+    name: "@cravingmaker/prettier-config/test-overrides",
     rules: {
       "functional/functional-parameters": "off",
       "functional/no-conditional-statements": "off",
@@ -149,6 +154,7 @@ const config = [
   },
   {
     files: ["tests/format.test.ts"],
+    name: "@cravingmaker/prettier-config/format-test-filesystem",
     rules: {
       "security/detect-non-literal-fs-filename": "off",
     },
@@ -161,6 +167,7 @@ const config = [
       "tests/vitest-watch.test.ts",
       "tests/workflow-tool.test.ts",
     ],
+    name: "@cravingmaker/prettier-config/tooling-test-filesystem",
     rules: {
       "security/detect-non-literal-fs-filename": "off",
     },
@@ -171,6 +178,7 @@ const config = [
       "tests/helpers/node-command.ts",
       "tests/package.smoke.test.ts",
     ],
+    name: "@cravingmaker/prettier-config/effect-classes",
     rules: {
       "functional/no-class-inheritance": "off",
       "functional/no-classes": "off",
@@ -182,6 +190,7 @@ const config = [
       "tests/helpers/node-command.ts",
       "tests/helpers/test-effect.ts",
     ],
+    name: "@cravingmaker/prettier-config/effect-services",
     rules: {
       "functional/no-mixed-types": "off",
       "functional/prefer-immutable-types": "off",
@@ -192,6 +201,7 @@ const config = [
   {
     // Node event listeners maintain process state and bounded output buffers.
     files: ["tests/helpers/node-command.ts"],
+    name: "@cravingmaker/prettier-config/native-process-state",
     rules: {
       "functional/immutable-data": "off",
       "functional/no-let": "off",
@@ -205,6 +215,7 @@ const config = [
       "scripts/effect-reference-metadata.mjs",
       "scripts/actionlint.mjs",
     ],
+    name: "@cravingmaker/prettier-config/tooling-filesystem",
     rules: {
       "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",
@@ -213,6 +224,7 @@ const config = [
   {
     // The native filesystem bridge rejects genuine Node I/O failures.
     files: ["tests/helpers/node-files.ts"],
+    name: "@cravingmaker/prettier-config/native-filesystem",
     rules: {
       "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",
@@ -224,12 +236,14 @@ const config = [
       "scripts/dependabot-effect-reference.mjs",
       "scripts/sync-dependabot-effect-reference.mjs",
     ],
+    name: "@cravingmaker/prettier-config/automation-promises",
     rules: {
       "functional/no-promise-reject": "off",
     },
   },
   {
     files: ["tests/consumers/**/*.mjs"],
+    name: "@cravingmaker/prettier-config/consumer-filesystem",
     rules: {
       "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",

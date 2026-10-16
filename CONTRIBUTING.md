@@ -203,6 +203,30 @@ the same exact version; Dependabot groups their updates. The UI is a development
 tool; finish with `npm run validate` and `git diff --check`. CI and publishing
 continue to use the existing complete validation commands.
 
+### ESLint config inspection
+
+Use [ESLint Config Inspector](https://github.com/eslint/config-inspector) to
+explore the repository's flat config, see which rules apply to a file, and trace
+overrides to their named config blocks:
+
+```bash
+npm run lint:inspect
+```
+
+Open the URL printed in the terminal, normally `http://127.0.0.1:7777/`. The
+command leaves browser opening to you; use `-- --open` to open it automatically.
+To select another port, use `npm run lint:inspect -- --port=7778`.
+
+Enter a repository-relative path such as `index.mjs`, `tests/config.test.ts`, or
+`tests/consumers/installed.mjs` in the config page's filepath filter to inspect
+its matching config blocks and merged rules. Local blocks use the
+`@cravingmaker/prettier-config/` prefix. Raw fixtures under `tests/fixtures/`
+and dependency references under `repos/` remain ignored.
+
+The inspector updates when the config or its local imports change. Use it when
+reviewing lint overrides, then finish with `npm run validate` and
+`git diff --check`.
+
 ### Dependency inspection
 
 Use [Node Modules Inspector](https://github.com/antfu/node-modules-inspector) to
