@@ -267,5 +267,5 @@ const runCommand = Effect.fn("packageSmoke.runCommand")(function* (
   );
 });
 
-export { CommandDeadline, CommandFailure, CommandOutputLimit, runCommand };
+export { runCommand };
 export type { CommandError, CommandSpec };

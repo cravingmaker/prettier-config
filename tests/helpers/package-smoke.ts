@@ -249,17 +249,8 @@ const packageSmokeLayer = Layer.effect(PackageSmoke, createPackageSmoke());
 export {
   consumerNode,
   createPackageSmoke,
-  InvalidTarballCount,
   PackageSmoke,
   packageSmokeLayer,
-  projectDirectory,
   SmokeFileSystemError,
 };
-export type { SmokeError };
-export {
-  type CommandSpec,
-  CommandDeadline,
-  CommandFailure,
-  CommandOutputLimit,
-  runCommand,
-} from "./node-command.js";
+export { runCommand } from "./node-command.js";

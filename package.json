@@ -46,6 +46,7 @@
     "lint": "eslint . --max-warnings 0",
     "lint:inspect": "eslint-config-inspector --no-open",
     "lint:package": "publint --strict",
+    "lint:unused": "knip",
     "lint:workflows": "node scripts/check-workflows.mjs",
     "prepare": "husky",
     "prepublishOnly": "npm run validate",
@@ -61,7 +62,7 @@
     "typecheck:package": "attw --pack . --profile esm-only",
     "validate": "npm run validate:static && npm run validate:behavior",
     "validate:behavior": "npm run test:runtime && npm run test:package",
-    "validate:static": "npm run effect:check-reference && npm run typecheck && npm run effect:check && npm run lint && npm run format:check && npm run lint:workflows && npm run lint:package && npm run typecheck:package && npm run test:tooling"
+    "validate:static": "npm run effect:check-reference && npm run typecheck && npm run effect:check && npm run lint && npm run lint:unused && npm run format:check && npm run lint:workflows && npm run lint:package && npm run typecheck:package && npm run test:tooling"
   },
   "lint-staged": {
     "*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": [
@@ -90,6 +91,7 @@
     "effect": "4.0.2",
     "eslint": "10.11.0",
     "husky": "9.1.7",
+    "knip": "6.41.0",
     "lint-staged": "17.6.0",
     "node-modules-inspector": "2.7.0",
     "prettier": "3.9.9",

@@ -83,8 +83,9 @@ npm run validate
 ```
 
 This runs `validate:static` followed by `validate:behavior`: offline Effect pin
-checks, typechecking, Effect diagnostics, linting, formatting, pinned workflow
-lint, package static analysis, tooling guards, runtime tests, and installed-consumer tests.
+checks, typechecking, Effect diagnostics, linting, unused-code analysis,
+formatting, pinned workflow lint, package static analysis, tooling guards,
+runtime tests, and installed-consumer tests.
 `prepublishOnly` and the publishing workflow use the same complete entry point.
 Package smoke tests install the tarball and consumer tools
 in a temporary project, so they need npm registry access or cached
@@ -236,6 +237,25 @@ reviewing lint overrides, then finish with `npm run validate` and
 `git diff --check`.
 
 ### Dependency inspection
+
+Use [Knip](https://knip.dev/) to check for unused files, exports, and dependencies,
+as well as unresolved imports and undeclared dependencies:
+
+```bash
+npm run lint:unused
+```
+
+This check runs in `validate:static`, so full local validation, CI's shared static
+job, and publishing all require a clean result. Configuration hints also fail
+the check to keep exceptions current.
+
+[knip.json](knip.json) adds the consumer programs that are copied and launched
+outside the import graph as entry points. Their shared helpers remain ordinary
+project files, so unused helper exports are still reported. Raw formatter and
+installed-type fixtures under `tests/fixtures/` and read-only upstream references
+under `repos/` are outside the analysis. The two explicitly listed Effect packages
+remain installed for coordinated reference pins and declaration-based guard tests;
+they are not unused dependency cleanup candidates.
 
 Use [Node Modules Inspector](https://github.com/antfu/node-modules-inspector) to
 explore the installed dependency tree, filter production and development
