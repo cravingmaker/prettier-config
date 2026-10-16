@@ -53,14 +53,15 @@ describe("repository tooling guards", () => {
         path.join(workspace, "tests/focused.test.ts"),
         'import { it, expect } from "vitest"; it.only("focused fixture", () => { expect(1).toBe(1); });',
       );
+      const commandEnvironment = Object.fromEntries(
+        // eslint-disable-next-line n/no-process-env -- Prove local behavior with CI unset, preserving the command's normal environment.
+        Object.entries(process.env).filter(([name]) => name !== "CI"),
+      );
       const error = await Effect.runPromise(
         runCommand({
           args: [path.join(directory, "node_modules/vitest/vitest.mjs"), "run"],
           cwd: workspace,
-          env: Object.fromEntries(
-            // eslint-disable-next-line n/no-process-env -- Prove local behavior with CI unset, preserving the command's normal environment.
-            Object.entries(process.env).filter(([name]) => name !== "CI"),
-          ),
+          env: commandEnvironment,
           executable: process.execPath,
           phase: "focused local test",
           timeoutMs: 30_000,

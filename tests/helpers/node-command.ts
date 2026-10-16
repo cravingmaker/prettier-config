@@ -79,14 +79,14 @@ const startCommand = (spec: CommandSpec) => {
     stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
-  let closed = false;
-  let exited = false;
+  let hasClosed = false;
+  let hasExited = false;
   let disposal: Promise<void> | undefined;
-  const hasLeaderExited = () => exited;
+  const hasLeaderExited = () => hasExited;
 
   const isAlive = () => {
     if (child.pid === undefined) return false;
-    if (process.platform === "win32") return !exited;
+    if (process.platform === "win32") return !hasExited;
     try {
       process.kill(-child.pid, 0);
       return true;
@@ -99,7 +99,7 @@ const startCommand = (spec: CommandSpec) => {
       throw error;
     }
   };
-  const hasStopped = () => closed && !isAlive();
+  const hasStopped = () => hasClosed && !isAlive();
   const waitForExit = async () => {
     const deadline = performance.now() + terminationGraceMs;
     while (!hasStopped() && performance.now() < deadline) {
@@ -142,12 +142,12 @@ const startCommand = (spec: CommandSpec) => {
         if (isAlive()) await signal("SIGKILL");
       }
       await waitForExit();
-      if (!closed) {
+      if (!hasClosed) {
         child.stdout.destroy();
         child.stderr.destroy();
         await waitForExit();
       }
-      if (!closed)
+      if (!hasClosed)
         throw new Error(`${spec.phase}: child process did not close`);
     })();
     await disposal;
@@ -184,16 +184,18 @@ const startCommand = (spec: CommandSpec) => {
     child.stdout.on("error", onError);
     child.stderr.on("error", onError);
     child.once("error", onError);
-    child.once("exit", () => {
-      exited = true;
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises, @typescript-eslint/strict-void-return -- Node ignores listener promises; cleanup failures are caught and reported through result.
+    child.once("exit", async () => {
+      hasExited = true;
       // The leader can exit while descendants retain its output pipes or ignore SIGTERM.
-      // eslint-disable-next-line promise/prefer-await-to-then, promise/prefer-await-to-callbacks -- Node listeners start disposal; the Effect finalizer awaits the same promise.
-      dispose().catch((error: unknown) => {
+      try {
+        await dispose();
+      } catch (error: unknown) {
         resolve(failure(error));
-      });
+      }
     });
     child.once("close", (code, exitSignal) => {
-      closed = true;
+      hasClosed = true;
       resolve({
         code,
         signal: exitSignal,
@@ -242,7 +244,7 @@ const runCommand = Effect.fn("packageSmoke.runCommand")(function* (
       return yield* new CommandFailure({
         ...details,
         cause: new Error(`Exit status ${status}`),
-        ...(result.code === null ? {} : { exitCode: result.code }),
+        ...(result.code !== null && { exitCode: result.code }),
         message: `${spec.phase}: ${spec.executable} exited with ${status} in ${spec.cwd}\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
         stderr: result.stderr,
         stdout: result.stdout,

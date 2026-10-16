@@ -23,7 +23,7 @@ describe("pinned workflow tool", () => {
         timeoutMs: 60_000,
       }),
     );
-    expect(output.split("\n")[0]).toBe(reference.version);
+    expect(output.split("\n", 1)[0]).toBe(reference.version);
   }, 70_000);
 
   it.each(["imaginary.field", "needs.absent.outputs.value"])(

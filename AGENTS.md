@@ -16,7 +16,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes.
   cleanup on failure, deadlines, and interruption; process tests use live clocks.
 - `scripts/` contains checked development tools, local ESLint rules, and source
   metadata. `.github/workflows/` owns CI and publishing checks.
-- Consumers support Node 22.12.0; development tools require Node >=22.22.1.
+- Consumers support Node 22.12.0; development tools require Node >=24.15.0.
   Run type tools on the development runtime and select consumer Node separately.
 
 Add meaningful regressions before behavior changes. Review intentional snapshot

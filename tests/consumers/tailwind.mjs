@@ -5,8 +5,14 @@ import process from "node:process";
 
 import { resolveConfig } from "prettier";
 
-import { consumerDirectory, format, verifyPluginPaths } from "./helpers.mjs";
+import {
+  consumerDirectory,
+  format,
+  verifyPluginPaths,
+  verifyPrettierVersion,
+} from "./helpers.mjs";
 
+verifyPrettierVersion();
 await verifyPluginPaths();
 const project = path.join(consumerDirectory, "stylesheet-project");
 await fs.mkdir(project, { recursive: true });

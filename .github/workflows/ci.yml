@@ -32,7 +32,7 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci --ignore-scripts
-      - name: Validate repository and package static checks
+      - name: Validate repository tooling and package checks
         run: npm run validate:static
 
   minimum-peers:
@@ -118,17 +118,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup Node.js
+      - name: Setup development Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Test behavior and npm-installed consumers
-        run: npm run validate:behavior
+      - name: Setup runtime Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Capture runtime executable
+        id: runtime-node
+        run: echo "executable=$(node --print process.execPath)" >> "$GITHUB_OUTPUT"
+
+      # The runtime suite can run below npm's development-engine requirement.
+      - name: Test runtime behavior
+        run: node --run test:runtime
+
+      - name: Restore development Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24
+
+      - name: Test npm-installed consumers
+        env:
+          PRETTIER_CONFIG_CONSUMER_NODE: ${{ steps.runtime-node.outputs.executable }}
+        run: npm run test:package
 
   minimum-runtime:
     name: Minimum Node.js 22.12.0

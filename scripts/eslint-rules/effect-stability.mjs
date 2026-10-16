@@ -10,22 +10,22 @@ const isEffectModule = (name) =>
 const isEffectSource = (filename) =>
   /\/node_modules\/(?:effect\/|@effect\/)/.test(filename.replaceAll("\\", "/"));
 /** @param {ts.Node} node @returns {boolean} */
-const insideGlobalAugmentation = (node) =>
+const isInsideGlobalAugmentation = (node) =>
   (ts.isModuleDeclaration(node) &&
     // eslint-disable-next-line no-bitwise -- TypeScript marks global augmentation with a NodeFlags bit.
     (node.flags & ts.NodeFlags.GlobalAugmentation) !== 0) ||
-  (node.parent !== undefined && insideGlobalAugmentation(node.parent));
+  (node.parent !== undefined && isInsideGlobalAugmentation(node.parent));
 /** @param {ts.Declaration} declaration */
 const isEffectDeclaration = (declaration) =>
   isEffectSource(declaration.getSourceFile().fileName) &&
-  !insideGlobalAugmentation(declaration);
+  !isInsideGlobalAugmentation(declaration);
 /** @param {string} name */
-const restrictedPath = (name) =>
+const isRestrictedPath = (name) =>
   /^(?:effect\/(?:process|unstable)(?:\/|$)|@effect\/experimental(?:\/|$)|@effect\/platform-node-shared\/NodeChildProcessSpawner$)/.test(
     name,
   );
 /** @param {readonly ts.JSDocTagInfo[]} tags */
-const unsupportedTags = (tags) =>
+const hasUnsupportedTags = (tags) =>
   tags.some(
     (tag) =>
       tag.name === "experimental" ||
@@ -88,8 +88,8 @@ const effectStability = {
       const target = originalSymbol(symbol);
       return (
         belongsToEffect(target) &&
-        (unsupportedTags(symbol.getJsDocTags(checker)) ||
-          unsupportedTags(target.getJsDocTags(checker)) ||
+        (hasUnsupportedTags(symbol.getJsDocTags(checker)) ||
+          hasUnsupportedTags(target.getJsDocTags(checker)) ||
           target
             .getDeclarations()
             ?.some((declaration) => unsupportedModuleDocument(declaration)))
@@ -113,7 +113,7 @@ const effectStability = {
         report(target, "reference", name);
         return;
       }
-      if (restrictedPath(name)) {
+      if (isRestrictedPath(name)) {
         report(target, "path", name);
         return;
       }

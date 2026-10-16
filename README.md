@@ -140,7 +140,7 @@ a compatible combination is verified.
 
 `index.mjs` is published directly alongside `index.d.ts`. The repository uses
 it through `prettier.config.mjs`; no build step is required. Development requires
-Node.js 22.22.1 or newer, while consumers support Node.js 22.12.0 or newer.
+Node.js 24.15.0 or newer, while consumers support Node.js 22.12.0 or newer.
 
 See [CONTRIBUTING.md](https://github.com/cravingmaker/prettier-config/blob/main/CONTRIBUTING.md)
 for npm installation, explicit hook activation, Effect reference setup, and
