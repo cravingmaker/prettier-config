@@ -5,7 +5,7 @@ interactions.
 
 ## Setup
 
-Development requires Node.js 22.22.1 or newer. The published configuration
+Development requires Node.js 24.15.0 or newer. The published configuration
 supports Node.js 22.12.0 or newer.
 
 Use the contributor Node.js version pinned in [.nvmrc](.nvmrc). If you use
@@ -84,7 +84,7 @@ npm run validate
 
 This runs `validate:static` followed by `validate:behavior`: offline Effect pin
 checks, typechecking, Effect diagnostics, linting, formatting, pinned workflow
-lint, package static analysis, regular tests, and installed-consumer tests.
+lint, package static analysis, tooling guards, runtime tests, and installed-consumer tests.
 `prepublishOnly` and the publishing workflow use the same complete entry point.
 Package smoke tests install the tarball and consumer tools
 in a temporary project, so they need npm registry access or cached
@@ -115,14 +115,22 @@ Node 22.12.0, and minimum peers once on development Node. Process lifecycle test
 also run on macOS Node 24 through `npm run test:lifecycle`; Linux retains the
 same lifecycle suite. Windows execution remains unverified.
 
-CI owns repository static checks once on development Node 24, then runs
-version-sensitive behavior and installed consumers on Node 22/24/26. Each required
+CI owns repository static checks and tooling guards once on development Node 24,
+then runs version-sensitive behavior and installed consumers on Node 22/24/26.
+Each matrix job installs dependencies on Node 24, runs `node --run test:runtime`
+on its selected runtime, then restores Node 24 for the package harness and type
+compiler while consumer programs use the captured runtime executable. Each required
 matrix status rejects failed, cancelled, or skipped static/minimum-peer/macOS
 prerequisites through an explicit result gate. The required minimum-runtime and
 Dependency Review names remain unchanged. See the
 [CI ownership table](docs/architecture.md#ci-check-ownership) for the complete
 command map; `validate:static` and `validate:behavior` are composable CI entry points,
 and `npm run validate` remains the required final local check.
+
+`npm test` and `npm run test:ui` retain all regular tests. `test:runtime` excludes
+the ESLint-backed tooling guards, and `test:tooling` selects those guards on the
+development runtime. Full validation runs both suites through its static and
+behavior phases.
 
 To run only a file or named case during development, use, for example:
 

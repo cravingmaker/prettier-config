@@ -38,7 +38,39 @@ const changes = [
   { filename: "tests/consumers/installed.mjs", tests: [packageTest] },
 ];
 
+const collectTestFiles = async (command: string) => {
+  const { filter, options } = parseCLI(command);
+  const runner = await createVitest({
+    ...options,
+    root: directory,
+    watch: false,
+  });
+  try {
+    const specifications = await runner.globTestSpecifications(filter);
+    return specifications.map((specification) =>
+      path.relative(directory, specification.moduleId),
+    );
+  } finally {
+    await runner.close();
+  }
+};
+
 describe("Vitest watch dependencies", () => {
+  it("partitions regular tests into runtime and tooling suites without losing coverage", async () => {
+    const [regular, runtime, tooling] = await Promise.all([
+      collectTestFiles(packageJson.scripts.test),
+      collectTestFiles(packageJson.scripts["test:runtime"]),
+      collectTestFiles(packageJson.scripts["test:tooling"]),
+    ]);
+
+    expect(tooling).toEqual(["tests/tooling-guards.test.ts"]);
+    expect(runtime).not.toContain("tests/tooling-guards.test.ts");
+    expect(runtime).not.toContain(packageTest);
+    expect(regular).toHaveLength(runtime.length + tooling.length);
+    expect(regular).toEqual(expect.arrayContaining(runtime));
+    expect(regular).toEqual(expect.arrayContaining(tooling));
+  });
+
   it.each(["package", "regular"] as const)(
     "reruns tests for filesystem inputs within the %s command's scope",
     async (scenario) => {

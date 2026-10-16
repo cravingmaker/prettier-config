@@ -64,7 +64,7 @@ const config = [
       parser: tseslint.parser,
       parserOptions: {
         projectService: true,
-        // eslint-disable-next-line n/no-unsupported-features/node-builtins -- Development tooling requires Node >=22.22.1; dirname is stable there.
+        // eslint-disable-next-line n/no-unsupported-features/node-builtins -- Development tooling requires Node >=24.15.0; dirname is stable there.
         tsconfigRootDir: import.meta.dirname,
       },
     },

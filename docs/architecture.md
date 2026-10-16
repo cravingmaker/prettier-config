@@ -73,7 +73,7 @@ PRETTIER_CONFIG_CONSUMER_NODE=/absolute/path/to/node-22.12.0 npm run test:packag
 ```
 
 This variable does not select the test runner or compiler. Development requires
-Node >=22.22.1; use [.nvmrc](../.nvmrc) and the
+Node >=24.15.0; use [.nvmrc](../.nvmrc) and the
 [contributor setup](../CONTRIBUTING.md#setup). Package tests need registry access
 or cached dependencies, and remove their temporary installations afterward.
 
@@ -241,17 +241,26 @@ retaining behavior on each supported runtime.
 | `effect:check-reference`, `typecheck`, `effect:check` | Shared static checks, Linux Node 24       | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
 | `lint`, `format:check`, `lint:workflows`              | Shared static checks, Linux Node 24       | Typed rules, test/API guards, repository formatting, pinned actionlint           |
 | `lint:package`, `typecheck:package`                   | Shared static checks, Linux Node 24       | Publint and ATTW's ESM package profile                                           |
-| `test`                                                | Node.js 22/24/26 on Linux                 | Behavior, negative tooling fixtures, native process lifecycle                    |
+| `test:tooling`                                        | Shared static checks, Linux Node 24       | Negative ESLint and compiler fixtures, focused-test guards                       |
+| `test:runtime`                                        | Node.js 22/24/26 on Linux                 | Runtime behavior, native process lifecycle, reference and workflow tooling       |
 | `test:package`, current peers                         | Node.js 22/24/26; Minimum Node.js 22.12.0 | Real npm consumers, custom stylesheets, public types, package contents           |
 | `test:package`, minimum peers                         | Minimum peer versions, Linux Node 24      | The same package assertions at declared lower bounds                             |
 | `test:lifecycle`                                      | macOS lifecycle, Node 24                  | Live-clock cleanup, process trees, interruption, deadlines, output limits, paths |
 | Dependency Review action                              | Dependency Review                         | Existing dependency-change policy                                                |
 | CodeQL default setup                                  | Repository-managed CodeQL analysis        | Existing Actions and JavaScript/TypeScript analysis                              |
 
-The minimum-runtime job runs the test harness and installed type compiler on
-development Node, with runtime programs on Node 22.12.0. Negative tooling tests
-remain behavioral regressions on each matrix runtime; they do not replace the
-repository-wide static owner.
+Each matrix job installs dependencies on development Node 24 before selecting its
+runtime. `node --run test:runtime` runs the runtime suite without invoking npm's
+development-engine check. The job captures that Node executable and restores Node
+24 for the package harness and installed type compiler, while consumer programs
+use the captured runtime. The minimum-runtime job uses the same harness/compiler
+boundary with consumer programs on Node 22.12.0.
+
+`test:tooling` loads the repository ESLint configuration, whose development
+dependency requires Node >=24.15.0. It runs once through `validate:static` on Node 24. `validate:behavior` composes `test:runtime` and `test:package`; full validation
+and publishing retain both phases. `npm test` and its UI still include every
+regular test, with runtime and tooling selection checked through Vitest's actual
+test discovery.
 
 Each required `Node.js 22/24/26` job depends on shared static, minimum-peer, and
 macOS lifecycle checks. Its `always()` condition allows the explicit result gate

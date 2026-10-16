@@ -54,12 +54,14 @@
     "test:lifecycle": "vitest run tests/package-smoke-harness.test.ts",
     "test:package": "vitest run tests/package.smoke.test.ts",
     "test:package:ui": "vitest --ui --watch tests/package.smoke.test.ts",
+    "test:runtime": "vitest run --exclude tests/package.smoke.test.ts --exclude tests/tooling-guards.test.ts",
+    "test:tooling": "vitest run tests/tooling-guards.test.ts",
     "test:ui": "vitest --ui --watch --exclude tests/package.smoke.test.ts",
     "typecheck": "tsc --noEmit",
     "typecheck:package": "attw --pack . --profile esm-only",
     "validate": "npm run validate:static && npm run validate:behavior",
-    "validate:behavior": "npm run test && npm run test:package",
-    "validate:static": "npm run effect:check-reference && npm run typecheck && npm run effect:check && npm run lint && npm run format:check && npm run lint:workflows && npm run lint:package && npm run typecheck:package"
+    "validate:behavior": "npm run test:runtime && npm run test:package",
+    "validate:static": "npm run effect:check-reference && npm run typecheck && npm run effect:check && npm run lint && npm run format:check && npm run lint:workflows && npm run lint:package && npm run typecheck:package && npm run test:tooling"
   },
   "lint-staged": {
     "*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": [
@@ -123,7 +125,7 @@
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": ">=22.22.1",
+      "version": ">=24.15.0",
       "onFail": "error"
     }
   },
