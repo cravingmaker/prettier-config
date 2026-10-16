@@ -11,9 +11,7 @@ const baseConsumerLayer = Layer.effect(
   BaseConsumer,
   Effect.gen(function* () {
     const smoke = yield* PackageSmoke;
-    const consumer = yield* smoke.installConsumer("installed-consumer", [
-      `typescript@${packageJson.devDependencies.typescript}`,
-    ]);
+    const consumer = yield* smoke.installConsumer("installed-consumer", [`typescript@${packageJson.devDependencies.typescript}`]);
     yield* smoke.copyFixtures(consumer, ["tests", "consumers"], ["resolution.mjs"]);
     yield* smoke.copyFixtures(consumer, ["tests", "fixtures", "installed-consumer"], ["typecheck.ts", "tsconfig.json"]);
     return consumer;

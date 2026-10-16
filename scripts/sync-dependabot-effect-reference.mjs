@@ -23,9 +23,7 @@ try {
     environmentSchema,
     Object.fromEntries(
       // eslint-disable-next-line n/no-process-env -- Filter credentials out before decoding workflow metadata.
-      Object.entries(process.env).filter(([name]) =>
-        ["EFFECT_PR_BRANCH", "EFFECT_PR_HEAD", "GITHUB_REPOSITORY"].includes(name),
-      ),
+      Object.entries(process.env).filter(([name]) => ["EFFECT_PR_BRANCH", "EFFECT_PR_HEAD", "GITHUB_REPOSITORY"].includes(name)),
     ),
     "workflow environment",
     "configure Effect synchronization",

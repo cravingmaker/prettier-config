@@ -59,11 +59,7 @@ describe("pinned workflow tool", () => {
   it("refuses altered cached tooling without replacing user content", async () => {
     const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-workflow-cache-"));
     try {
-      const cache = path.join(
-        workspace,
-        ".tools",
-        `actionlint-${reference.version}-${process.platform}-${process.arch}`,
-      );
+      const cache = path.join(workspace, ".tools", `actionlint-${reference.version}-${process.platform}-${process.arch}`);
       const binary = path.join(cache, "actionlint");
       await fs.mkdir(cache, { recursive: true });
       await fs.writeFile(binary, "altered cached binary");

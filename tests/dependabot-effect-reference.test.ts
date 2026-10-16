@@ -74,10 +74,7 @@ const fixture = (overrides: Readonly<Record<string, unknown>> = {}) => {
         version,
       }),
     ],
-    [
-      upstreamEndpoint("packages/platform/node-shared/package.json"),
-      content({ name: "@effect/platform-node-shared", version }),
-    ],
+    [upstreamEndpoint("packages/platform/node-shared/package.json"), content({ name: "@effect/platform-node-shared", version })],
     [
       upstreamEndpoint("packages/vitest/package.json"),
       content({

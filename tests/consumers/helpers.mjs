@@ -32,7 +32,7 @@ const format = async (filename, source, parser) => {
   }
   assert.equal(resolved.parser, parser, filename);
   assert.equal(resolved.singleAttributePerLine, true, filename);
-  assert.equal(resolved.printWidth, 120, filename);
+  assert.equal(resolved.printWidth, 130, filename);
 
   const options = { ...resolved, filepath: filePath };
   const formatted = await formatSource(source, options);
@@ -46,17 +46,11 @@ const format = async (filename, source, parser) => {
 const verifyPluginPaths = async () => {
   const modules = await fs.realpath(path.join(consumerDirectory, "node_modules"));
   const require = createRequire(path.join(consumerDirectory, "package.json"));
-  const pluginPaths = [
-    require.resolve("@prettier/plugin-oxc"),
-    ...config.plugins.filter((plugin) => typeof plugin === "string"),
-  ];
+  const pluginPaths = [require.resolve("@prettier/plugin-oxc"), ...config.plugins.filter((plugin) => typeof plugin === "string")];
   await Promise.all(
     pluginPaths.map(async (plugin) => {
       const pluginPath = await fs.realpath(plugin);
-      assert.ok(
-        pluginPath.startsWith(modules + path.sep),
-        `Plugin resolved outside the consumer installation: ${plugin}`,
-      );
+      assert.ok(pluginPath.startsWith(modules + path.sep), `Plugin resolved outside the consumer installation: ${plugin}`);
     }),
   );
 };

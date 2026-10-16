@@ -47,9 +47,7 @@ const withProject = async (check: (root: string) => Promise<void>) => {
       scripts: Object.fromEntries(
         Object.entries(packageJson.scripts).map(([name, command]) => [
           name,
-          ["effect:check-reference", "prepublishOnly", "validate", "validate:behavior", "validate:static"].includes(
-            name,
-          )
+          ["effect:check-reference", "prepublishOnly", "validate", "validate:behavior", "validate:static"].includes(name)
             ? command
             : 'node -e ""',
         ]),
@@ -214,9 +212,7 @@ describe("Effect reference setup in disposable repositories", () => {
     await withProject(async (root) => {
       const repository = await makeRepository(root);
       expect(await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]))).toContain("reference ready");
-      expect(await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]))).toContain(
-        "reference verified",
-      );
+      expect(await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]))).toContain("reference verified");
       expect(await Effect.runPromise(run(repository, ["status", "--porcelain"], "git"))).toBe("");
       expect(await fs.readdir(path.join(root, "repos"))).toEqual(["effect"]);
     });
@@ -269,9 +265,7 @@ describe("Effect reference setup in disposable repositories", () => {
       await makeRepository(root);
       await Effect.runPromise(run(root, ["scripts/setup-effect-reference.mjs"]));
       const checkout = path.join(root, "repos/effect");
-      await Effect.runPromise(
-        run(checkout, ["remote", "set-url", "origin", "https://example.invalid/user.git"], "git"),
-      );
+      await Effect.runPromise(run(checkout, ["remote", "set-url", "origin", "https://example.invalid/user.git"], "git"));
       await checkFailure(root, ["scripts/setup-effect-reference.mjs"], "origin differs");
       const origin = await Effect.runPromise(run(checkout, ["remote", "get-url", "origin"], "git"));
       expect(origin.trim()).toBe("https://example.invalid/user.git");

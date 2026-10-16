@@ -238,9 +238,7 @@ it.for([
         const smoke = yield* createPackageSmoke(fakePack);
         const ready = `${smoke.workspace}/ready`;
         const code =
-          deniedSignal === "SIGTERM"
-            ? uncooperativeChild.replace("process.on('SIGTERM', () => {});", "")
-            : uncooperativeChild;
+          deniedSignal === "SIGTERM" ? uncooperativeChild.replace("process.on('SIGTERM', () => {});", "") : uncooperativeChild;
         const fiber = yield* smoke
           .run({
             args: ["-e", code, ready],
@@ -481,28 +479,25 @@ it.for([
   },
 );
 
-it.for(["cwd", "executable"] as const)(
-  "reports a missing %s without hanging during cleanup",
-  async (missing, context) => {
-    await runEffect(
-      context,
-      Effect.gen(function* () {
-        const smoke = yield* createPackageSmoke(fakePack);
-        const absent = `${smoke.workspace}/does-not-exist`;
-        const error = yield* smoke
-          .run({
-            args: ["-e", "process.stdout.write('unexpected');"],
-            cwd: missing === "cwd" ? absent : smoke.workspace,
-            executable: missing === "executable" ? absent : process.execPath,
-            phase: "spawn failure",
-            timeoutMs: 2000,
-          })
-          .pipe(Effect.flip);
-        expect(error).toMatchObject({
+it.for(["cwd", "executable"] as const)("reports a missing %s without hanging during cleanup", async (missing, context) => {
+  await runEffect(
+    context,
+    Effect.gen(function* () {
+      const smoke = yield* createPackageSmoke(fakePack);
+      const absent = `${smoke.workspace}/does-not-exist`;
+      const error = yield* smoke
+        .run({
+          args: ["-e", "process.stdout.write('unexpected');"],
+          cwd: missing === "cwd" ? absent : smoke.workspace,
+          executable: missing === "executable" ? absent : process.execPath,
           phase: "spawn failure",
-          _tag: "CommandFailure",
-        });
-      }).pipe(Effect.scoped),
-    );
-  },
-);
+          timeoutMs: 2000,
+        })
+        .pipe(Effect.flip);
+      expect(error).toMatchObject({
+        phase: "spawn failure",
+        _tag: "CommandFailure",
+      });
+    }).pipe(Effect.scoped),
+  );
+});

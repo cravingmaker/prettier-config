@@ -59,12 +59,7 @@ const commitSchema = Schema.Struct({
 const readJson = async (request, { commit, filename, repository }, schema) => {
   const endpoint = `/repos/${repository}/contents/${filename}?ref=${commit}`;
   const file = decodeValue(fileSchema, await request(endpoint), endpoint, "read GitHub file");
-  const contents = decodeValue(
-    Schema.StringFromBase64,
-    file.content.replaceAll("\n", ""),
-    filename,
-    "decode GitHub contents",
-  );
+  const contents = decodeValue(Schema.StringFromBase64, file.content.replaceAll("\n", ""), filename, "decode GitHub contents");
   return decodeJson(schema, contents, filename, "verify Effect update");
 };
 
@@ -118,12 +113,7 @@ const syncEffectReference = async ({ branch, head, repository, request }) => {
   ]);
   if (reference.repository !== `https://github.com/${upstream}.git`)
     throw new Error("Effect source repository differs from the trusted upstream");
-  const version = decodeValue(
-    versionSchema,
-    manifest.devDependencies.effect,
-    "package.json",
-    "verify exact Effect version",
-  );
+  const version = decodeValue(versionSchema, manifest.devDependencies.effect, "package.json", "verify exact Effect version");
   const root = decodeValue(dependenciesSchema, lock.packages[""], "package-lock.json", "verify root dependency pins");
   const declared = new Map(Object.entries(manifest.devDependencies));
   const locked = new Map(Object.entries(root.devDependencies));
