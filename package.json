@@ -101,7 +101,7 @@
     "publint": "0.3.25",
     "svelte": "5.57.2",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.59.2",
+    "typescript-eslint": "8.71.0",
     "vitest": "5.0.3"
   },
   "peerDependencies": {
