@@ -9,7 +9,7 @@ const testModes = {
     /** @param {ts.Expression} expression @returns {boolean} */
     const isTestApi = (expression) => {
       const type = checker.getTypeAtLocation(expression);
-      const known = ["only", "skip", "each"].every((name) =>
+      const isKnownTestApi = ["only", "skip", "each"].every((name) =>
         type
           .getProperty(name)
           ?.getDeclarations()
@@ -20,7 +20,7 @@ const testModes = {
           ),
       );
       return (
-        known ||
+        isKnownTestApi ||
         ((ts.isPropertyAccessExpression(expression) ||
           ts.isElementAccessExpression(expression) ||
           ts.isCallExpression(expression)) &&

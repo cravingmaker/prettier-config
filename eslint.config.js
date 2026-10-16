@@ -47,6 +47,7 @@ import { testModes } from "./scripts/eslint-rules/test-modes.mjs";
 
 const baseConfig = await createConfig({
   ignores: ["tests/fixtures/**/*", "repos/**"],
+  tsTypeChecked: true,
 });
 
 const config = [
@@ -86,6 +87,41 @@ const config = [
       reportUnusedInlineConfigs: "error",
     },
     name: "@cravingmaker/prettier-config/linter-options",
+  },
+  {
+    files: ["**/*.{js,mjs,cjs,jsx,mjsx,ts,mts,cts,tsx,mtsx}"],
+    name: "@cravingmaker/prettier-config/unicorn-overrides",
+    rules: {
+      "unicorn/name-replacements": [
+        "error",
+        {
+          allowList: {
+            i18n: true,
+            i18nKey: true,
+            tsconfigRootDir: true,
+          },
+          ignore: [
+            String.raw`\.spec$`,
+            String.raw`\.test$`,
+            String.raw`\.e2e$`,
+          ],
+          replacements: {
+            ctx: false,
+            e: { error: true, event: false },
+            fn: { function: false },
+            ref: false,
+            repository: false,
+            req: false,
+            res: false,
+          },
+        },
+      ],
+      "unicorn/no-asterisk-prefix-in-documentation-comments": "off",
+      "unicorn/no-unused-array-method-return": "off",
+      "unicorn/prefer-error-is-error": "off",
+      "unicorn/prefer-simple-condition-first": "off",
+      "unicorn/single-line-block-comment-style": "off",
+    },
   },
   {
     files: ["**/*.{js,mjs,ts}"],

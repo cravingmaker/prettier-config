@@ -3,8 +3,13 @@ import process from "node:process";
 
 import config from "@cravingmaker/prettier-config";
 
-import { format, verifyPluginPaths } from "./helpers.mjs";
+import {
+  format,
+  verifyPluginPaths,
+  verifyPrettierVersion,
+} from "./helpers.mjs";
 
+verifyPrettierVersion();
 await verifyPluginPaths();
 const oxc = await import("@prettier/plugin-oxc");
 assert.equal(config.plugins[0], oxc.default);

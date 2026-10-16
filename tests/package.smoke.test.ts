@@ -118,7 +118,9 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
         Effect.gen(function* () {
           const smoke = yield* PackageSmoke;
           const consumer = yield* BaseConsumer;
-          expect(yield* smoke.isInstalledPackageSymlink(consumer)).toBe(false);
+          expect(yield* smoke.checkInstalledPackageSymlink(consumer)).toBe(
+            false,
+          );
           expect(
             yield* smoke.run({
               args: ["resolution.mjs"],

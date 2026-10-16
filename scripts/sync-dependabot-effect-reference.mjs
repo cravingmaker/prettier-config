@@ -10,10 +10,9 @@ const environmentSchema = Schema.Struct({
   EFFECT_PR_HEAD: Schema.String,
   GITHUB_REPOSITORY: Schema.String,
 });
+const errorSchema = Schema.Struct({ message: Schema.String });
 const errorsSchema = Schema.Struct({
-  errors: Schema.optional(
-    Schema.Array(Schema.Struct({ message: Schema.String })),
-  ),
+  errors: Schema.optional(Schema.Array(errorSchema)),
 });
 
 try {
@@ -38,7 +37,7 @@ try {
     const response = await globalThis.fetch(
       `https://api.github.com${endpoint}`,
       {
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        ...(body !== undefined && { body: JSON.stringify(body) }),
         headers: {
           Accept: "application/vnd.github+json",
           Authorization: `Bearer ${token}`,

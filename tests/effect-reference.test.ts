@@ -262,15 +262,16 @@ describe("Effect reference setup in disposable repositories", () => {
         run(repository, ["rev-parse", "HEAD"], "git"),
       );
       const gitDirectory = path.join(repository, ".git");
+      const hookEnvironment = Object.fromEntries([
+        ["GIT_COMMON_DIR", gitDirectory],
+        ["GIT_DIR", gitDirectory],
+        ["GIT_INDEX_FILE", path.join(gitDirectory, "index")],
+        ["GIT_WORK_TREE", repository],
+      ]);
       const output = await Effect.runPromise(
         run(root, ["scripts/setup-effect-reference.mjs"], process.execPath, {
           ...environment,
-          ...Object.fromEntries([
-            ["GIT_COMMON_DIR", gitDirectory],
-            ["GIT_DIR", gitDirectory],
-            ["GIT_INDEX_FILE", path.join(gitDirectory, "index")],
-            ["GIT_WORK_TREE", repository],
-          ]),
+          ...hookEnvironment,
         }),
       );
       expect(output).toContain("reference ready");

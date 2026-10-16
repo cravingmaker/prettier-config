@@ -64,7 +64,7 @@ const checkEffectReference = async (projectDirectory) => {
     "validate lockfile",
   );
   const installedPackages = new Map(Object.entries(lock.packages));
-  const root = decodeValue(
+  const { devDependencies: rootDependencies } = decodeValue(
     dependenciesSchema,
     installedPackages.get(""),
     lockPath,
@@ -79,7 +79,7 @@ const checkEffectReference = async (projectDirectory) => {
       `${lockPath}: expected the repository's version 3 npm lockfile`,
     );
   const declared = new Map(Object.entries(manifest.devDependencies));
-  const locked = new Map(Object.entries(root.devDependencies));
+  const locked = new Map(Object.entries(rootDependencies));
   // eslint-disable-next-line functional/no-loop-statements -- Validate each coordinated pin with its own actionable diagnostic.
   for (const { name } of effectPackages) {
     if (declared.get(name) !== reference.version)

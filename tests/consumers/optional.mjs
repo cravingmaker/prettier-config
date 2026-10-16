@@ -6,8 +6,14 @@ import process from "node:process";
 
 import config from "@cravingmaker/prettier-config";
 
-import { consumerDirectory, format, verifyPluginPaths } from "./helpers.mjs";
+import {
+  consumerDirectory,
+  format,
+  verifyPluginPaths,
+  verifyPrettierVersion,
+} from "./helpers.mjs";
 
+verifyPrettierVersion();
 const astro = await format(
   "example.astro",
   '---\nconst name="World"\n---\n<div class="p-4 flex">{name}</div>',

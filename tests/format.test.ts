@@ -49,9 +49,9 @@ const testFixture = async (
   expect(formatted).toBe(
     await prettier.format(content, {
       filepath: filePath,
-      ...(resolvedConfig?.parser === undefined
-        ? {}
-        : { parser: resolvedConfig.parser }),
+      ...(resolvedConfig?.parser !== undefined && {
+        parser: resolvedConfig.parser,
+      }),
       plugins: resolvedConfig?.plugins ?? [],
       singleAttributePerLine: true,
     }),

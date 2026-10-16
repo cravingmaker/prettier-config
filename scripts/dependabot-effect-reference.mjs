@@ -46,10 +46,11 @@ const objectSchema = Schema.Struct({
   type: Schema.Literals(["commit", "tag"]),
 });
 const tagSchema = Schema.Struct({ object: objectSchema });
+const commitOidSchema = Schema.Struct({ oid: shaSchema });
 const commitSchema = Schema.Struct({
   data: Schema.Struct({
     createCommitOnBranch: Schema.Struct({
-      commit: Schema.Struct({ oid: shaSchema }),
+      commit: commitOidSchema,
     }),
   }),
 });
@@ -137,11 +138,11 @@ const syncEffectReference = async ({ branch, head, repository, request }) => {
   );
   const allowed = new Set(["package-lock.json", "package.json", referencePath]);
   if (
-    !files.every(
-      (file) => file.status === "modified" && allowed.has(file.filename),
+    files.some(
+      (file) => file.status !== "modified" || !allowed.has(file.filename),
     ) ||
-    !["package.json", "package-lock.json"].every((filename) =>
-      files.some((file) => file.filename === filename),
+    ["package.json", "package-lock.json"].some((filename) =>
+      files.every((file) => file.filename !== filename),
     )
   )
     throw new Error("Unexpected changed files in the Dependabot Effect PR");

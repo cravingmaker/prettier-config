@@ -14,9 +14,11 @@ const withTestLifetime = async <A>(
   const result = start(context.signal);
   // Vitest can report a timeout before the interrupted fiber finishes cleanup.
   context.onTestFinished(async () => {
-    await result.catch(() => {
+    try {
+      await result;
+    } catch {
       // The returned test promise already reports the failure.
-    });
+    }
   });
   return await result;
 };

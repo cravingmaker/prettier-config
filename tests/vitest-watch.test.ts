@@ -42,9 +42,10 @@ describe("Vitest watch dependencies", () => {
   it.each(["package", "regular"] as const)(
     "reruns tests for filesystem inputs within the %s command's scope",
     async (scenario) => {
-      const workspace = await fs.realpath(
-        await fs.mkdtemp(path.join(os.tmpdir(), "prettier-watch-")),
+      const temporaryDirectory = await fs.mkdtemp(
+        path.join(os.tmpdir(), "prettier-watch-"),
       );
+      const workspace = await fs.realpath(temporaryDirectory);
       const selectedTests = testFiles.filter((filename) =>
         scenario === "package"
           ? filename === packageTest
@@ -96,15 +97,16 @@ describe("Vitest watch dependencies", () => {
           reporters: [
             {
               onTestRunEnd(modules, errors, reason) {
+                const files = new Set(
+                  modules.map((module) =>
+                    path.relative(workspace, module.moduleId),
+                  ),
+                );
                 reports.dispatchEvent(
                   new CustomEvent("complete", {
                     detail: {
                       errors,
-                      files: new Set(
-                        modules.map((module) =>
-                          path.relative(workspace, module.moduleId),
-                        ),
-                      ),
+                      files,
                       reason,
                     },
                   }),

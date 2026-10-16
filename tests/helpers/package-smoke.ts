@@ -54,6 +54,9 @@ const withFileContext = <A, E>(
   );
 
 type SmokeHarness = {
+  readonly checkInstalledPackageSymlink: (
+    consumer: string,
+  ) => Effect.Effect<boolean, SmokeFileSystemError>;
   readonly copyFixtures: (
     consumer: string,
     source: readonly string[],
@@ -64,14 +67,11 @@ type SmokeHarness = {
     dependencies: readonly string[],
     prettierVersion?: string,
   ) => Effect.Effect<string, SmokeError>;
-  readonly isInstalledPackageSymlink: (
-    consumer: string,
-  ) => Effect.Effect<boolean, SmokeFileSystemError>;
   readonly run: (spec: CommandSpec) => Effect.Effect<string, CommandError>;
   readonly runConsumer: (
     consumer: string,
     script: "installed.mjs" | "optional.mjs" | "tailwind.mjs",
-    externalCwd: boolean,
+    isExternalCwd: boolean,
   ) => Effect.Effect<string, SmokeError>;
   readonly tarball: string;
   readonly workspace: string;
@@ -194,7 +194,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
     const runConsumer = Effect.fn("packageSmoke.runConsumer")(function* (
       consumer: string,
       script: "installed.mjs" | "optional.mjs" | "tailwind.mjs",
-      externalCwd: boolean,
+      isExternalCwd: boolean,
     ) {
       yield* copyFixtures(
         consumer,
@@ -203,13 +203,13 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
       );
       return yield* run({
         args: [path.join(consumer, script), peerScenario.prettier],
-        cwd: externalCwd ? path.dirname(consumer) : consumer,
+        cwd: isExternalCwd ? path.dirname(consumer) : consumer,
         executable: consumerNode,
         phase: `run ${script}`,
         timeoutMs: 30_000,
       });
     });
-    const isInstalledPackageSymlink = (consumer: string) =>
+    const checkInstalledPackageSymlink = (consumer: string) =>
       withFileContext(
         "inspect installed package",
         consumer,
@@ -228,9 +228,9 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
         }).pipe(Effect.map((stat) => stat.isSymbolicLink())),
       );
     return PackageSmoke.of({
+      checkInstalledPackageSymlink,
       copyFixtures,
       installConsumer,
-      isInstalledPackageSymlink,
       run,
       runConsumer,
       tarball,
