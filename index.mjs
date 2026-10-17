@@ -30,13 +30,7 @@ const resolveOptionalPlugin = (name) => {
   } catch (error) {
     // Node also reports MODULE_NOT_FOUND without a path for installed packages
     // that have no entry point. Confirm absence without resolving package.json exports.
-    if (
-      error instanceof Error &&
-      "code" in error &&
-      error.code === "MODULE_NOT_FOUND" &&
-      !("path" in error) &&
-      isOptionalPackageAbsent(name)
-    ) {
+    if (error instanceof Error && "code" in error && error.code === "MODULE_NOT_FOUND" && !("path" in error) && isOptionalPackageAbsent(name)) {
       return [];
     }
     throw error;
@@ -67,7 +61,7 @@ const config = {
     },
   ],
   plugins,
-  printWidth: 130,
+  printWidth: 150,
   singleAttributePerLine: true,
   tailwindFunctions: ["clsx", "cn", "cva", "classNames", "classnames", "tv"],
 };

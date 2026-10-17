@@ -24,11 +24,7 @@ const optionalConsumerLayer = Layer.effect(
   Effect.gen(function* () {
     const smoke = yield* PackageSmoke;
     const consumer = yield* smoke.installConsumer("installed-optional-consumer", peerScenario.optionalDependencies);
-    yield* smoke.copyFixtures(
-      consumer,
-      ["tests", "fixtures"],
-      ["tailwind.vue", "tailwind.css", "tailwind.scss", "tailwind.less"],
-    );
+    yield* smoke.copyFixtures(consumer, ["tests", "fixtures"], ["tailwind.vue", "tailwind.css", "tailwind.scss", "tailwind.less"]);
     yield* smoke.copyFixtures(consumer, ["tests", "consumers"], ["tailwind-config.mjs"]);
     yield* smoke.copyFixtures(consumer, ["tests", "fixtures", "tailwind-stylesheet"], ["theme.css"]);
     return consumer;
@@ -59,13 +55,7 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
         const entries = output.trim().split("\n");
         expect(entries).toHaveLength(5);
         expect(entries).toEqual(
-          expect.arrayContaining([
-            "package/LICENSE",
-            "package/README.md",
-            "package/index.d.ts",
-            "package/index.mjs",
-            "package/package.json",
-          ]),
+          expect.arrayContaining(["package/LICENSE", "package/README.md", "package/index.d.ts", "package/index.mjs", "package/package.json"]),
         );
       }),
     );
@@ -151,20 +141,16 @@ describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario
         );
       },
     );
-    it.for([false, true])(
-      "loads optional plugins from the consumer (external cwd: %s)",
-      { timeout: 60_000 },
-      async (externalCwd, context) => {
-        await runRuntimeEffect(
-          context,
-          optionalRuntime,
-          Effect.gen(function* () {
-            const smoke = yield* PackageSmoke;
-            const consumer = yield* OptionalConsumer;
-            expect(yield* smoke.runConsumer(consumer, "optional.mjs", externalCwd)).toBe("ok");
-          }),
-        );
-      },
-    );
+    it.for([false, true])("loads optional plugins from the consumer (external cwd: %s)", { timeout: 60_000 }, async (externalCwd, context) => {
+      await runRuntimeEffect(
+        context,
+        optionalRuntime,
+        Effect.gen(function* () {
+          const smoke = yield* PackageSmoke;
+          const consumer = yield* OptionalConsumer;
+          expect(yield* smoke.runConsumer(consumer, "optional.mjs", externalCwd)).toBe("ok");
+        }),
+      );
+    });
   });
 });

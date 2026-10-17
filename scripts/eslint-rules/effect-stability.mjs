@@ -12,13 +12,10 @@ const isInsideGlobalAugmentation = (node) =>
     (node.flags & ts.NodeFlags.GlobalAugmentation) !== 0) ||
   (node.parent !== undefined && isInsideGlobalAugmentation(node.parent));
 /** @param {ts.Declaration} declaration */
-const isEffectDeclaration = (declaration) =>
-  isEffectSource(declaration.getSourceFile().fileName) && !isInsideGlobalAugmentation(declaration);
+const isEffectDeclaration = (declaration) => isEffectSource(declaration.getSourceFile().fileName) && !isInsideGlobalAugmentation(declaration);
 /** @param {string} name */
 const isRestrictedPath = (name) =>
-  /^(?:effect\/(?:process|unstable)(?:\/|$)|@effect\/experimental(?:\/|$)|@effect\/platform-node-shared\/NodeChildProcessSpawner$)/.test(
-    name,
-  );
+  /^(?:effect\/(?:process|unstable)(?:\/|$)|@effect\/experimental(?:\/|$)|@effect\/platform-node-shared\/NodeChildProcessSpawner$)/.test(name);
 /** @param {readonly ts.JSDocTagInfo[]} tags */
 const hasUnsupportedTags = (tags) =>
   tags.some(
@@ -38,9 +35,7 @@ const unsupportedModuleDocument = (declaration) => {
       .some(
         (tag) =>
           tag.tagName.text === "experimental" ||
-          (tag.tagName.text === "stability" &&
-            typeof tag.comment === "string" &&
-            /\b(?:experimental|unstable)\b/i.test(tag.comment)),
+          (tag.tagName.text === "stability" && typeof tag.comment === "string" && /\b(?:experimental|unstable)\b/i.test(tag.comment)),
       )
   );
 };
@@ -112,8 +107,7 @@ const effectStability = {
 
     /** @param {ts.Expression} expression */
     const isRequire = (expression) =>
-      (ts.isIdentifier(expression) && expression.text === "require") ||
-      checker.getTypeAtLocation(expression).getSymbol()?.getName() === "Require";
+      (ts.isIdentifier(expression) && expression.text === "require") || checker.getTypeAtLocation(expression).getSymbol()?.getName() === "Require";
 
     /** @param {ts.Node} node */
     const checkLoading = (node) => {
@@ -121,8 +115,7 @@ const effectStability = {
         checkModule(node.moduleSpecifier);
         if (ts.isExportDeclaration(node) && !node.exportClause) {
           const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
-          const unsupported =
-            moduleSymbol && checker.getExportsOfModule(moduleSymbol).find((symbol) => unsupportedSymbol(symbol));
+          const unsupported = moduleSymbol && checker.getExportsOfModule(moduleSymbol).find((symbol) => unsupportedSymbol(symbol));
           if (unsupported) report(node.moduleSpecifier, "api", unsupported.getName());
         }
       }
@@ -132,8 +125,7 @@ const effectStability = {
         const target = node.arguments[0];
         if (target) {
           checkModule(target);
-          if (isRequire(node.expression) && ts.isStringLiteralLike(target) && isEffectModule(target.text))
-            report(target, "commonjs", target.text);
+          if (isRequire(node.expression) && ts.isStringLiteralLike(target) && isEffectModule(target.text)) report(target, "commonjs", target.text);
         }
       }
     };
@@ -191,13 +183,11 @@ const effectStability = {
     },
     messages: {
       api: "{{api}} is annotated unstable or experimental. Use a public stable API; process execution belongs in tests/helpers/node-command.ts.",
-      commonjs:
-        "{{api}} loses symbol types through CommonJS loading. Use a typed ESM import so Effect API stability can be checked.",
+      commonjs: "{{api}} loses symbol types through CommonJS loading. Use a typed ESM import so Effect API stability can be checked.",
       literal:
         "{{api}} must use a literal target so Effect API stability can be reviewed statically. Runtime indirection is not verified by this rule.",
       path: "{{api}} is not a supported stable Effect import. Use public stable APIs and the native Node command adapter.",
-      reference:
-        "{{api}} imports a read-only source reference. Resolve application imports through installed packages instead of repos/.",
+      reference: "{{api}} imports a read-only source reference. Resolve application imports through installed packages instead of repos/.",
     },
     schema: [],
     type: "problem",

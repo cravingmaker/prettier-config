@@ -11,12 +11,7 @@ export default defineConfig({
     watchTriggerPatterns: [
       {
         pattern: /(?:^|\/)index\.mjs$/,
-        testsToRun: (_filename) => [
-          "tests/config.test.ts",
-          "tests/format.test.ts",
-          "tests/package.smoke.test.ts",
-          "tests/tooling-guards.test.ts",
-        ],
+        testsToRun: (_filename) => ["tests/config.test.ts", "tests/format.test.ts", "tests/package.smoke.test.ts", "tests/tooling-guards.test.ts"],
       },
       {
         pattern: /(?:^|\/)index\.d\.ts$/,

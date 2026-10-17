@@ -45,16 +45,8 @@ const withFileContext = <A, E>(phase: string, filename: string, operation: Effec
 
 type SmokeHarness = {
   readonly checkInstalledPackageSymlink: (consumer: string) => Effect.Effect<boolean, SmokeFileSystemError>;
-  readonly copyFixtures: (
-    consumer: string,
-    source: readonly string[],
-    filenames: readonly string[],
-  ) => Effect.Effect<void, SmokeFileSystemError>;
-  readonly installConsumer: (
-    name: string,
-    dependencies: readonly string[],
-    prettierVersion?: string,
-  ) => Effect.Effect<string, SmokeError>;
+  readonly copyFixtures: (consumer: string, source: readonly string[], filenames: readonly string[]) => Effect.Effect<void, SmokeFileSystemError>;
+  readonly installConsumer: (name: string, dependencies: readonly string[], prettierVersion?: string) => Effect.Effect<string, SmokeError>;
   readonly run: (spec: CommandSpec) => Effect.Effect<string, CommandError>;
   readonly runConsumer: (
     consumer: string,
@@ -67,9 +59,7 @@ type SmokeHarness = {
 
 class PackageSmoke extends Context.Service<PackageSmoke, SmokeHarness>()("prettier-config/tests/PackageSmoke") {}
 
-const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
-  pack?: (workspace: string) => Effect.Effect<void, SmokeError>,
-) {
+const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (pack?: (workspace: string) => Effect.Effect<void, SmokeError>) {
   const fs = nodeFileSystem;
   const scope = yield* Scope.fork(yield* Effect.scope);
   const run = runCommand;
@@ -77,8 +67,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
   return yield* Effect.gen(function* () {
     const workspace = yield* Effect.acquireRelease(
       withFileContext("allocate workspace", "temporary directory", fs.makeTempDirectory({ prefix: "prettier-config-package-" })),
-      (directory) =>
-        withFileContext("remove workspace", directory, fs.remove(directory, { force: true, recursive: true })).pipe(Effect.orDie),
+      (directory) => withFileContext("remove workspace", directory, fs.remove(directory, { force: true, recursive: true })).pipe(Effect.orDie),
     );
     yield* pack
       ? pack(workspace)
@@ -139,16 +128,7 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (
       yield* withFileContext("create installed consumer", consumer, fs.makeDirectory(consumer));
       yield* manifest(consumer);
       yield* run({
-        args: [
-          "install",
-          "--ignore-scripts",
-          "--no-audit",
-          "--no-fund",
-          "--save-exact",
-          tarball,
-          `prettier@${prettierVersion}`,
-          ...dependencies,
-        ],
+        args: ["install", "--ignore-scripts", "--no-audit", "--no-fund", "--save-exact", tarball, `prettier@${prettierVersion}`, ...dependencies],
         cwd: consumer,
         executable: "npm",
         phase: "install consumer",

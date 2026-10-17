@@ -14,16 +14,12 @@ const testModes = {
           .getProperty(name)
           ?.getDeclarations()
           ?.some((declaration) =>
-            /\/node_modules\/(?:@effect\/vitest\/|vitest\/|@vitest\/runner\/)/.test(
-              declaration.getSourceFile().fileName.replaceAll("\\", "/"),
-            ),
+            /\/node_modules\/(?:@effect\/vitest\/|vitest\/|@vitest\/runner\/)/.test(declaration.getSourceFile().fileName.replaceAll("\\", "/")),
           ),
       );
       return (
         isKnownTestApi ||
-        ((ts.isPropertyAccessExpression(expression) ||
-          ts.isElementAccessExpression(expression) ||
-          ts.isCallExpression(expression)) &&
+        ((ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression) || ts.isCallExpression(expression)) &&
           isTestApi(expression.expression))
       );
     };
@@ -55,8 +51,7 @@ const testModes = {
           .filter((property) => property.initializer.kind !== ts.SyntaxKind.FalseKeyword)
           .map((property) => {
             const key = property.name;
-            if ((ts.isIdentifier(key) || ts.isStringLiteralLike(key)) && ["only", "skip", "todo"].includes(key.text))
-              report(key, key.text);
+            if ((ts.isIdentifier(key) || ts.isStringLiteralLike(key)) && ["only", "skip", "todo"].includes(key.text)) report(key, key.text);
             return property;
           });
       }
@@ -74,8 +69,7 @@ const testModes = {
       description: "Check typed Vitest and Effect test modes, including aliases and layer helpers.",
     },
     messages: {
-      disabled:
-        "Disabled or conditional tests require a local, explained rule exception. Keep ordinary validation's coverage intact.",
+      disabled: "Disabled or conditional tests require a local, explained rule exception. Keep ordinary validation's coverage intact.",
       focused: "Focused tests prevent full-suite coverage. Use explicit file or name filtering during development.",
     },
     schema: [],

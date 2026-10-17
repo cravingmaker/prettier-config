@@ -43,7 +43,7 @@ const testFixture = async (filename: string, directory: string, prettierConfigPa
         parser: resolvedConfig.parser,
       }),
       plugins: resolvedConfig?.plugins ?? [],
-      printWidth: 130,
+      printWidth: 150,
       singleAttributePerLine: true,
     }),
   );
@@ -115,7 +115,7 @@ describe("Format Integration", () => {
   it.each([
     { filename: "width.js", parser: "oxc" },
     { filename: "width.ts", parser: "oxc-ts" },
-  ])("wraps at 130 columns with $parser", async ({ filename, parser }) => {
+  ])("wraps at 150 columns with $parser", async ({ filename, parser }) => {
     const filePath = await prepareFixture(`nested/${filename}`, temporaryDirectory, "width.js");
     const source = await fs.readFile(filePath, "utf8");
     const resolved = await prettier.resolveConfig(filePath, {
@@ -128,15 +128,15 @@ describe("Format Integration", () => {
     expect(resolved?.parser).toBe(parser);
     expect(formatted).toBe(
       [
-        'const message = createMessage("Hello from the shared Prettier config", "This call fits within 130 columns across projects");',
+        'const message = createMessage("Hello from the shared Prettier config", "This call fits within 150 columns across multiple consumer projects");',
         "const detailedMessage = createMessage(",
         '  "Hello from the shared Prettier config",',
-        '  "This longer call should wrap because it exceeds 130 columns",',
+        '  "This longer call should wrap because it exceeds the shared 150-column width across consumer projects",',
         ");",
         "",
       ].join("\n"),
     );
-    expect(resolved?.printWidth).toBe(130);
+    expect(resolved?.printWidth).toBe(150);
     expect(await prettier.format(formatted, options)).toBe(formatted);
   });
 
@@ -259,7 +259,9 @@ describe("Format Integration", () => {
     expect(formatted).toContain("# Primary target");
     expect(formatted).toContain('message = """\nFirst line\n  Indented second line\nLast line\n"""');
     expect(formatted).toContain("literal = '''\nC:\\work\\project\n  Keep these spaces\n'''");
-    expect(formatted).toContain('targets = [\n  "production-region-primary",');
+    expect(formatted).toContain(
+      'targets = ["production-region-primary", "production-region-secondary", "development-region-primary", "development-region-secondary"]',
+    );
   });
 
   it("uses Svelte shorthand only when the attribute matches its expression", async () => {
@@ -273,9 +275,7 @@ describe("Format Integration", () => {
   it.each(["embedded.md", "embedded.mdx"])("inherits the shared width and JavaScript quotes inside %s", async (filename) => {
     const formatted = await testFixture(filename, temporaryDirectory, configPath);
 
-    expect(formatted).toContain(
-      'const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };',
-    );
+    expect(formatted).toContain('const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };');
   });
 
   it.each(["quotes.yaml", "quotes.yml"])("uses double quotes for quoted YAML values in %s", async (filename) => {
@@ -313,7 +313,7 @@ describe("Format Integration", () => {
     expect(formatted).toContain('<![CDATA[if (a < b) { value = "x & y"; }]]>');
   });
 
-  it("uses the 130-column print width for XML in nested directories", async () => {
+  it("uses the 150-column print width for XML in nested directories", async () => {
     const filePath = await prepareFixture("nested/width.xml", temporaryDirectory, "width.xml");
     const source = await fs.readFile(filePath, "utf8");
     const resolved = await prettier.resolveConfig(filePath, {
@@ -323,9 +323,9 @@ describe("Format Integration", () => {
     const options = { ...resolved, filepath: filePath };
     const formatted = await prettier.format(source, options);
 
-    expect(resolved?.printWidth).toBe(130);
+    expect(resolved?.printWidth).toBe(150);
     expect(formatted.trim()).not.toContain("\n");
-    expect(formatted).toBe(await prettier.format(source, { ...options, printWidth: 130 }));
+    expect(formatted).toBe(await prettier.format(source, { ...options, printWidth: 150 }));
     expect(formatted).not.toBe(await prettier.format(source, { ...options, printWidth: 80 }));
     expect(await prettier.format(formatted, options)).toBe(formatted);
   });

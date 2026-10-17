@@ -23,9 +23,7 @@ const ensureActionlint = async (root = projectDirectory) => {
   const binary = path.join(cache, "actionlint");
   const verify = async () => {
     if (sha256(await fs.readFile(binary)) !== target.binarySha256)
-      throw new Error(
-        `Cached actionlint does not match the pinned binary: ${binary}. Remove this cache directory and rerun lint:workflows.`,
-      );
+      throw new Error(`Cached actionlint does not match the pinned binary: ${binary}. Remove this cache directory and rerun lint:workflows.`);
     return binary;
   };
   try {

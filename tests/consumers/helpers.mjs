@@ -32,7 +32,7 @@ const format = async (filename, source, parser) => {
   }
   assert.equal(resolved.parser, parser, filename);
   assert.equal(resolved.singleAttributePerLine, true, filename);
-  assert.equal(resolved.printWidth, 130, filename);
+  assert.equal(resolved.printWidth, 150, filename);
 
   const options = { ...resolved, filepath: filePath };
   const formatted = await formatSource(source, options);

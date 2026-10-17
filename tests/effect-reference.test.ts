@@ -47,9 +47,7 @@ const withProject = async (check: (root: string) => Promise<void>) => {
       scripts: Object.fromEntries(
         Object.entries(packageJson.scripts).map(([name, command]) => [
           name,
-          ["effect:check-reference", "prepublishOnly", "validate", "validate:behavior", "validate:static"].includes(name)
-            ? command
-            : 'node -e ""',
+          ["effect:check-reference", "prepublishOnly", "validate", "validate:behavior", "validate:static"].includes(name) ? command : 'node -e ""',
         ]),
       ),
       type: "module",
@@ -279,11 +277,7 @@ describe("Effect reference setup in disposable repositories", () => {
       await fs.writeFile(path.join(target, "marker"), "keep");
       if (location === "repos/effect") await fs.mkdir(path.join(root, "repos"));
       await fs.symlink(target, path.join(root, location), "junction");
-      await checkFailure(
-        root,
-        ["scripts/setup-effect-reference.mjs"],
-        location === "repos" ? "Expected a real directory" : "Unexpected content",
-      );
+      await checkFailure(root, ["scripts/setup-effect-reference.mjs"], location === "repos" ? "Expected a real directory" : "Unexpected content");
       expect(await fs.readFile(path.join(target, "marker"), "utf8")).toBe("keep");
       const stat = await fs.lstat(path.join(root, location));
       expect(stat.isSymbolicLink()).toBe(true);

@@ -35,11 +35,11 @@ const examples = [
   },
   {
     expected:
-      'const message = createMessage("Hello from the shared Prettier config", "This call fits within 130 columns across projects");\n',
+      'const message = createMessage("Hello from the shared Prettier config", "This call fits within 150 columns across multiple consumer projects");\n',
     filename: "nested/width.js",
     parser: "oxc",
     source:
-      'const message=createMessage("Hello from the shared Prettier config","This call fits within 130 columns across projects")',
+      'const message=createMessage("Hello from the shared Prettier config","This call fits within 150 columns across multiple consumer projects")',
   },
   {
     expected: 'const greeting: string = "hello";\n',
