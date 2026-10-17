@@ -26,8 +26,7 @@ const nodeFileSystem = {
     operation(async () => {
       await fs.mkdir(directory);
     }),
-  makeTempDirectory: (options: { readonly prefix: string }) =>
-    operation(async () => await fs.mkdtemp(path.join(os.tmpdir(), options.prefix))),
+  makeTempDirectory: (options: { readonly prefix: string }) => operation(async () => await fs.mkdtemp(path.join(os.tmpdir(), options.prefix))),
   readDirectory: (directory: string) => operation(async () => await fs.readdir(directory)),
   readFileString: (filename: string) => operation(async () => await fs.readFile(filename, "utf8")),
   realPath: (filename: string) => operation(async () => await fs.realpath(filename)),

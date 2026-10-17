@@ -185,12 +185,7 @@ const config = [
   },
   {
     // Guard tests use controlled temporary projects and compiler filesystem hosts.
-    files: [
-      "tests/tooling-guards.test.ts",
-      "tests/effect-reference.test.ts",
-      "tests/vitest-watch.test.ts",
-      "tests/workflow-tool.test.ts",
-    ],
+    files: ["tests/tooling-guards.test.ts", "tests/effect-reference.test.ts", "tests/vitest-watch.test.ts", "tests/workflow-tool.test.ts"],
     name: "@cravingmaker/prettier-config/tooling-test-filesystem",
     rules: {
       "security/detect-non-literal-fs-filename": "off",

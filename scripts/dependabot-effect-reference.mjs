@@ -79,12 +79,7 @@ const syncEffectReference = async ({ branch, head, repository, request }) => {
   decodeValue(shaSchema, head, "workflow_run.head_sha", "verify triggering commit");
   const owner = repository.slice(0, repository.indexOf("/"));
   const pullsEndpoint = `/repos/${repository}/pulls?state=open&head=${encodeURIComponent(`${owner}:${branch}`)}&per_page=100`;
-  const pulls = decodeValue(
-    Schema.Array(pullSchema),
-    await request(pullsEndpoint),
-    pullsEndpoint,
-    "find Dependabot pull request",
-  );
+  const pulls = decodeValue(Schema.Array(pullSchema), await request(pullsEndpoint), pullsEndpoint, "find Dependabot pull request");
   const pull = pulls.find(
     (candidate) =>
       candidate.state === "open" &&
@@ -111,8 +106,7 @@ const syncEffectReference = async ({ branch, head, repository, request }) => {
     readJson(request, { commit: head, filename: "package-lock.json", repository }, lockSchema),
     readJson(request, { commit: head, filename: referencePath, repository }, referenceSchema),
   ]);
-  if (reference.repository !== `https://github.com/${upstream}.git`)
-    throw new Error("Effect source repository differs from the trusted upstream");
+  if (reference.repository !== `https://github.com/${upstream}.git`) throw new Error("Effect source repository differs from the trusted upstream");
   const version = decodeValue(versionSchema, manifest.devDependencies.effect, "package.json", "verify exact Effect version");
   const root = decodeValue(dependenciesSchema, lock.packages[""], "package-lock.json", "verify root dependency pins");
   const declared = new Map(Object.entries(manifest.devDependencies));
@@ -120,14 +114,8 @@ const syncEffectReference = async ({ branch, head, repository, request }) => {
   // eslint-disable-next-line functional/no-loop-statements -- Every coordinated package must match before any write.
   for (const { name } of effectPackages) {
     if (declared.get(name) !== version) throw new Error(`package.json: ${name} must match Effect ${version}`);
-    const installed = decodeValue(
-      packageManifestVersionSchema,
-      lock.packages[`node_modules/${name}`],
-      "package-lock.json",
-      `verify ${name}`,
-    );
-    if (locked.get(name) !== version || installed.version !== version)
-      throw new Error(`package-lock.json: ${name} must match Effect ${version}`);
+    const installed = decodeValue(packageManifestVersionSchema, lock.packages[`node_modules/${name}`], "package-lock.json", `verify ${name}`);
+    if (locked.get(name) !== version || installed.version !== version) throw new Error(`package-lock.json: ${name} must match Effect ${version}`);
   }
 
   const tag = `effect@${version}`;
@@ -137,8 +125,7 @@ const syncEffectReference = async ({ branch, head, repository, request }) => {
   await Promise.all(
     effectPackages.map(async ({ manifest: filename, name }) => {
       const source = await readJson(request, { commit, filename, repository: upstream }, packageManifestSchema);
-      if (source.name !== name || source.version !== version)
-        throw new Error(`Upstream ${name} does not match Effect ${version}`);
+      if (source.name !== name || source.version !== version) throw new Error(`Upstream ${name} does not match Effect ${version}`);
     }),
   );
   if (reference.version === version && reference.tag === tag && reference.commit === commit)

@@ -57,12 +57,7 @@ const verify = async (directory, reference) => {
   await Promise.all(
     packages.map(async (package_) => {
       const filename = path.join(directory, package_.manifest);
-      const manifest = decodeJson(
-        packageManifestSchema,
-        await fs.readFile(filename, "utf8"),
-        filename,
-        "verify reference package",
-      );
+      const manifest = decodeJson(packageManifestSchema, await fs.readFile(filename, "utf8"), filename, "verify reference package");
       if (manifest.name !== package_.name || manifest.version !== reference.version) {
         throw new Error(`Reference package ${package_.name} differs from ${reference.version}`);
       }
@@ -89,10 +84,7 @@ const setup = async () => {
 
   const staging = await fs.mkdtemp(path.join(referencesDirectory, ".effect-"));
   try {
-    await git(
-      ["clone", "--depth", "1", "--single-branch", "--branch", reference.tag, reference.repository, staging],
-      projectDirectory,
-    );
+    await git(["clone", "--depth", "1", "--single-branch", "--branch", reference.tag, reference.repository, staging], projectDirectory);
     await verify(staging, reference);
     if (await inspect(destination)) {
       throw new Error(`Content appeared at ${destination}; leave it intact and retry`);

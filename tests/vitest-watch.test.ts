@@ -64,9 +64,7 @@ describe("Vitest watch dependencies", () => {
     async (scenario) => {
       const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-watch-"));
       const workspace = await fs.realpath(temporaryDirectory);
-      const selectedTests = testFiles.filter((filename) =>
-        scenario === "package" ? filename === packageTest : filename !== packageTest,
-      );
+      const selectedTests = testFiles.filter((filename) => (scenario === "package" ? filename === packageTest : filename !== packageTest));
       const reports = new EventTarget();
       const { filter, options } = parseCLI(packageJson.scripts[scenario === "package" ? "test:package:ui" : "test:ui"]);
 

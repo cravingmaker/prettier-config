@@ -54,9 +54,7 @@ describe("repository tooling guards", () => {
         }).pipe(Effect.flip),
       );
       expect(error).toMatchObject({ exitCode: 1, _tag: "CommandFailure" });
-      expect(error._tag === "CommandFailure" ? `${error.stdout ?? ""}\n${error.stderr ?? ""}` : undefined).toContain(
-        "Unexpected .only modifier",
-      );
+      expect(error._tag === "CommandFailure" ? `${error.stdout ?? ""}\n${error.stderr ?? ""}` : undefined).toContain("Unexpected .only modifier");
     } finally {
       await fs.rm(workspace, { force: true, recursive: true });
     }
@@ -77,8 +75,7 @@ describe("repository tooling guards", () => {
       });
       expect(
         result?.messages.filter(
-          (message) =>
-            message.ruleId === "local/test-modes" || (message.ruleId?.startsWith("vitest/") ?? false) || message.ruleId === null,
+          (message) => message.ruleId === "local/test-modes" || (message.ruleId?.startsWith("vitest/") ?? false) || message.ruleId === null,
         ),
       ).toEqual([]);
     },
@@ -116,13 +113,11 @@ describe("repository tooling guards", () => {
     },
     {
       ruleId: "local/test-modes",
-      source:
-        'import { it } from "@effect/vitest"; import { Effect } from "effect"; it.effect.only("focused effect", () => Effect.void);',
+      source: 'import { it } from "@effect/vitest"; import { Effect } from "effect"; it.effect.only("focused effect", () => Effect.void);',
     },
     {
       ruleId: "local/test-modes",
-      source:
-        'import { it } from "@effect/vitest"; import { Effect } from "effect"; it.live.skip("disabled live", () => Effect.void);',
+      source: 'import { it } from "@effect/vitest"; import { Effect } from "effect"; it.live.skip("disabled live", () => Effect.void);',
     },
     {
       ruleId: "local/test-modes",
@@ -230,9 +225,7 @@ describe("repository tooling guards", () => {
     expect(await eslint.isPathIgnored("repos/effect/example.ts")).toBe(true);
     expect(await eslint.isPathIgnored("tests/fixtures/example.js")).toBe(true);
     const parsed = parseProject(path.join(directory, "tsconfig.json"));
-    expect(parsed.fileNames.some((filename) => filename.includes("/repos/") || filename.includes("/tests/fixtures/"))).toBe(
-      false,
-    );
+    expect(parsed.fileNames.some((filename) => filename.includes("/repos/") || filename.includes("/tests/fixtures/"))).toBe(false);
   });
 
   it("rejects an unobserved Effect through the configured language service", async () => {
@@ -241,10 +234,7 @@ describe("repository tooling guards", () => {
       await fs.copyFile(path.join(directory, "tsconfig.json"), path.join(workspace, "tsconfig.json"));
       await fs.symlink(path.join(directory, "node_modules"), path.join(workspace, "node_modules"), "junction");
       await fs.mkdir(path.join(workspace, "tests"));
-      await fs.writeFile(
-        path.join(workspace, "tests", "floating.ts"),
-        'import { Effect } from "effect";\nEffect.succeed("unobserved");\n',
-      );
+      await fs.writeFile(path.join(workspace, "tests", "floating.ts"), 'import { Effect } from "effect";\nEffect.succeed("unobserved");\n');
       const error = await Effect.runPromise(
         runCommand({
           args: [
@@ -266,22 +256,19 @@ describe("repository tooling guards", () => {
     }
   }, 40_000);
 
-  it.each([
-    "index.mjs",
-    "eslint.config.js",
-    "scripts/setup-effect-reference.mjs",
-    "tests/consumers/helpers.mjs",
-    "tests/consumers/installed.mjs",
-  ])("rejects floating promises and unsafe parsed data in %s", async (filePath) => {
-    const results = await eslint.lintText(
-      'import fs from "node:fs/promises";\nfs.readFile("package.json");\nconst manifest = JSON.parse("{}");\nmanifest.version();\n',
-      { filePath },
-    );
-    const identifiers = results.flatMap((result) => result.messages.map((message) => message.ruleId));
-    expect(identifiers).toContain("@typescript-eslint/no-floating-promises");
-    expect(identifiers).toContain("@typescript-eslint/no-unsafe-member-access");
-    expect(identifiers).toContain("@typescript-eslint/no-unsafe-call");
-  });
+  it.each(["index.mjs", "eslint.config.js", "scripts/setup-effect-reference.mjs", "tests/consumers/helpers.mjs", "tests/consumers/installed.mjs"])(
+    "rejects floating promises and unsafe parsed data in %s",
+    async (filePath) => {
+      const results = await eslint.lintText(
+        'import fs from "node:fs/promises";\nfs.readFile("package.json");\nconst manifest = JSON.parse("{}");\nmanifest.version();\n',
+        { filePath },
+      );
+      const identifiers = results.flatMap((result) => result.messages.map((message) => message.ruleId));
+      expect(identifiers).toContain("@typescript-eslint/no-floating-promises");
+      expect(identifiers).toContain("@typescript-eslint/no-unsafe-member-access");
+      expect(identifiers).toContain("@typescript-eslint/no-unsafe-call");
+    },
+  );
 
   it("includes newly added scripts in typechecking", async () => {
     const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-typing-"));
@@ -304,9 +291,7 @@ describe("repository tooling guards", () => {
     const filename = path.join(directory, "index.mjs");
     const source = await fs.readFile(filename, "utf8");
     const { options } = parseProject(path.join(directory, "tsconfig.json"));
-    expect(ts.resolveModuleName("./index.d.ts", filename, options, ts.sys).resolvedModule?.resolvedFileName).toBe(
-      path.join(directory, "index.d.ts"),
-    );
+    expect(ts.resolveModuleName("./index.d.ts", filename, options, ts.sys).resolvedModule?.resolvedFileName).toBe(path.join(directory, "index.d.ts"));
     const host = ts.createCompilerHost(options);
     const program = ts.createProgram([filename], options, {
       ...host,
@@ -316,8 +301,6 @@ describe("repository tooling guards", () => {
           : host.getSourceFile(requested, languageVersion, onError, shouldCreateNewSourceFile),
     });
     const diagnostics = ts.getPreEmitDiagnostics(program).filter((diagnostic) => diagnostic.file?.fileName === filename);
-    expect(
-      diagnostics.some((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n").includes("plugins")),
-    ).toBe(true);
+    expect(diagnostics.some((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n").includes("plugins"))).toBe(true);
   });
 });
