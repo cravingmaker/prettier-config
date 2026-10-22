@@ -98,7 +98,7 @@ const makeRepository = async (root: string, effectManifest: unknown = defaultMan
     ),
   );
   const commit = await Effect.runPromise(run(repository, ["rev-parse", "HEAD"], "git"));
-  await Effect.runPromise(run(repository, ["tag", reference.tag], "git"));
+  await Effect.runPromise(run(repository, ["-c", "tag.gpgsign=false", "tag", reference.tag], "git"));
   await writeJson(root, "scripts/effect-reference.json", {
     ...reference,
     commit: commit.trim(),
