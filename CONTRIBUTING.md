@@ -1,7 +1,8 @@
 # Contributing
 
-Please follow the [Code of Conduct](CODE_OF_CONDUCT.md) in all project
-interactions.
+Please follow the
+[Code of Conduct](https://github.com/cravingmaker/.github/blob/main/CODE_OF_CONDUCT.md)
+in all project interactions.
 
 ## Setup
 
@@ -327,4 +328,5 @@ For formatting bugs, open a
 minimal input, the configuration used, actual and expected output, and the
 package, Node.js, Prettier, and optional plugin versions.
 
-Report vulnerabilities privately using [SECURITY.md](SECURITY.md).
+Report vulnerabilities privately as described in the
+[security policy](https://github.com/cravingmaker/.github/blob/main/SECURITY.md).
