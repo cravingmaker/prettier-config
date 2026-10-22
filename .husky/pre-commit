@@ -1,1 +1,1 @@
-npm run commit:check
+npm run lint:staged

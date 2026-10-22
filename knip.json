@@ -8,6 +8,6 @@
     "tests/consumers/tailwind.mjs"
   ],
   "ignoreDependencies": ["@effect/platform-node-shared", "@effect/vitest"],
-  "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,svelte}!", "!tests/fixtures/**", "!repos/**"],
+  "project": ["**/*.{js,cjs,mjs,jsx,ts,cts,mts,tsx,svelte}", "!tests/fixtures/**", "!repos/**"],
   "treatConfigHintsAsErrors": true
 }

@@ -36,7 +36,6 @@
     "index.d.ts"
   ],
   "scripts": {
-    "commit:check": "lint-staged",
     "deps:inspect": "node-modules-inspector --no-open",
     "deps:report-duplicates": "node-modules-inspector report duplicates",
     "deps:report-sizes": "node-modules-inspector report sizes",
@@ -47,6 +46,7 @@
     "lint": "eslint . --max-warnings 0",
     "lint:inspect": "eslint-config-inspector --no-open",
     "lint:package": "publint --strict",
+    "lint:staged": "lint-staged",
     "lint:unused": "knip",
     "lint:workflows": "node scripts/check-workflows.mjs",
     "prepare": "husky",
@@ -66,11 +66,11 @@
     "validate:static": "npm run effect:check-reference && npm run typecheck && npm run effect:check && npm run lint && npm run lint:unused && npm run format:check && npm run lint:workflows && npm run lint:package && npm run typecheck:package && npm run test:tooling"
   },
   "lint-staged": {
-    "*.{js,mjs,jsx,ts,mts,tsx,astro,svelte,css,html,json,jsonc,json5,md}": [
-      "eslint --fix",
-      "prettier --write"
+    "*.{js,mjs,cjs,jsx,mjsx,ts,mts,tsx,mtsx,svelte,html,md,json,jsonc,json5}": [
+      "eslint --fix --max-warnings 0 --no-warn-ignored",
+      "prettier --ignore-unknown --write"
     ],
-    "!(*.js|*.mjs|*.jsx|*.ts|*.mts|*.tsx|*.astro|*.svelte|*.css|*.html|*.json|*.jsonc|*.json5|*.md)": "prettier --ignore-unknown --write"
+    "!(*.js|*.mjs|*.cjs|*.jsx|*.mjsx|*.ts|*.mts|*.tsx|*.mtsx|*.svelte|*.html|*.md|*.json|*.jsonc|*.json5)": "prettier --ignore-unknown --write"
   },
   "dependencies": {
     "@prettier/plugin-oxc": "0.2.3",

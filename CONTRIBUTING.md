@@ -166,8 +166,12 @@ can also use optional ShellCheck/Pyflakes installations when present. Full
 validation and CI include the workflow command. Review
 `scripts/actionlint-reference.json` when updating the tool pin.
 
-The pre-commit hook runs ESLint fixes and Prettier on staged files. Full
-typechecking and tests run through `npm run validate` and in CI.
+The pre-commit hook runs `npm run lint:staged`. It applies ESLint fixes and
+then Prettier to the staged files of the formats that ESLint lints, and
+Prettier alone to every other staged file that Prettier can format. A
+remaining ESLint warning fails the commit, as it fails validation. The
+pre-push hook runs `npm test`. Full typechecking and tests run through
+`npm run validate` and in CI.
 
 ### Interactive test UI
 
