@@ -1,7 +1,9 @@
 name: Synchronize Dependabot Effect reference
 
 on:
-  workflow_run:
+  # The job checks out only trusted default-branch code, never the pull request or its
+  # artifacts, and accepts only same-repository Dependabot branches.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows:
       - CI
     types:
@@ -9,8 +11,7 @@ on:
     branches:
       - dependabot/npm_and_yarn/effect-reference-*
 
-permissions:
-  contents: read
+permissions: {}
 
 concurrency:
   group: effect-reference-${{ github.event.workflow_run.head_branch }}
@@ -18,11 +19,14 @@ concurrency:
 
 jobs:
   synchronize:
+    name: Synchronize Effect reference
     if: >-
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read
     steps:
       # workflow_run uses trusted default-branch code, never the PR checkout or artifacts.
       - name: Checkout trusted automation
@@ -30,10 +34,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Setup development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - name: Set up development Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           package-manager-cache: false
 
       - name: Install trusted tooling dependencies

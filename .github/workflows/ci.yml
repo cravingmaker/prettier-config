@@ -6,54 +6,64 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
+permissions: {}
 
+# Supersede outdated pull request runs; every main commit keeps its own result.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  shared-static:
-    name: Shared static checks
+  static:
+    name: Static checks
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      HUSKY: 0
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Setup development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+
+      - name: Set up development Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
+
       - name: Install dependencies
         run: npm ci --ignore-scripts
-      - name: Validate repository tooling and package checks
+
+      - name: Verify registry signatures and provenance
+        run: npm audit signatures
+
+      - name: Run static checks
         run: npm run validate:static
 
   minimum-peers:
     name: Minimum peer versions
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     env:
-      HUSKY: 0
       PRETTIER_CONFIG_PEER_SCENARIO: minimum
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Setup development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+
+      - name: Set up development Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
+
       - name: Install dependencies
         run: npm ci --ignore-scripts
+
       - name: Test minimum peers and custom stylesheets
         run: npm run test:package
 
@@ -61,33 +71,32 @@ jobs:
     name: macOS lifecycle
     runs-on: macos-latest
     timeout-minutes: 10
-    env:
-      HUSKY: 0
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Setup development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+
+      - name: Set up development Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
+
       - name: Install dependencies
         run: npm ci --ignore-scripts
+
       - name: Test native process lifecycle and paths
         run: npm run test:lifecycle
 
-  validate:
+  runtime:
     name: Node.js ${{ matrix.node-version }}
-    needs:
-      - shared-static
-      - minimum-peers
-      - macos-lifecycle
-    if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -95,42 +104,27 @@ jobs:
           - 22
           - 24
           - 26
-
-    env:
-      HUSKY: 0
-
     steps:
-      - name: Require successful shared checks
-        env:
-          SHARED_STATIC_RESULT: ${{ needs.shared-static.result }}
-          MINIMUM_PEERS_RESULT: ${{ needs.minimum-peers.result }}
-          MACOS_LIFECYCLE_RESULT: ${{ needs.macos-lifecycle.result }}
-        run: |
-          if [ "$SHARED_STATIC_RESULT" != "success" ] ||
-             [ "$MINIMUM_PEERS_RESULT" != "success" ] ||
-             [ "$MACOS_LIFECYCLE_RESULT" != "success" ]; then
-            echo "::error::CI prerequisites did not all succeed (static=$SHARED_STATIC_RESULT, minimum peers=$MINIMUM_PEERS_RESULT, macOS lifecycle=$MACOS_LIFECYCLE_RESULT)."
-            exit 1
-          fi
-
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Setup development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - name: Set up development Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Setup runtime Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      # Resolve the newest release of the line instead of an older cached runner copy.
+      - name: Set up runtime Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node-version }}
+          check-latest: true
 
       - name: Capture runtime executable
         id: runtime-node
@@ -141,9 +135,9 @@ jobs:
         run: node --run test:runtime
 
       - name: Restore development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
 
       - name: Test npm-installed consumers
         env:
@@ -154,10 +148,8 @@ jobs:
     name: Minimum Node.js 22.12.0
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
-    env:
-      HUSKY: 0
-
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -165,17 +157,17 @@ jobs:
           persist-credentials: false
 
       # Development tools require newer Node.js versions than the runtime config.
-      - name: Setup development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - name: Set up development Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: npm
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Setup minimum runtime
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      - name: Set up minimum runtime
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22.12.0
 
@@ -184,12 +176,55 @@ jobs:
         run: echo "executable=$(node --print process.execPath)" >> "$GITHUB_OUTPUT"
 
       - name: Restore development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
 
       # Pack and run the test harness on development Node; execute consumers on the minimum.
       - name: Test packed package on minimum runtime
         env:
           PRETTIER_CONFIG_CONSUMER_NODE: ${{ steps.minimum-node.outputs.executable }}
         run: npm run test:package
+
+  dependency-review:
+    name: Dependency Review
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      # Compares the pull request's base and head dependency graphs; no checkout is needed.
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: low
+
+  # The single status for rulesets: it fails unless every job above succeeded.
+  # Dependency Review is skipped outside pull requests.
+  result:
+    name: CI result
+    if: ${{ always() }}
+    needs:
+      - static
+      - minimum-peers
+      - macos-lifecycle
+      - runtime
+      - minimum-runtime
+      - dependency-review
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every CI job to succeed
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          failed="$(jq --raw-output 'to_entries[]
+            | select(.value.result != "success" and (.key != "dependency-review" or .value.result != "skipped"))
+            | "\(.key)=\(.value.result)"' <<< "${NEEDS}")"
+
+          if [ -n "${failed}" ]; then
+            echo "::error::CI jobs did not succeed: $(echo "${failed}" | tr '\n' ' ')"
+            exit 1
+          fi

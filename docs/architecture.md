@@ -222,12 +222,13 @@ Read the new `LLMS.md` and re-audit APIs before adopting them. Run
 ### CI changes
 
 Map each existing command to its job before removing duplicated execution. Keep
-the required `Node.js 22`, `Node.js 24`, `Node.js 26`, `Minimum Node.js 22.12.0`,
-and `Dependency Review` contexts effective. Stacked PRs receive CI for feature
-branch bases as well as `main`. Run `npm run lint:workflows` with the repository's
-pinned actionlint; see [installation and cache details](../CONTRIBUTING.md#validation). Verify successful
-remote checks and deliberate prerequisite failures when changing dependencies
-between jobs. Do not accept a skipped prerequisite as required-job success.
+the `CI result` job's `needs` list complete: it is the only required status, so
+a job missing from that list cannot block a merge. Stacked PRs receive CI for
+feature branch bases as well as `main`. Run `npm run lint:workflows` with the
+repository's pinned actionlint; see [installation and cache details](../CONTRIBUTING.md#validation).
+Verify successful remote checks and a deliberate job failure when changing the
+gate. Do not accept a skipped job as success; only Dependency Review skips,
+outside pull requests.
 
 ## CI check ownership
 
@@ -238,19 +239,22 @@ retaining behavior on each supported runtime.
 
 | Commands/checks                                       | CI owner                                  | Coverage                                                                         |
 | ----------------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------- |
-| `effect:check-reference`, `typecheck`, `effect:check` | Shared static checks, Linux Node 24       | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
-| `lint`, `format:check`, `lint:workflows`              | Shared static checks, Linux Node 24       | Typed rules, test/API guards, repository formatting, pinned actionlint           |
-| `lint:unused`                                         | Shared static checks, Linux Node 24       | Knip unused files, exports, dependencies, and unresolved imports                 |
-| `lint:package`, `typecheck:package`                   | Shared static checks, Linux Node 24       | Publint and ATTW's ESM package profile                                           |
-| `test:tooling`                                        | Shared static checks, Linux Node 24       | Negative ESLint and compiler fixtures, focused-test guards                       |
+| `npm audit signatures`                                | Static checks, development Node           | Registry signatures and provenance attestations of installed packages            |
+| `effect:check-reference`, `typecheck`, `effect:check` | Static checks, development Node           | Offline pins, required runtime shape, checked owned code, Effect diagnostics     |
+| `lint`, `format:check`, `lint:workflows`              | Static checks, development Node           | Typed rules, test/API guards, repository formatting, pinned actionlint           |
+| `lint:unused`                                         | Static checks, development Node           | Knip unused files, exports, dependencies, and unresolved imports                 |
+| `lint:package`, `typecheck:package`                   | Static checks, development Node           | Publint and ATTW's ESM package profile                                           |
+| `test:tooling`                                        | Static checks, development Node           | Negative ESLint and compiler fixtures, focused-test guards                       |
 | `test:runtime`                                        | Node.js 22/24/26 on Linux                 | Runtime behavior, native process lifecycle, reference and workflow tooling       |
 | `test:package`, current peers                         | Node.js 22/24/26; Minimum Node.js 22.12.0 | Real npm consumers, custom stylesheets, public types, package contents           |
-| `test:package`, minimum peers                         | Minimum peer versions, Linux Node 24      | The same package assertions at declared lower bounds                             |
-| `test:lifecycle`                                      | macOS lifecycle, Node 24                  | Live-clock cleanup, process trees, interruption, deadlines, output limits, paths |
-| Dependency Review action                              | Dependency Review                         | Existing dependency-change policy                                                |
-| CodeQL default setup                                  | Repository-managed CodeQL analysis        | Existing Actions and JavaScript/TypeScript analysis                              |
+| `test:package`, minimum peers                         | Minimum peer versions, development Node   | The same package assertions at declared lower bounds                             |
+| `test:lifecycle`                                      | macOS lifecycle, development Node         | Live-clock cleanup, process trees, interruption, deadlines, output limits, paths |
+| Dependency Review action                              | Dependency Review, pull requests          | New dependencies with known vulnerabilities of any severity                      |
+| Every job above                                       | CI result                                 | The single required status                                                       |
+| zizmor workflow                                       | zizmor analysis                           | Workflow and Dependabot configuration security, reported to code scanning        |
+| CodeQL default setup                                  | Repository-managed CodeQL analysis        | Extended Actions and JavaScript/TypeScript queries                               |
 
-Each matrix job installs dependencies on development Node 24 before selecting its
+Each matrix job installs dependencies on development Node before selecting its
 runtime. `node --run test:runtime` runs the runtime suite without invoking npm's
 development-engine check. The job captures that Node executable and restores Node
 24 for the package harness and installed type compiler, while consumer programs
@@ -258,14 +262,13 @@ use the captured runtime. The minimum-runtime job uses the same harness/compiler
 boundary with consumer programs on Node 22.12.0.
 
 `test:tooling` loads the repository ESLint configuration, whose development
-dependency requires Node >=24.15.0. It runs once through `validate:static` on Node 24. `validate:behavior` composes `test:runtime` and `test:package`; full validation
+dependency requires Node >=24.15.0. It runs once through `validate:static` on development Node. `validate:behavior` composes `test:runtime` and `test:package`; full validation
 and publishing retain both phases. `npm test` and its UI still include every
 regular test, with runtime and tooling selection checked through Vitest's actual
 test discovery.
 
-Each required `Node.js 22/24/26` job depends on shared static, minimum-peer, and
-macOS lifecycle checks. Its `always()` condition allows the explicit result gate
-to run after a failed or skipped prerequisite. Only three `success` results
-permit the behavior steps; other results fail the required status before checkout
-or installation. `Minimum Node.js 22.12.0` and `Dependency Review` remain separate
-required contexts. Existing strict/up-to-date repository rules are preserved.
+All CI jobs run in parallel. `CI result` runs with `always()` after them and
+fails unless each job succeeded; only Dependency Review may skip, outside pull
+requests. A cancelled run therefore fails the gate rather than skipping it.
+The repository rules require only `CI result`, so renaming or adding a job
+needs no rule change. Existing strict/up-to-date repository rules are preserved.

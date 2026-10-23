@@ -114,17 +114,18 @@ The scenario and consumer-runtime variables can be combined.
 
 CI runs behavioral and package coverage on Linux Node 22/24/26, consumers on
 Node 22.12.0, and minimum peers once on development Node. Process lifecycle tests
-also run on macOS Node 24 through `npm run test:lifecycle`; Linux retains the
-same lifecycle suite. Windows execution remains unverified.
+also run on macOS through `npm run test:lifecycle`; Linux retains the same
+lifecycle suite. Windows execution remains unverified.
 
-CI owns repository static checks and tooling guards once on development Node 24,
-then runs version-sensitive behavior and installed consumers on Node 22/24/26.
-Each matrix job installs dependencies on Node 24, runs `node --run test:runtime`
-on its selected runtime, then restores Node 24 for the package harness and type
-compiler while consumer programs use the captured runtime executable. Each required
-matrix status rejects failed, cancelled, or skipped static/minimum-peer/macOS
-prerequisites through an explicit result gate. The required minimum-runtime and
-Dependency Review names remain unchanged. See the
+CI runs repository static checks and tooling guards once on the development
+Node.js version in `.nvmrc`, beside version-sensitive behavior and installed
+consumers on Node 22/24/26. Each matrix job installs dependencies on development
+Node, runs `node --run test:runtime` on the newest release of its line, then
+restores development Node for the package harness and type compiler while
+consumer programs use the captured runtime executable. All jobs run in parallel.
+The `CI result` job fails unless every one of them succeeds, and it is the status
+that the repository rules require; Dependency Review runs as one of its jobs on
+pull requests. See the
 [CI ownership table](docs/architecture.md#ci-check-ownership) for the complete
 command map; `validate:static` and `validate:behavior` are composable CI entry points,
 and `npm run validate` remains the required final local check.
@@ -142,8 +143,8 @@ npx vitest run tests/config.test.ts -t "optional"
 ```
 
 Finish with `npm run validate` and `git diff --check`. Treat local results and
-remote CI separately. All required Node and Dependency Review contexts must
-settle successfully before a PR is ready for review.
+remote CI separately. The `CI result` status must succeed before a PR is ready
+for review.
 
 Focused tests fail locally as well as in CI (`allowOnly: false`). ESLint checks
 ordinary tests, aliases, `.each`, Effect testers, and layer-provided helpers.
@@ -165,6 +166,12 @@ First use needs GitHub release access; a verified cache works offline. Actionlin
 can also use optional ShellCheck/Pyflakes installations when present. Full
 validation and CI include the workflow command. Review
 `scripts/actionlint-reference.json` when updating the tool pin.
+
+The zizmor workflow audits the workflows and the Dependabot configuration for
+security problems, such as template injection or broad permissions, when they
+change and weekly. It reports findings to code scanning, beside CodeQL's analysis
+of the workflows. Suppress a finding only with an inline `zizmor: ignore[...]`
+comment that explains why the code is safe.
 
 The pre-commit hook runs `npm run lint:staged`. It applies ESLint fixes and
 then Prettier to the staged files of the formats that ESLint lints, and
@@ -275,7 +282,7 @@ as well as unresolved imports and undeclared dependencies:
 npm run lint:unused
 ```
 
-This check runs in `validate:static`, so full local validation, CI's shared static
+This check runs in `validate:static`, so full local validation, CI's static checks
 job, and publishing all require a clean result. Configuration hints also fail
 the check to keep exceptions current.
 
@@ -364,7 +371,7 @@ npm run typecheck:package
 
 The package has no build step: the published `index.mjs` and `index.d.ts` are
 the repository files. `validate:static` runs both, so full validation, CI's
-shared static job, and publishing require them to pass.
+static checks job, and publishing require them to pass.
 
 ## Releases
 
@@ -385,8 +392,11 @@ request. Include consumer-facing migration guidance for formatting changes,
 using `docs/releases/` when additional examples or instructions are needed.
 The bot updates `package.json`, `package-lock.json`, the release manifest,
 and `CHANGELOG.md`, then creates a `vX.Y.Z` tag and GitHub Release after the
-pull request is merged. The GitHub Release triggers the existing npm
-publishing workflow, which validates the package and uses Trusted Publishing.
+pull request is merged. The GitHub Release triggers the npm publishing
+workflow. It checks that the tag matches `package.json` and is reachable from
+`main`, and that the version is unpublished. It then verifies registry
+signatures, runs full validation, and publishes the packed tarball with Trusted
+Publishing.
 
 To retry release automation, run the **Release Please** workflow manually
 from the Actions tab with `main` selected. The release manifest records the
