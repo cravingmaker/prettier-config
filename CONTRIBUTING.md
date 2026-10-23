@@ -50,6 +50,15 @@ plugin updates, formatter behavior, public types, subprocess lifecycle,
 dependency/reference updates, and CI changes. Owned executable JavaScript is
 linted with type information and checked by TypeScript; raw fixtures stay excluded.
 
+`tsconfig.json` sets the compiler contract of `@cravingmaker/eslint-config`
+(`strict`, `noImplicitReturns`, and `allowUnreachableCode: false`), because that
+config leaves those checks to the compiler in TypeScript files. It adds stricter
+checks, including `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, and
+`verbatimModuleSyntax`. Its `target` and `lib` describe Node.js 22.12, the
+minimum consumer runtime: ES2024 with iterator helpers, Set methods, and
+`Array.fromAsync`. The compiler therefore rejects APIs that this runtime
+lacks, such as `Promise.try`, in the published files and the tests alike.
+
 ## Effect reference
 
 Before writing Effect code, run:
