@@ -37,6 +37,7 @@
   ],
   "scripts": {
     "deps:inspect": "node-modules-inspector --no-open",
+    "deps:inspect:build": "node-modules-inspector build --outDir node_modules/.cache/node-modules-inspector-build",
     "deps:report-duplicates": "node-modules-inspector report duplicates",
     "deps:report-sizes": "node-modules-inspector report sizes",
     "effect:check": "effect-language-service diagnostics --project tsconfig.json",
@@ -45,6 +46,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
     "lint:inspect": "eslint-config-inspector --no-open",
+    "lint:inspect:build": "eslint-config-inspector build --outDir node_modules/.cache/eslint-config-inspector",
     "lint:package": "publint --strict",
     "lint:staged": "lint-staged",
     "lint:unused": "knip",
