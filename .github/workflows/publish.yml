@@ -5,9 +5,7 @@ on:
     types:
       - published
 
-permissions:
-  contents: read
-  id-token: write
+permissions: {}
 
 concurrency:
   group: npm-publish-${{ github.event.release.tag_name }}
@@ -19,21 +17,22 @@ jobs:
     if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
-
-    env:
-      HUSKY: 0
-
+    permissions:
+      contents: read
+      id-token: write # Authenticate to npm with Trusted Publishing and sign provenance.
     steps:
       - name: Checkout release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      # No dependency cache: a release installs from the lockfile alone.
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org/
           package-manager-cache: false
 
@@ -46,6 +45,15 @@ jobs:
 
           if [ "${RELEASE_TAG}" != "${EXPECTED_TAG}" ]; then
             echo "::error::Release tag ${RELEASE_TAG} does not match package version ${PACKAGE_VERSION}. Expected ${EXPECTED_TAG}."
+            exit 1
+          fi
+
+      - name: Verify release source
+        run: |
+          git fetch --no-tags --depth=1 origin main
+
+          if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
+            echo "::error::Release tag must point to a commit reachable from main."
             exit 1
           fi
 
@@ -69,11 +77,48 @@ jobs:
           }
           NODE
 
+      - name: Verify version is unpublished
+        run: |
+          PACKAGE_NAME="$(node --print "require('./package.json').name")"
+          PACKAGE_VERSION="$(node --print "require('./package.json').version")"
+
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "::error::${PACKAGE_NAME}@${PACKAGE_VERSION} is already published."
+            exit 1
+          fi
+
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      - name: Validate
+      - name: Verify registry signatures and provenance
+        run: npm audit signatures
+
+      - name: Verify release readiness
         run: npm run validate
 
-      - name: Publish
-        run: npm publish --access public --ignore-scripts
+      - name: Pack release artifact
+        id: pack
+        run: |
+          mkdir -p .release
+          npm pack --ignore-scripts --json --pack-destination .release > .release/pack.json
+
+          TARBALL="$(node <<'NODE'
+          const fs = require('node:fs');
+          const artifacts = JSON.parse(fs.readFileSync('.release/pack.json', 'utf8'));
+
+          if (!Array.isArray(artifacts) || artifacts.length !== 1 || !artifacts[0]?.filename) {
+            console.error('Expected npm pack to produce exactly one tarball.');
+            process.exit(1);
+          }
+
+          process.stdout.write(artifacts[0].filename);
+          NODE
+          )"
+
+          echo "tarball=.release/${TARBALL}" >> "${GITHUB_OUTPUT}"
+          sha256sum ".release/${TARBALL}"
+
+      - name: Publish release artifact
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+        run: npm publish "${TARBALL}" --access public --ignore-scripts
