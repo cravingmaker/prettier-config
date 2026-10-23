@@ -85,8 +85,8 @@ npm run validate
 
 This runs `validate:static` followed by `validate:behavior`: offline Effect pin
 checks, typechecking, Effect diagnostics, linting, unused-code analysis,
-formatting, pinned workflow lint, package static analysis, tooling guards,
-runtime tests, and installed-consumer tests.
+formatting, pinned workflow lint, [package checks](#published-package-checks),
+tooling guards, runtime tests, and installed-consumer tests.
 `prepublishOnly` and the publishing workflow use the same complete entry point.
 Package smoke tests install the tarball and consumer tools
 in a temporary project, so they need npm registry access or cached
@@ -227,9 +227,17 @@ overrides to their named config blocks:
 npm run lint:inspect
 ```
 
-Open the URL printed in the terminal, normally `http://127.0.0.1:7777/`. The
-command leaves browser opening to you; use `-- --open` to open it automatically.
-To select another port, use `npm run lint:inspect -- --port=7778`.
+Open the URL printed in the terminal, normally <http://localhost:7777/>. The
+command keeps running until you press Ctrl+C. It does not open a browser
+automatically; use `npm run lint:inspect -- --open` to do so, or
+`npm run lint:inspect -- --port=7778` to choose another port. The server listens
+on `127.0.0.1` unless `--host` or the `HOST` environment variable selects another
+address. Keep that default: the inspector serves the configuration and the
+repository's file paths without authentication.
+
+Start it with `npm run lint:inspect` rather than `npx eslint --inspect-config`.
+ESLint's flag runs `npx @eslint/config-inspector@latest`, which can download a
+newer release than the version locked in `package-lock.json`.
 
 Enter a repository-relative path such as `index.mjs`, `tests/config.test.ts`, or
 `tests/consumers/installed.mjs` in the config page's filepath filter to inspect
@@ -237,9 +245,26 @@ its matching config blocks and merged rules. Local blocks use the
 `@cravingmaker/prettier-config/` prefix. Raw fixtures under `tests/fixtures/`
 and dependency references under `repos/` remain ignored.
 
-The inspector updates when the config or its local imports change. Use it when
-reviewing lint overrides, then finish with `npm run validate` and
-`git diff --check`.
+The inspector updates when the config or its local imports change.
+
+To save a static snapshot of the current configuration:
+
+```bash
+npm run lint:inspect:build
+```
+
+This writes a standalone inspector to
+`node_modules/.cache/eslint-config-inspector/`. Serve that directory with a static
+HTTP server to browse it. The build deletes its output directory before writing,
+so each run replaces the previous snapshot. The script's directory is ignored by
+Git and the repository checks and is removed by `npm ci`; the inspector's
+default, `dist/__eslint-config-inspector/`, is neither. Run the command again
+after config changes. Inspector options can be forwarded with `--`, for example
+`npm run lint:inspect:build -- --base /prettier-config/` for hosting at a
+subpath.
+
+Use the inspector when reviewing lint overrides, then finish with
+`npm run validate` and `git diff --check`.
 
 ### Dependency inspection
 
@@ -270,9 +295,12 @@ dependencies, and inspect package sizes:
 npm run deps:inspect
 ```
 
-Open the URL printed in the terminal, normally `http://localhost:9999/`. The
-command leaves browser opening to you; use `-- --open` to open it automatically.
-To select another port, use `npm run deps:inspect -- --port=10000`.
+Open the URL printed in the terminal, normally <http://localhost:9999/>. The
+command keeps running until you press Ctrl+C. It does not open a browser
+automatically; use `npm run deps:inspect -- --open` to do so, or
+`npm run deps:inspect -- --port=10000` to choose another port. Like the config
+inspector, it listens on `127.0.0.1` unless `--host` or `HOST` selects another
+address; keep that default.
 
 Run reports without starting the UI:
 
@@ -293,10 +321,50 @@ npm run --silent deps:report-sizes -- --json --limit 10
 Registry metadata is fetched by default and cached under
 `node_modules/.cache/node-modules-inspector/`. For local analysis without metadata
 requests, supply an inspector configuration with `fetchNpmMeta: false` using
-`-- --config /path/to/config.mjs`.
+`-- --config /path/to/config.mjs`. Node Modules Inspector 2.7.0 prints
+`Failed to get npm meta for:` with many packages even when their metadata loaded:
+its vulnerability lookup lists every package without a recorded vulnerability.
+The reports and their JSON output are unaffected.
+
+To save a static snapshot of the installed tree:
+
+```bash
+npm run deps:inspect:build
+```
+
+This writes a standalone inspector to
+`node_modules/.cache/node-modules-inspector-build/`. Serve that directory with a
+static HTTP server to browse it. As with the config inspector, each run replaces
+the previous snapshot, and the script avoids the default inside `dist/`. The
+directory is separate from `node_modules/.cache/node-modules-inspector/` so that
+a build keeps the metadata cache.
 
 Use these tools when reviewing dependency updates. Finish changes with the
 required `npm run validate` checks.
+
+### Published package checks
+
+Two checks read the package as `npm pack` produces it, so they see only the files
+that npm publishes:
+
+```bash
+npm run lint:package
+npm run typecheck:package
+```
+
+- `lint:package` runs [publint](https://publint.dev/) with `--strict`, which
+  fails on warnings as well as errors. It checks `exports`, `types`, and the
+  other entry fields against the packed files.
+- `typecheck:package` runs
+  [Are the Types Wrong?](https://arethetypeswrong.github.io/) with the
+  `esm-only` profile. It resolves each `exports` subpath as Node.js and bundlers
+  do and checks that the declarations it finds match the JavaScript they
+  describe. The profile skips the `node10` and `node16-cjs` resolutions, which
+  describe CommonJS consumers: the package is published as ESM only.
+
+The package has no build step: the published `index.mjs` and `index.d.ts` are
+the repository files. `validate:static` runs both, so full validation, CI's
+shared static job, and publishing require them to pass.
 
 ## Releases
 
