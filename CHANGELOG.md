@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0](https://github.com/cravingmaker/prettier-config/compare/v0.3.2...v0.4.0) (2026-10-24)
+
+
+### ⚠ BREAKING CHANGES
+
+* set print width to 150 ([#161](https://github.com/cravingmaker/prettier-config/issues/161))
+* set print width to 130 ([#160](https://github.com/cravingmaker/prettier-config/issues/160))
+* set print width to 120 ([#159](https://github.com/cravingmaker/prettier-config/issues/159))
+
+### Features
+
+* set print width to 120 ([#159](https://github.com/cravingmaker/prettier-config/issues/159)) ([69a26d2](https://github.com/cravingmaker/prettier-config/commit/69a26d2777df6a201d26528452c81dcc934e9c89))
+* set print width to 130 ([#160](https://github.com/cravingmaker/prettier-config/issues/160)) ([40ae1d6](https://github.com/cravingmaker/prettier-config/commit/40ae1d616a13aaa606a8cd4bca98c95a0b7f3477))
+* set print width to 150 ([#161](https://github.com/cravingmaker/prettier-config/issues/161)) ([f253f8d](https://github.com/cravingmaker/prettier-config/commit/f253f8d76e4a30c178d66cb13c99a1001ab13d86))
+* sort Tailwind classes in helper functions ([#145](https://github.com/cravingmaker/prettier-config/issues/145)) ([95ee667](https://github.com/cravingmaker/prettier-config/commit/95ee667c3b649a242685cd9e2f58355d11609f30))
+
+
+### Bug Fixes
+
+* validate stacked PRs and reject broken optional plugins ([#123](https://github.com/cravingmaker/prettier-config/issues/123)) ([41d84c7](https://github.com/cravingmaker/prettier-config/commit/41d84c7e23b4f47f1938681ac339111e276a5988))
+
 ## [0.3.2](https://github.com/cravingmaker/prettier-config/compare/v0.3.1...v0.3.2) (2026-10-06)
 
 
