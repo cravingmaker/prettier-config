@@ -1,19 +1,35 @@
 {
   "compilerOptions": {
+    // The compiler contract of @cravingmaker/eslint-config, which lints this repository. Its
+    // TypeScript rules leave unreachable code and missing returns to the compiler.
+    "allowUnreachableCode": false,
+    "noImplicitReturns": true,
+    "strict": true,
+
+    // Checks beyond that contract.
+    "erasableSyntaxOnly": true,
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": true,
+    "verbatimModuleSyntax": true,
+
+    // Node.js 22.12, the minimum consumer runtime: ES2024 and the newer APIs that it ships.
+    "lib": ["ES2024", "ES2025.Collection", "ES2025.Iterator", "ESNext.Array"],
+    "module": "NodeNext",
+    "target": "ES2024",
+    "types": ["node"],
+
+    // The published files are JavaScript: the compiler checks them and the tests without emitting.
     "allowImportingTsExtensions": true,
     "allowJs": true,
     "checkJs": true,
-    "esModuleInterop": true,
-    "exactOptionalPropertyTypes": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "lib": ["ES2022"],
-    "module": "NodeNext",
-    "moduleDetection": "force",
     "noEmit": true,
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": true,
-    "noUncheckedSideEffectImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+
     "plugins": [
       {
         "diagnosticSeverity": {
@@ -21,13 +37,7 @@
         },
         "name": "@effect/language-service"
       }
-    ],
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "target": "ES2022",
-    "types": ["node"],
-    "verbatimModuleSyntax": true
+    ]
   },
   "exclude": ["node_modules", "tests/fixtures", "repos"],
   "include": [

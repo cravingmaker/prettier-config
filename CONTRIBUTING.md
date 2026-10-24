@@ -50,6 +50,15 @@ plugin updates, formatter behavior, public types, subprocess lifecycle,
 dependency/reference updates, and CI changes. Owned executable JavaScript is
 linted with type information and checked by TypeScript; raw fixtures stay excluded.
 
+`tsconfig.json` sets the compiler contract of `@cravingmaker/eslint-config`
+(`strict`, `noImplicitReturns`, and `allowUnreachableCode: false`), because that
+config leaves those checks to the compiler in TypeScript files. It adds stricter
+checks, including `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, and
+`verbatimModuleSyntax`. Its `target` and `lib` describe Node.js 22.12, the
+minimum consumer runtime: ES2024 with iterator helpers, Set methods, and
+`Array.fromAsync`. The compiler therefore rejects APIs that this runtime
+lacks, such as `Promise.try`, in the published files and the tests alike.
+
 ## Effect reference
 
 Before writing Effect code, run:
@@ -146,7 +155,11 @@ Finish with `npm run validate` and `git diff --check`. Treat local results and
 remote CI separately. The `CI result` status must succeed before a PR is ready
 for review.
 
-Focused tests fail locally as well as in CI (`allowOnly: false`). ESLint checks
+Focused tests fail locally as well as in CI (`allowOnly: false`), and every test
+needs at least one assertion (`expect.requireAssertions`). Before each test,
+Vitest restores spies, stubbed environment variables, and stubbed globals
+(`restoreMocks`, `unstubEnvs`, and `unstubGlobals`), so no test depends on what
+an earlier test replaced. ESLint checks
 ordinary tests, aliases, `.each`, Effect testers, and layer-provided helpers.
 Skipped, pending, or conditional tests require a local rule exception explaining
 why coverage is intentionally disabled; do not disable these guards for a file or
