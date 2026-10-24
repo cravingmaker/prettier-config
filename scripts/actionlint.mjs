@@ -41,12 +41,13 @@ const ensureActionlint = async (root = projectDirectory) => {
     if (!response.ok) throw new Error(`Download pinned actionlint: HTTP ${String(response.status)} from ${url}`);
     const bytes = new Uint8Array(await response.arrayBuffer());
     if (sha256(bytes) !== target.archiveSha256) throw new Error(`Pinned actionlint archive checksum mismatch: ${target.archive}`);
-    const archive = path.join(staging, target.archive);
-    await fs.writeFile(archive, bytes);
-    await execute("tar", ["-xzf", archive, "-C", staging, "actionlint"], {
+    // Extract the verified archive from standard input, so downloaded data is never written to a file.
+    const extraction = execute("tar", ["-xzf", "-", "-C", staging, "actionlint"], {
       maxBuffer: 1024 * 1024,
       timeout: 30_000,
     });
+    extraction.child.stdin?.end(bytes);
+    await extraction;
     const extracted = path.join(staging, "actionlint");
     if (sha256(await fs.readFile(extracted)) !== target.binarySha256)
       throw new Error(`Pinned actionlint binary checksum mismatch: ${target.archive}`);
