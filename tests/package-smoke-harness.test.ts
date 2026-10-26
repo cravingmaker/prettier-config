@@ -8,25 +8,28 @@ import { runEffect } from "./helpers/test-effect.js";
 const writeArchive = Effect.fnUntraced(function* (workspace: string, filename: string) {
   const fs = nodeFileSystem;
   yield* fs.writeFileString(`${workspace}/${filename}`, "test archive").pipe(
-    Effect.mapError(
-      (cause) =>
-        new SmokeFileSystemError({
-          cause,
-          message: "Test archive could not be written",
-          path: workspace,
-          phase: "test pack",
-        }),
-    ),
+    Effect.mapError((cause) => {
+      return new SmokeFileSystemError({
+        cause,
+        message: "Test archive could not be written",
+        path: workspace,
+        phase: "test pack",
+      });
+    }),
   );
 });
-const fakePack = (workspace: string) => writeArchive(workspace, "package.tgz");
+const fakePack = (workspace: string) => {
+  return writeArchive(workspace, "package.tgz");
+};
 
 const waitForPid = Effect.fnUntraced(function* (filename: string) {
   const fs = nodeFileSystem;
   yield* fs.exists(filename).pipe(
     Effect.repeat({
       schedule: Schedule.spaced("10 millis"),
-      until: (exists) => exists,
+      until: (exists) => {
+        return exists;
+      },
     }),
     Effect.timeout("5 seconds"),
   );
@@ -91,8 +94,12 @@ it.for([0, 2])("removes the workspace when packing produces %s tarballs", async 
         Effect.fnUntraced(function* (workspace) {
           yield* Ref.set(workspaceRef, workspace);
           yield* Effect.forEach(
-            Array.from({ length: count }, (_, index) => index),
-            (index) => writeArchive(workspace, `${String(index)}.tgz`),
+            Array.from({ length: count }, (_, index) => {
+              return index;
+            }),
+            (index) => {
+              return writeArchive(workspace, `${String(index)}.tgz`);
+            },
             { discard: true },
           );
         }),
@@ -188,7 +195,9 @@ it("waits for forced termination before returning a deadline failure", async (co
         _tag: "CommandDeadline",
         timeoutMs: 2000,
       });
-      expect(() => process.kill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
+      expect(() => {
+        return process.kill(pid, 0);
+      }).toThrow(expect.objectContaining({ code: "ESRCH" }));
     }).pipe(Effect.scoped),
   );
 }, 10_000);
@@ -213,7 +222,9 @@ it("releases an interrupted process before disposing the suite workspace", async
             .pipe(Effect.forkChild);
           const pid = yield* waitForPid(ready);
           yield* Fiber.interrupt(fiber);
-          expect(() => process.kill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
+          expect(() => {
+            return process.kill(pid, 0);
+          }).toThrow(expect.objectContaining({ code: "ESRCH" }));
           expect(yield* fs.exists(smoke.workspace)).toBe(true);
           return smoke.workspace;
         }),
@@ -231,6 +242,7 @@ it.for([
 ] as const)(
   "preserves deadline cleanup after transient EPERM from $label",
   { timeout: 10_000 },
+  // eslint-disable-next-line max-lines-per-function -- Keep the live signal spy, interrupted command, and awaited finalizers in one test lifetime.
   async ({ afterKill, signal: deniedSignal }, context) => {
     await runEffect(
       context,
@@ -248,11 +260,11 @@ it.for([
           })
           .pipe(Effect.flip, Effect.forkChild);
         const pid = yield* waitForPid(ready);
-        yield* Effect.addFinalizer(() =>
-          Effect.sync(() => {
+        yield* Effect.addFinalizer(() => {
+          return Effect.sync(() => {
             killIfRunning(pid);
-          }),
-        );
+          });
+        });
         const nativeKill = process.kill.bind(process);
         const deny = vi.fn(() => {
           throw Object.assign(new Error("group is being reaped"), {
@@ -261,29 +273,35 @@ it.for([
         });
         const spy = vi.spyOn(process, "kill");
         spy.mockImplementation((target, signal) => {
+          const isFirstDeniedSignal = target === -pid && signal === deniedSignal && deny.mock.calls.length === 0;
           if (
-            target === -pid &&
-            signal === deniedSignal &&
-            deny.mock.calls.length === 0 &&
-            (!afterKill || spy.mock.calls.some(([group, sent]) => group === -pid && sent === "SIGKILL"))
+            isFirstDeniedSignal &&
+            (!afterKill ||
+              spy.mock.calls.some(([group, sent]) => {
+                return group === -pid && sent === "SIGKILL";
+              }))
           ) {
-            if (signal !== 0) nativeKill(target, signal);
+            if (signal !== 0) {
+              nativeKill(target, signal);
+            }
             return deny();
           }
           return nativeKill(target, signal);
         });
-        yield* Effect.addFinalizer(() =>
-          Effect.sync(() => {
+        yield* Effect.addFinalizer(() => {
+          return Effect.sync(() => {
             spy.mockRestore();
-          }),
-        );
+          });
+        });
         expect(yield* Fiber.join(fiber)).toMatchObject({
           phase: "reaping group",
           _tag: "CommandDeadline",
           timeoutMs: 2000,
         });
         expect(deny).toHaveBeenCalledOnce();
-        expect(() => nativeKill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
+        expect(() => {
+          return nativeKill(pid, 0);
+        }).toThrow(expect.objectContaining({ code: "ESRCH" }));
       }).pipe(Effect.scoped),
     );
   },
@@ -301,16 +319,13 @@ it("retains successful output while a process group is being reaped", async (con
         });
       });
       const spy = vi.spyOn(process, "kill").mockImplementation((pid, signal) => {
-        if (pid < 0 && signal === 0 && deny.mock.calls.length === 0) {
-          return deny();
-        }
-        return nativeKill(pid, signal);
+        return pid < 0 && signal === 0 && deny.mock.calls.length === 0 ? deny() : nativeKill(pid, signal);
       });
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
+      yield* Effect.addFinalizer(() => {
+        return Effect.sync(() => {
           spy.mockRestore();
-        }),
-      );
+        });
+      });
       expect(
         yield* smoke.run({
           args: ["-e", "process.stdout.write('finished');"],
@@ -336,14 +351,16 @@ it("preserves permission errors when the process group remains alive", async (co
         code: "EPERM",
       });
       const spy = vi.spyOn(process, "kill").mockImplementation((target, signal) => {
-        if (target < 0 && signal === "SIGTERM") throw denied;
+        if (target < 0 && signal === "SIGTERM") {
+          throw denied;
+        }
         return nativeKill(target, signal);
       });
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
+      yield* Effect.addFinalizer(() => {
+        return Effect.sync(() => {
           spy.mockRestore();
-        }),
-      );
+        });
+      });
       const descendant = `${uncooperativeChild}\nsetTimeout(() => process.exit(0), 15000);`;
       const leader = [
         `require('node:child_process').spawn(process.execPath, ['-e', ${JSON.stringify(descendant)}, process.argv[1]], { stdio: 'ignore' }).unref();`,
@@ -359,14 +376,21 @@ it("preserves permission errors when the process group remains alive", async (co
         })
         .pipe(Effect.exit, Effect.forkChild);
       const pid = yield* waitForPid(ready);
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
+      yield* Effect.addFinalizer(() => {
+        return Effect.sync(() => {
           killIfRunning(pid);
-        }),
-      );
+        });
+      });
       const result = yield* Fiber.join(fiber);
       expect(Exit.isFailure(result)).toBe(true);
-      expect(Exit.match(result, { onFailure: Cause.pretty, onSuccess: () => "" })).toContain(denied.message);
+      expect(
+        Exit.match(result, {
+          onFailure: Cause.pretty,
+          onSuccess: () => {
+            return "";
+          },
+        }),
+      ).toContain(denied.message);
       expect(nativeKill(pid, 0)).toBe(true);
     }).pipe(Effect.scoped),
   );
@@ -395,7 +419,9 @@ it.for(["stderr", "stdout"] as const)("limits %s output and terminates the child
         stream,
         _tag: "CommandOutputLimit",
       });
-      expect(() => process.kill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
+      expect(() => {
+        return process.kill(pid, 0);
+      }).toThrow(expect.objectContaining({ code: "ESRCH" }));
     }).pipe(Effect.scoped),
   );
 });
@@ -416,6 +442,47 @@ it("decodes UTF-8 after collecting split byte sequences", async (context) => {
           timeoutMs: 5000,
         }),
       ).toBe("🙂");
+    }).pipe(Effect.scoped),
+  );
+});
+
+it.for([0, 9])("preserves UTF-8 byte order marks and incomplete sequences on exit %s", async (code, context) => {
+  await runEffect(
+    context,
+    Effect.gen(function* () {
+      const smoke = yield* createPackageSmoke(fakePack);
+      const result = yield* smoke
+        .run({
+          args: [
+            "-e",
+            `process.stdout.write(new Uint8Array([0xEF, 0xBB, 0xBF, 0xF0, 0x9F, 0x99, 0x82, 0xE2])); process.stderr.write(new Uint8Array([0xEF, 0xBB, 0xBF, 0xE2])); process.exitCode = ${String(code)};`,
+          ],
+          cwd: smoke.workspace,
+          executable: process.execPath,
+          phase: "utf8 byte preservation",
+          timeoutMs: 5000,
+        })
+        .pipe(
+          Effect.match({
+            onFailure: (error) => {
+              return { error };
+            },
+            onSuccess: (stdout) => {
+              return { stdout };
+            },
+          }),
+        );
+      if ("stdout" in result) {
+        expect(code).toBe(0);
+        expect(result.stdout).toBe("\u{FEFF}🙂\u{FFFD}");
+      } else {
+        expect(result.error).toMatchObject({
+          exitCode: code,
+          stderr: "\u{FEFF}\u{FFFD}",
+          stdout: "\u{FEFF}🙂\u{FFFD}",
+          _tag: "CommandFailure",
+        });
+      }
     }).pipe(Effect.scoped),
   );
 });
@@ -446,11 +513,11 @@ it.for([
         })
         .pipe(Effect.result, Effect.forkChild);
       const pid = yield* waitForPid(ready);
-      yield* Effect.addFinalizer(() =>
-        Effect.sync(() => {
+      yield* Effect.addFinalizer(() => {
+        return Effect.sync(() => {
           killIfRunning(pid);
-        }),
-      );
+        });
+      });
       const result = yield* Fiber.join(fiber);
       if (code === 0) {
         expect(result).toMatchObject({ success: "output", _tag: "Success" });
@@ -465,7 +532,9 @@ it.for([
           _tag: "Failure",
         });
       }
-      expect(() => process.kill(pid, 0)).toThrow(expect.objectContaining({ code: "ESRCH" }));
+      expect(() => {
+        return process.kill(pid, 0);
+      }).toThrow(expect.objectContaining({ code: "ESRCH" }));
     }).pipe(Effect.scoped),
   );
 });

@@ -11,9 +11,9 @@ const runtimeConfig = path.resolve(__dirname, "..", "index.mjs");
 const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-config-format-"));
 const configPath = path.join(temporaryDirectory, "prettier.config.mjs");
 
-const prepareFixture = async (filename: string, directory: string, fixtureFilename = filename) => {
+const prepareFixture = async (filename: string, fixtureFilename = filename) => {
   const sourcePath = path.join(fixturesDirectory, fixtureFilename);
-  const filePath = path.join(directory, filename);
+  const filePath = path.join(temporaryDirectory, filename);
   const content = await fs.readFile(sourcePath, "utf8");
 
   await fs.mkdir(path.dirname(filePath), { recursive: true });
@@ -22,12 +22,12 @@ const prepareFixture = async (filename: string, directory: string, fixtureFilena
   return filePath;
 };
 
-const testFixture = async (filename: string, directory: string, prettierConfigPath: string) => {
-  const filePath = await prepareFixture(filename, directory);
+const testFixture = async (filename: string) => {
+  const filePath = await prepareFixture(filename);
   const content = await fs.readFile(filePath, "utf8");
 
   const resolvedConfig = await prettier.resolveConfig(filePath, {
-    config: prettierConfigPath,
+    config: configPath,
     editorconfig: false,
   });
 
@@ -39,7 +39,7 @@ const testFixture = async (filename: string, directory: string, prettierConfigPa
   expect(formatted).toBe(
     await prettier.format(content, {
       filepath: filePath,
-      ...(resolvedConfig?.parser !== undefined && {
+      ...(typeof resolvedConfig?.parser !== "undefined" && {
         parser: resolvedConfig.parser,
       }),
       plugins: resolvedConfig?.plugins ?? [],
@@ -55,6 +55,7 @@ const testFixture = async (filename: string, directory: string, prettierConfigPa
 
 await fs.writeFile(configPath, `export { default } from ${JSON.stringify(pathToFileURL(runtimeConfig).href)};\n`, "utf8");
 
+// eslint-disable-next-line max-lines-per-function -- This callback registers independent formatter cases.
 describe("Format Integration", () => {
   afterAll(async () => {
     await fs.rm(temporaryDirectory, {
@@ -92,7 +93,7 @@ describe("Format Integration", () => {
     { filename: "tailwind.scss", parser: "scss" },
     { filename: "tailwind.less", parser: "less" },
   ])("infers the $parser parser from nested/$filename", async ({ filename, parser }) => {
-    const filePath = await prepareFixture(`nested/${filename}`, temporaryDirectory, filename);
+    const filePath = await prepareFixture(`nested/${filename}`, filename);
     const resolved = await prettier.resolveConfig(filePath, {
       config: configPath,
       editorconfig: false,
@@ -105,18 +106,18 @@ describe("Format Integration", () => {
   });
 
   it("01. formats TypeScript correctly", async () => {
-    await testFixture("sample.ts", temporaryDirectory, configPath);
+    await testFixture("sample.ts");
   });
 
   it("02. formats JavaScript correctly", async () => {
-    await testFixture("sample.js", temporaryDirectory, configPath);
+    await testFixture("sample.js");
   });
 
   it.each([
     { filename: "width.js", parser: "oxc" },
     { filename: "width.ts", parser: "oxc-ts" },
   ])("wraps at 150 columns with $parser", async ({ filename, parser }) => {
-    const filePath = await prepareFixture(`nested/${filename}`, temporaryDirectory, "width.js");
+    const filePath = await prepareFixture(`nested/${filename}`, "width.js");
     const source = await fs.readFile(filePath, "utf8");
     const resolved = await prettier.resolveConfig(filePath, {
       config: configPath,
@@ -141,34 +142,34 @@ describe("Format Integration", () => {
   });
 
   it("03. formats TSX correctly", async () => {
-    await testFixture("sample.tsx", temporaryDirectory, configPath);
+    await testFixture("sample.tsx");
   });
 
   it("04. formats JSX correctly", async () => {
-    await testFixture("sample.jsx", temporaryDirectory, configPath);
+    await testFixture("sample.jsx");
   });
 
   it("05. formats Astro correctly", async () => {
-    await testFixture("sample.astro", temporaryDirectory, configPath);
+    await testFixture("sample.astro");
   });
 
   it("06. formats Svelte correctly", async () => {
-    await testFixture("sample.svelte", temporaryDirectory, configPath);
+    await testFixture("sample.svelte");
   });
 
   it("07. formats HTML correctly", async () => {
-    await testFixture("sample.html", temporaryDirectory, configPath);
+    await testFixture("sample.html");
   });
 
   it("08. formats CSS correctly", async () => {
-    await testFixture("sample.css", temporaryDirectory, configPath);
+    await testFixture("sample.css");
   });
 
   it.each([
     { filename: "tailwind-functions.js", parser: "oxc" },
     { filename: "tailwind-functions.ts", parser: "oxc-ts" },
   ])("sorts Tailwind helper functions with $parser", async ({ filename, parser }) => {
-    const filePath = await prepareFixture(`nested/${filename}`, temporaryDirectory, "tailwind-functions.js");
+    const filePath = await prepareFixture(`nested/${filename}`, "tailwind-functions.js");
     const source = await fs.readFile(filePath, "utf8");
     const resolved = await prettier.resolveConfig(filePath, {
       config: configPath,
@@ -192,7 +193,7 @@ describe("Format Integration", () => {
   });
 
   it("sorts Tailwind classes in Vue attributes, bindings, and scoped styles", async () => {
-    const formatted = await testFixture("tailwind.vue", temporaryDirectory, configPath);
+    const formatted = await testFixture("tailwind.vue");
 
     expect(formatted).toContain('class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"');
     expect(formatted).toContain("'px-6 py-3 text-lg font-bold'");
@@ -207,7 +208,7 @@ describe("Format Integration", () => {
     { declaration: "color: $accent;", filename: "tailwind.scss" },
     { declaration: "color: @accent;", filename: "tailwind.less" },
   ])("sorts Tailwind @apply utilities while preserving stylesheet syntax in $filename", async ({ declaration, filename }) => {
-    const formatted = await testFixture(filename, temporaryDirectory, configPath);
+    const formatted = await testFixture(filename);
 
     expect(formatted).toContain("@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;");
     expect(formatted).toContain("@apply flex items-center px-4 py-2 !important;");
@@ -216,43 +217,43 @@ describe("Format Integration", () => {
   });
 
   it("09. formats Markdown correctly", async () => {
-    await testFixture("sample.md", temporaryDirectory, configPath);
+    await testFixture("sample.md");
   });
 
   it("10. formats package.json correctly", async () => {
-    await testFixture("package.json", temporaryDirectory, configPath);
+    await testFixture("package.json");
   });
 
   it("11. formats JSON with Prettier defaults", async () => {
-    await testFixture("sample.json", temporaryDirectory, configPath);
+    await testFixture("sample.json");
   });
 
   it("12. formats JSONC with Prettier defaults", async () => {
-    await testFixture("sample.jsonc", temporaryDirectory, configPath);
+    await testFixture("sample.jsonc");
   });
 
   it("13. formats JSON5 with Prettier defaults", async () => {
-    await testFixture("sample.json5", temporaryDirectory, configPath);
+    await testFixture("sample.json5");
   });
 
   it("14. formats YAML with Prettier defaults", async () => {
-    await testFixture("sample.yaml", temporaryDirectory, configPath);
+    await testFixture("sample.yaml");
   });
 
   it("15. formats YML with Prettier defaults", async () => {
-    await testFixture("sample.yml", temporaryDirectory, configPath);
+    await testFixture("sample.yml");
   });
 
   it("16. formats MDX with Prettier defaults", async () => {
-    await testFixture("sample.mdx", temporaryDirectory, configPath);
+    await testFixture("sample.mdx");
   });
 
   it("17. formats TOML correctly", async () => {
-    await testFixture("sample.toml", temporaryDirectory, configPath);
+    await testFixture("sample.toml");
   });
 
   it("preserves TOML key order, comments, and multiline string contents", async () => {
-    const formatted = await testFixture("complex.toml", temporaryDirectory, configPath);
+    const formatted = await testFixture("complex.toml");
 
     expect(formatted.indexOf("zulu =")).toBeLessThan(formatted.indexOf("alpha ="));
     expect(formatted).toContain("# Keep the deployment order");
@@ -265,7 +266,7 @@ describe("Format Integration", () => {
   });
 
   it("uses Svelte shorthand only when the attribute matches its expression", async () => {
-    const formatted = await testFixture("shorthand.svelte", temporaryDirectory, configPath);
+    const formatted = await testFixture("shorthand.svelte");
 
     expect(formatted).toContain("{title}");
     expect(formatted).not.toContain("title={title}");
@@ -273,27 +274,27 @@ describe("Format Integration", () => {
   });
 
   it.each(["embedded.md", "embedded.mdx"])("inherits the shared width and JavaScript quotes inside %s", async (filename) => {
-    const formatted = await testFixture(filename, temporaryDirectory, configPath);
+    const formatted = await testFixture(filename);
 
     expect(formatted).toContain('const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };');
   });
 
   it.each(["quotes.yaml", "quotes.yml"])("uses double quotes for quoted YAML values in %s", async (filename) => {
-    const formatted = await testFixture(filename, temporaryDirectory, configPath);
+    const formatted = await testFixture(filename);
 
     expect(formatted).toContain('message: "status: ready"');
     expect(formatted).toContain('boolean_text: "true"');
   });
 
   it("uses default TOML quotes while preserving literal backslashes", async () => {
-    const formatted = await testFixture("quotes.toml", temporaryDirectory, configPath);
+    const formatted = await testFixture("quotes.toml");
 
     expect(formatted).toContain('"quoted key" = "hello"');
     expect(formatted).toContain(String.raw`path = 'C:\work\project'`);
   });
 
   it("formats XML structure, attributes, namespaces, and comments", async () => {
-    const formatted = await testFixture("sample.xml", temporaryDirectory, configPath);
+    const formatted = await testFixture("sample.xml");
 
     expect(formatted).toContain("<app:item");
     expect(formatted).toContain("title='say \"hello\"'");
@@ -305,7 +306,7 @@ describe("Format Integration", () => {
   });
 
   it("preserves XML mixed text, entities, CDATA, and explicit whitespace", async () => {
-    const formatted = await testFixture("mixed.xml", temporaryDirectory, configPath);
+    const formatted = await testFixture("mixed.xml");
 
     expect(formatted).toContain("<p>Hello <b>world</b> ! &amp; goodbye.</p>");
     expect(formatted).toContain("xml:space='preserve'");
@@ -314,7 +315,7 @@ describe("Format Integration", () => {
   });
 
   it("uses the 150-column print width for XML in nested directories", async () => {
-    const filePath = await prepareFixture("nested/width.xml", temporaryDirectory, "width.xml");
+    const filePath = await prepareFixture("nested/width.xml", "width.xml");
     const source = await fs.readFile(filePath, "utf8");
     const resolved = await prettier.resolveConfig(filePath, {
       config: configPath,
@@ -331,7 +332,7 @@ describe("Format Integration", () => {
   });
 
   it("reports incomplete XML markup", async () => {
-    const filePath = await prepareFixture("sample.xml", temporaryDirectory);
+    const filePath = await prepareFixture("sample.xml");
     const resolved = await prettier.resolveConfig(filePath, {
       config: configPath,
       editorconfig: false,
@@ -343,7 +344,7 @@ describe("Format Integration", () => {
   it.each(["package.json", "package-lock.json", "nested/package.json", "nested/package-lock.json"])(
     "uses Prettier defaults while preserving package formatting for %s",
     async (filename) => {
-      const filePath = await prepareFixture(filename, temporaryDirectory, `width/${path.basename(filename)}`);
+      const filePath = await prepareFixture(filename, `width/${path.basename(filename)}`);
       const source = await fs.readFile(filePath, "utf8");
       const resolved = await prettier.resolveConfig(filePath, {
         config: configPath,

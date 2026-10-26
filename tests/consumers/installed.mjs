@@ -11,7 +11,11 @@ const oxc = await import("@prettier/plugin-oxc");
 assert.equal(config.plugins[0], oxc.default);
 const optionalPlugins = ["prettier-plugin-astro", "prettier-plugin-svelte", "prettier-plugin-tailwindcss"];
 assert.deepEqual(
-  optionalPlugins.filter((name) => config.plugins.some((plugin) => typeof plugin === "string" && plugin.includes(name))),
+  optionalPlugins.filter((name) => {
+    return config.plugins.some((plugin) => {
+      return typeof plugin === "string" && plugin.includes(name);
+    });
+  }),
   [],
 );
 

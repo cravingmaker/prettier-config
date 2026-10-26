@@ -9,7 +9,11 @@ const commit = "b".repeat(40);
 const version = "4.0.2";
 const referencePath = "scripts/effect-reference.json";
 const names = ["effect", "@effect/platform-node-shared", "@effect/vitest"] as const;
-const dependencies = Object.fromEntries<string>(names.map((name) => [name, version]));
+const dependencies = Object.fromEntries<string>(
+  names.map((name) => {
+    return [name, version];
+  }),
+);
 const reference = {
   commit: "c".repeat(40),
   repository: "https://github.com/Effect-TS/effect.git",
@@ -17,7 +21,10 @@ const reference = {
   version: "4.0.0",
 };
 const expected = { ...reference, commit, tag: `effect@${version}`, version };
-const repositoryData = (fullName: string) => Object.fromEntries([["full_name", fullName]]);
+const repositoryData = (fullName: string) => {
+  return Object.fromEntries([["full_name", fullName]]);
+};
+
 const pull = {
   base: { ref: "main", repo: repositoryData(repository) },
   head: { ref: branch, repo: repositoryData(repository), sha: head },
@@ -27,21 +34,33 @@ const pull = {
 };
 const pullEndpoint = `/repos/${repository}/pulls?state=open&head=${encodeURIComponent(`cravingmaker:${branch}`)}&per_page=100`;
 const filesEndpoint = `/repos/${repository}/pulls/142/files?per_page=100`;
-const contentEndpoint = (filename: string) => `/repos/${repository}/contents/${filename}?ref=${head}`;
-const upstreamEndpoint = (filename: string) => `/repos/Effect-TS/effect/contents/${filename}?ref=${commit}`;
+const contentEndpoint = (filename: string) => {
+  return `/repos/${repository}/contents/${filename}?ref=${head}`;
+};
+
+const upstreamEndpoint = (filename: string) => {
+  return `/repos/Effect-TS/effect/contents/${filename}?ref=${commit}`;
+};
+
 const tagEndpoint = `/repos/Effect-TS/effect/git/ref/tags/effect%404.0.2`;
-const content = (value: unknown) => ({
-  content: btoa(JSON.stringify(value)),
-  encoding: "base64",
-  type: "file",
-});
+const content = (value: unknown) => {
+  return {
+    content: btoa(JSON.stringify(value)),
+    encoding: "base64",
+    type: "file",
+  };
+};
+
 const lock = {
   lockfileVersion: 3,
   packages: Object.fromEntries<unknown>([
     ["", { devDependencies: dependencies }],
-    ...names.map((name) => [`node_modules/${name}`, { version }] as const),
+    ...names.map((name) => {
+      return [`node_modules/${name}`, { version }] as const;
+    }),
   ]),
 };
+// eslint-disable-next-line max-lines-per-function -- The API fixture and captured writes share one response table.
 const fixture = (overrides: Readonly<Record<string, unknown>> = {}) => {
   const responses = new Map<string, unknown>([
     [contentEndpoint("package-lock.json"), content(lock)],
@@ -54,10 +73,12 @@ const fixture = (overrides: Readonly<Record<string, unknown>> = {}) => {
     [contentEndpoint(referencePath), content(reference)],
     [
       filesEndpoint,
-      ["package.json", "package-lock.json"].map((filename) => ({
-        filename,
-        status: "modified",
-      })),
+      ["package.json", "package-lock.json"].map((filename) => {
+        return {
+          filename,
+          status: "modified",
+        };
+      }),
     ],
     [
       "/graphql",
@@ -86,20 +107,30 @@ const fixture = (overrides: Readonly<Record<string, unknown>> = {}) => {
   ]);
   const request = vi.fn(async (endpoint: string, _body?: Readonly<Record<string, unknown>>): Promise<unknown> => {
     const response = await Promise.resolve(responses.get(endpoint));
-    // eslint-disable-next-line functional/no-promise-reject -- Reproduce a GitHub API failure.
-    if (response instanceof Error) throw response;
-    if (response === undefined)
+    if (response instanceof Error) {
+      // eslint-disable-next-line functional/no-promise-reject -- Reproduce a GitHub API failure.
+      throw response;
+    }
+    if (typeof response === "undefined") {
       // eslint-disable-next-line functional/no-promise-reject -- Unexpected requests must fail the test.
       throw new Error(`Unexpected request: ${endpoint}`);
+    }
     return response;
   });
   return {
     request,
-    run: async () => await syncEffectReference({ branch, head, repository, request }),
-    writes: () => request.mock.calls.filter(([, body]) => body !== undefined),
+    run: async () => {
+      return await syncEffectReference({ branch, head, repository, request });
+    },
+    writes: () => {
+      return request.mock.calls.filter(([, body]) => {
+        return typeof body !== "undefined";
+      });
+    },
   };
 };
 
+// eslint-disable-next-line max-lines-per-function -- This callback registers independent synchronization cases.
 describe("Dependabot Effect reference synchronization", () => {
   it("repairs a grouped update in one commit tied to the inspected PR head", async () => {
     const test = fixture();
@@ -115,6 +146,7 @@ describe("Dependabot Effect reference synchronization", () => {
         fileChanges: {
           additions: [
             {
+              // eslint-disable-next-line no-undefined -- Match the source JSON's omitted replacer and indentation.
               contents: btoa(`${JSON.stringify(expected, undefined, 2)}\n`),
               path: referencePath,
             },
@@ -130,10 +162,12 @@ describe("Dependabot Effect reference synchronization", () => {
   it("does not create another commit when the reference is already synchronized", async () => {
     const test = fixture({
       [contentEndpoint(referencePath)]: content(expected),
-      [filesEndpoint]: ["package.json", "package-lock.json", referencePath].map((filename) => ({
-        filename,
-        status: "modified",
-      })),
+      [filesEndpoint]: ["package.json", "package-lock.json", referencePath].map((filename) => {
+        return {
+          filename,
+          status: "modified",
+        };
+      }),
     });
     await expect(test.run()).resolves.toContain("already synchronized");
     expect(test.writes()).toEqual([]);
@@ -180,7 +214,11 @@ describe("Dependabot Effect reference synchronization", () => {
     });
     await expect(test.run()).rejects.toThrow("@effect/vitest");
     expect(test.writes()).toEqual([]);
-    expect(test.request.mock.calls.some(([endpoint]) => endpoint === tagEndpoint)).toBe(false);
+    expect(
+      test.request.mock.calls.some(([endpoint]) => {
+        return endpoint === tagEndpoint;
+      }),
+    ).toBe(false);
   });
 
   it.each([

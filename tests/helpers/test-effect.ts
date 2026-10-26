@@ -20,13 +20,20 @@ const withTestLifetime = async <A>(context: TestLifetime, start: (signal: AbortS
   return await result;
 };
 
-const runEffect = async <A, E>(context: TestLifetime, effect: Effect.Effect<A, E, Scope.Scope>) =>
-  await withTestLifetime(context, async (signal) => await Effect.runPromise(Effect.scoped(effect), { signal }));
+const runEffect = async <A, E>(context: TestLifetime, effect: Effect.Effect<A, E, Scope.Scope>) => {
+  return await withTestLifetime(context, async (signal) => {
+    return await Effect.runPromise(Effect.scoped(effect), { signal });
+  });
+};
 
 const runRuntimeEffect = async <A, E, R, ER>(
   context: TestLifetime,
   runtime: ManagedRuntime.ManagedRuntime<R, ER>,
   effect: Effect.Effect<A, E, R | Scope.Scope>,
-) => await withTestLifetime(context, async (signal) => await runtime.runPromise(Effect.scoped(effect), { signal }));
+) => {
+  return await withTestLifetime(context, async (signal) => {
+    return await runtime.runPromise(Effect.scoped(effect), { signal });
+  });
+};
 
 export { runEffect, runRuntimeEffect };

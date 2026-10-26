@@ -46,7 +46,7 @@ describe("pinned workflow tool", () => {
           }).pipe(Effect.flip),
         );
         expect(error).toMatchObject({ exitCode: 1, _tag: "CommandFailure" });
-        expect(error._tag === "CommandFailure" ? `${error.stdout ?? ""}\n${error.stderr ?? ""}` : undefined).toContain(expression);
+        expect(error._tag === "CommandFailure" ? `${error.stdout ?? ""}\n${error.stderr ?? ""}` : "").toContain(expression);
       } finally {
         await fs.rm(workspace, { force: true, recursive: true });
       }

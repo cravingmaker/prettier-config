@@ -14,7 +14,9 @@ const foreignGitEnvironment = async () => {
   const localVariables = new Set(stdout.trim().split("\n"));
   return Object.fromEntries(
     // eslint-disable-next-line n/no-process-env -- Preserve the command environment except Git's own repository-selection variables.
-    Object.entries(process.env).filter(([name]) => !localVariables.has(name)),
+    Object.entries(process.env).filter(([name]) => {
+      return !localVariables.has(name);
+    }),
   );
 };
 

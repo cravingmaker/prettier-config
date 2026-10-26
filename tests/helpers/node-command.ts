@@ -28,7 +28,7 @@ type CommandSpec = {
 
   readonly env?: NodeJS.ProcessEnv;
 };
-type OutputBuffer = { chunks: Buffer[]; size: number };
+type OutputBuffer = { chunks: Uint8Array[]; size: number };
 
 class CommandDeadline extends Schema.TaggedError<CommandDeadline>()("CommandDeadline", {
   ...commandFields,
@@ -52,7 +52,19 @@ const terminationGraceMs = 1000;
 // eslint-disable-next-line @typescript-eslint/strict-void-return -- promisify uses execFile's callback and intentionally ignores its ChildProcess return value.
 const execute = promisify(execFile);
 
+const decodeOutput = (buffer: OutputBuffer) => {
+  const decoder = new TextDecoder("utf-8", { ignoreBOM: true });
+  return (
+    buffer.chunks
+      .map((chunk) => {
+        return decoder.decode(chunk, { stream: true });
+      })
+      .join("") + decoder.decode()
+  );
+};
+
 // Native event listeners own the mutable process state; the Effect scope owns disposal.
+// eslint-disable-next-line max-lines-per-function -- Process events and disposal share one command's bounded buffers and mutable lifetime state.
 const startCommand = (spec: CommandSpec) => {
   const details = {
     args: [...spec.args],
@@ -60,12 +72,14 @@ const startCommand = (spec: CommandSpec) => {
     executable: spec.executable,
     phase: spec.phase,
   };
-  const failure = (cause: unknown) =>
-    new CommandFailure({
+  const failure = (cause: unknown) => {
+    return new CommandFailure({
       ...details,
       cause,
       message: `${spec.phase}: ${spec.executable} failed in ${spec.cwd}`,
     });
+  };
+
   const child = spawn(spec.executable, [...spec.args], {
     cwd: spec.cwd,
     detached: process.platform !== "win32",
@@ -76,24 +90,38 @@ const startCommand = (spec: CommandSpec) => {
   let hasClosed = false;
   let hasExited = false;
   let disposal: Promise<void> | undefined;
-  const hasLeaderExited = () => hasExited;
+  const hasLeaderExited = () => {
+    return hasExited;
+  };
 
   const isAlive = () => {
-    if (child.pid === undefined) return false;
-    if (process.platform === "win32") return !hasExited;
+    if (typeof child.pid === "undefined") {
+      return false;
+    }
+    if (process.platform === "win32") {
+      return !hasExited;
+    }
     try {
       process.kill(-child.pid, 0);
       return true;
     } catch (error) {
       if (error instanceof Error && "code" in error) {
-        if (error.code === "ESRCH") return false;
+        if (error.code === "ESRCH") {
+          return false;
+        }
         // Darwin can retain a zombie-only group while its members are reaped.
-        if (error.code === "EPERM") return true;
+        if (error.code === "EPERM") {
+          return true;
+        }
       }
       throw error;
     }
   };
-  const hasStopped = () => hasClosed && !isAlive();
+
+  const hasStopped = () => {
+    return hasClosed && !isAlive();
+  };
+
   const waitForExit = async () => {
     const deadline = performance.now() + terminationGraceMs;
     while (!hasStopped() && performance.now() < deadline) {
@@ -101,48 +129,70 @@ const startCommand = (spec: CommandSpec) => {
       await delay(10);
     }
   };
+
   const signal = async (name: NodeJS.Signals) => {
-    if (child.pid === undefined) return;
+    if (typeof child.pid === "undefined") {
+      return;
+    }
     try {
       process.kill(-child.pid, name);
     } catch (error) {
-      if (error instanceof Error && "code" in error) {
-        if (error.code === "ESRCH") return;
-        if (error.code === "EPERM") {
-          // Reaping can briefly deny group signals; preserve genuine permission failures.
-          await waitForExit();
-          if (!isAlive()) return;
+      if (!(error instanceof Error && "code" in error)) {
+        throw error;
+      }
+      if (error.code === "ESRCH") {
+        return;
+      }
+      if (error.code === "EPERM") {
+        // Reaping can briefly deny group signals; preserve genuine permission failures.
+        await waitForExit();
+        if (!isAlive()) {
+          return;
         }
       }
       throw error;
     }
   };
+
+  const stopWindows = async () => {
+    if (hasLeaderExited() || typeof child.pid === "undefined") {
+      return;
+    }
+    try {
+      await execute("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
+        timeout: terminationGraceMs,
+        windowsHide: true,
+      });
+    } catch (error) {
+      if (!hasLeaderExited()) {
+        throw error;
+      }
+    }
+  };
+
   const dispose = async () => {
-    disposal ??= (async () => {
-      if (process.platform === "win32") {
-        if (!hasLeaderExited() && child.pid !== undefined) {
-          try {
-            await execute("taskkill", ["/pid", String(child.pid), "/T", "/F"], {
-              timeout: terminationGraceMs,
-              windowsHide: true,
-            });
-          } catch (error) {
-            if (!hasLeaderExited()) throw error;
+    disposal =
+      disposal ??
+      (async () => {
+        if (process.platform === "win32") {
+          await stopWindows();
+        } else {
+          await signal("SIGTERM");
+          await waitForExit();
+          if (isAlive()) {
+            await signal("SIGKILL");
           }
         }
-      } else {
-        await signal("SIGTERM");
         await waitForExit();
-        if (isAlive()) await signal("SIGKILL");
-      }
-      await waitForExit();
-      if (!hasClosed) {
-        child.stdout.destroy();
-        child.stderr.destroy();
-        await waitForExit();
-      }
-      if (!hasClosed) throw new Error(`${spec.phase}: child process did not close`);
-    })();
+        if (!hasClosed) {
+          child.stdout.destroy();
+          child.stderr.destroy();
+          await waitForExit();
+        }
+        if (!hasClosed) {
+          throw new Error(`${spec.phase}: child process did not close`);
+        }
+      })();
     await disposal;
   };
 
@@ -150,27 +200,33 @@ const startCommand = (spec: CommandSpec) => {
   const result = new Promise<CommandFailure | CommandOutputLimit | CommandResult>((resolve) => {
     const stdout: OutputBuffer = { chunks: [], size: 0 };
     const stderr: OutputBuffer = { chunks: [], size: 0 };
-    const collect = (name: "stderr" | "stdout", buffer: OutputBuffer) => (chunk: Buffer) => {
-      if (buffer.size > outputLimit) return;
-      buffer.size += chunk.byteLength;
-      if (buffer.size > outputLimit) {
-        resolve(
-          new CommandOutputLimit({
-            ...details,
-            limit: outputLimit,
-            message: `${spec.phase}: ${name} exceeds ${String(outputLimit)} bytes`,
-            stream: name,
-          }),
-        );
-      } else {
-        buffer.chunks.push(chunk);
-      }
+    const collect = (name: "stderr" | "stdout", buffer: OutputBuffer) => {
+      return (chunk: Uint8Array) => {
+        if (buffer.size > outputLimit) {
+          return;
+        }
+        buffer.size = buffer.size + chunk.byteLength;
+        if (buffer.size > outputLimit) {
+          resolve(
+            new CommandOutputLimit({
+              ...details,
+              limit: outputLimit,
+              message: `${spec.phase}: ${name} exceeds ${String(outputLimit)} bytes`,
+              stream: name,
+            }),
+          );
+        } else {
+          buffer.chunks.push(chunk);
+        }
+      };
     };
+
     child.stdout.on("data", collect("stdout", stdout));
     child.stderr.on("data", collect("stderr", stderr));
     const onError = (cause: unknown) => {
       resolve(failure(cause));
     };
+
     child.stdout.on("error", onError);
     child.stderr.on("error", onError);
     child.once("error", onError);
@@ -189,8 +245,8 @@ const startCommand = (spec: CommandSpec) => {
       resolve({
         code,
         signal: exitSignal,
-        stderr: Buffer.concat(stderr.chunks).toString("utf8"),
-        stdout: Buffer.concat(stdout.chunks).toString("utf8"),
+        stderr: decodeOutput(stderr),
+        stdout: decodeOutput(stdout),
       });
     });
   });
@@ -207,17 +263,24 @@ const runCommand = Effect.fn("packageSmoke.runCommand")(function* (spec: Command
   return yield* Effect.gen(function* () {
     const command = yield* Effect.acquireRelease(
       Effect.try({
-        catch: (cause) =>
-          new CommandFailure({
+        catch: (cause) => {
+          return new CommandFailure({
             ...details,
             cause,
             message: `${spec.phase}: ${spec.executable} could not start in ${spec.cwd}`,
-          }),
-        try: () => startCommand(spec),
+          });
+        },
+        try: () => {
+          return startCommand(spec);
+        },
       }),
-      (handle) => Effect.promise(handle.dispose),
+      (handle) => {
+        return Effect.promise(handle.dispose);
+      },
     );
-    const result = yield* Effect.promise(async () => await command.result);
+    const result = yield* Effect.promise(async () => {
+      return await command.result;
+    });
     if (result instanceof CommandFailure || result instanceof CommandOutputLimit) {
       return yield* result;
     }
@@ -237,14 +300,15 @@ const runCommand = Effect.fn("packageSmoke.runCommand")(function* (spec: Command
     Effect.scoped,
     Effect.timeoutOrElse({
       duration: spec.timeoutMs,
-      orElse: () =>
-        Effect.fail(
+      orElse: () => {
+        return Effect.fail(
           new CommandDeadline({
             ...details,
             message: `${spec.phase}: ${spec.executable} exceeded ${String(spec.timeoutMs)}ms in ${spec.cwd}`,
             timeoutMs: spec.timeoutMs,
           }),
-        ),
+        );
+      },
     }),
   );
 });

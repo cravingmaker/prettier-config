@@ -43,7 +43,9 @@ const cases = [
 for (const name of optionalPlugins) {
   const installed = path.join(directory, "node_modules", name);
   assert.equal(
-    config.plugins.some((plugin) => typeof plugin === "string" && plugin.includes(name)),
+    config.plugins.some((plugin) => {
+      return typeof plugin === "string" && plugin.includes(name);
+    }),
     false,
     `${name}: confirmed absence is supported`,
   );

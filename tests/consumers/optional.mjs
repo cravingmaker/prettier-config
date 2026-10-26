@@ -12,7 +12,9 @@ verifyPrettierVersion();
 const astro = await format("example.astro", '---\nconst name="World"\n---\n<div class="p-4 flex">{name}</div>');
 const svelte = await format("example.svelte", '<script>let name="World"</script><div class="p-4 flex">{name}</div>');
 const require = createRequire(path.join(consumerDirectory, "package.json"));
-const configuredPlugins = (config.plugins ?? []).filter((plugin) => typeof plugin === "string");
+const configuredPlugins = (config.plugins ?? []).filter((plugin) => {
+  return typeof plugin === "string";
+});
 await verifyPluginPaths();
 
 if (!configuredPlugins.includes(require.resolve("prettier-plugin-astro"))) {
@@ -35,34 +37,39 @@ if (!svelte.includes('let name = "World";')) {
   throw new Error("Svelte parser did not format the script");
 }
 
-if (!/class=["']flex p-4["']/.test(svelte)) {
+if (!/class=["']flex p-4["']/u.test(svelte)) {
   throw new Error(`Tailwind did not sort Svelte classes: ${svelte}`);
 }
 
-if (!/class=["']flex p-4["']/.test(astro)) {
+if (!/class=["']flex p-4["']/u.test(astro)) {
   throw new Error(`Tailwind did not sort Astro classes: ${astro}`);
 }
 
 await Promise.all(
-  ["clsx", "cn", "cva", "classNames", "classnames", "tv"].flatMap((name) =>
-    [
+  ["clsx", "cn", "cva", "classNames", "classnames", "tv"].flatMap((name) => {
+    return [
       { extension: "js", parser: "oxc" },
       { extension: "ts", parser: "oxc-ts" },
     ].map(async ({ extension, parser }) => {
       const argument = name === "tv" ? '{base:"text-white p-4 flex"}' : '"text-white p-4 flex"';
       const formatted = await format(`tailwind-functions/${name}.${extension}`, `${name}(${argument})`, parser);
       assert.ok(formatted.includes('"flex p-4 text-white"'), formatted);
-    }),
-  ),
+    });
+  }),
 );
 
 const vue = await format("tailwind.vue", await fs.readFile(path.join(consumerDirectory, "tailwind.vue"), "utf8"));
+const expectedVueFragments = [
+  'class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"',
+  "'px-6 py-3 text-lg font-bold'",
+  "'bg-black text-white': active",
+  'data-label="text-white bg-black"',
+  "@apply flex rounded bg-blue-500 p-4 text-white;",
+];
 if (
-  !vue.includes('class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"') ||
-  !vue.includes("'px-6 py-3 text-lg font-bold'") ||
-  !vue.includes("'bg-black text-white': active") ||
-  !vue.includes('data-label="text-white bg-black"') ||
-  !vue.includes("@apply flex rounded bg-blue-500 p-4 text-white;")
+  expectedVueFragments.some((fragment) => {
+    return !vue.includes(fragment);
+  })
 ) {
   throw new Error(`Tailwind did not sort Vue classes and scoped styles: ${vue}`);
 }

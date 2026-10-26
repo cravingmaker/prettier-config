@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const require = createRequire(import.meta.url);
 
+// eslint-disable-next-line max-lines-per-function -- This callback registers independent configuration cases.
 describe("Prettier Config", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -24,7 +25,11 @@ describe("Prettier Config", () => {
     expect(config).not.toHaveProperty("jsxSingleQuote");
     expect(config).not.toHaveProperty("tabWidth");
     expect(config).not.toHaveProperty("useTabs");
-    expect(config.overrides.map((override) => override.options)).toEqual([{ parser: "oxc-ts" }, { parser: "oxc" }]);
+    expect(
+      config.overrides.map((override) => {
+        return override.options;
+      }),
+    ).toEqual([{ parser: "oxc-ts" }, { parser: "oxc" }]);
   });
 
   it.each([
@@ -37,24 +42,38 @@ describe("Prettier Config", () => {
     { installed: ["svelte", "tailwindcss"], label: "Svelte and Tailwind" },
     { installed: ["astro", "svelte", "tailwindcss"], label: "all" },
   ])("includes exactly the installed optional plugins in order: $label", async ({ installed }) => {
-    vi.doMock("node:module", () => ({
-      createRequire: () => ({
-        resolve: Object.assign(
-          (name: string) => {
-            if (name === "prettier-plugin-packagejson") return "/plugins/packagejson.cjs";
-            if (name === "prettier-plugin-toml") return "/plugins/toml.mjs";
-            if (name === "@prettier/plugin-xml") return "/plugins/xml.mjs";
-            if (installed.includes(name.slice("prettier-plugin-".length))) {
-              return `/plugins/${name}.mjs`;
-            }
-            throw Object.assign(new Error("Not found"), {
-              code: "MODULE_NOT_FOUND",
-            });
-          },
-          { paths: () => [] },
-        ),
-      }),
-    }));
+    vi.doMock("node:module", () => {
+      return {
+        createRequire: () => {
+          return {
+            resolve: Object.assign(
+              (name: string) => {
+                if (name === "prettier-plugin-packagejson") {
+                  return "/plugins/packagejson.cjs";
+                }
+                if (name === "prettier-plugin-toml") {
+                  return "/plugins/toml.mjs";
+                }
+                if (name === "@prettier/plugin-xml") {
+                  return "/plugins/xml.mjs";
+                }
+                if (installed.includes(name.slice("prettier-plugin-".length))) {
+                  return `/plugins/${name}.mjs`;
+                }
+                throw Object.assign(new Error("Not found"), {
+                  code: "MODULE_NOT_FOUND",
+                });
+              },
+              {
+                paths: () => {
+                  return [];
+                },
+              },
+            ),
+          };
+        },
+      };
+    });
 
     const { default: config } = await import("../index.mjs");
 
@@ -63,7 +82,9 @@ describe("Prettier Config", () => {
       "/plugins/packagejson.cjs",
       "/plugins/toml.mjs",
       "/plugins/xml.mjs",
-      ...installed.map((plugin) => `/plugins/prettier-plugin-${plugin}.mjs`),
+      ...installed.map((plugin) => {
+        return `/plugins/prettier-plugin-${plugin}.mjs`;
+      }),
     ]);
   });
 
@@ -74,19 +95,26 @@ describe("Prettier Config", () => {
       label: "inaccessible package exports",
     },
     { code: "EACCES", label: "filesystem permission failures" },
+    // eslint-disable-next-line no-undefined -- Exercise a resolver error with an explicitly undefined code.
     { code: undefined, label: "unexpected resolver errors" },
   ])("preserves the original error for $label", async ({ code }) => {
     const failure = Object.assign(new Error("Cannot resolve optional plugin"), {
       code,
     });
-    vi.doMock("node:module", () => ({
-      createRequire: () => ({
-        resolve(name: string) {
-          if (name === "prettier-plugin-astro") throw failure;
-          return `/plugins/${name}.mjs`;
+    vi.doMock("node:module", () => {
+      return {
+        createRequire: () => {
+          return {
+            resolve(name: string) {
+              if (name === "prettier-plugin-astro") {
+                throw failure;
+              }
+              return `/plugins/${name}.mjs`;
+            },
+          };
         },
-      }),
-    }));
+      };
+    });
 
     await expect(import("../index.mjs")).rejects.toBe(failure);
   });
@@ -98,14 +126,20 @@ describe("Prettier Config", () => {
         code: "MODULE_NOT_FOUND",
         path: `/plugins/${plugin}/package.json`,
       });
-      vi.doMock("node:module", () => ({
-        createRequire: () => ({
-          resolve(name: string) {
-            if (name === plugin) throw failure;
-            return `/plugins/${name}.mjs`;
+      vi.doMock("node:module", () => {
+        return {
+          createRequire: () => {
+            return {
+              resolve(name: string) {
+                if (name === plugin) {
+                  throw failure;
+                }
+                return `/plugins/${name}.mjs`;
+              },
+            };
           },
-        }),
-      }));
+        };
+      });
 
       await expect(import("../index.mjs")).rejects.toBe(failure);
     },

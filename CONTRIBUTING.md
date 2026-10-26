@@ -139,6 +139,10 @@ pull requests. See the
 command map; `validate:static` and `validate:behavior` are composable CI entry points,
 and `npm run validate` remains the required final local check.
 
+Vitest runs one test file at a time to limit peak memory when typed ESLint
+services and compiler subprocesses run in the combined suite. Test isolation,
+assertion guards, real-clock deadlines, and the complete test selection still apply.
+
 `npm test` and `npm run test:ui` retain all regular tests. `test:runtime` excludes
 the ESLint-backed tooling guards, and `test:tooling` selects those guards on the
 development runtime. Full validation runs both suites through its static and

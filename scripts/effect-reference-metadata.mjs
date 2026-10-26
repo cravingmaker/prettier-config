@@ -14,10 +14,10 @@ const effectPackages = [
   { manifest: "packages/vitest/package.json", name: "@effect/vitest" },
 ];
 const referenceSchema = Schema.Struct({
-  commit: Schema.String.check(Schema.isPattern(/^[\da-f]{40}$/)),
-  repository: Schema.String.check(Schema.isPattern(/\S/)),
+  commit: Schema.String.check(Schema.isPattern(/^[\da-f]{40}$/u)),
+  repository: Schema.String.check(Schema.isPattern(/\S/u)),
   tag: Schema.String,
-  version: Schema.String.check(Schema.isPattern(/^(?:\d+\.\d+\.\d+|\d+\.\d+\.\d+-[\d\-.a-z]+)$/i)),
+  version: Schema.String.check(Schema.isPattern(/^(?:\d+\.\d+\.\d+|\d+\.\d+\.\d+-[\d\-.a-z]+)$/iu)),
 });
 const dependenciesSchema = Schema.Struct({
   devDependencies: Schema.Record(Schema.String, Schema.String),
@@ -43,18 +43,27 @@ const checkEffectReference = async (projectDirectory) => {
   const lock = decodeJson(lockSchema, lockContents, lockPath, "validate lockfile");
   const installedPackages = new Map(Object.entries(lock.packages));
   const { devDependencies: rootDependencies } = decodeValue(dependenciesSchema, installedPackages.get(""), lockPath, "validate root lockfile");
-  if (reference.tag !== `effect@${reference.version}`) throw new Error(`${referencePath}: tag must equal effect@${reference.version}`);
-  if (lock.lockfileVersion !== 3) throw new Error(`${lockPath}: expected the repository's version 3 npm lockfile`);
+  if (reference.tag !== `effect@${reference.version}`) {
+    throw new Error(`${referencePath}: tag must equal effect@${reference.version}`);
+  }
+  if (lock.lockfileVersion !== 3) {
+    throw new Error(`${lockPath}: expected the repository's version 3 npm lockfile`);
+  }
   const declared = new Map(Object.entries(manifest.devDependencies));
   const locked = new Map(Object.entries(rootDependencies));
   // eslint-disable-next-line functional/no-loop-statements -- Validate each coordinated pin with its own actionable diagnostic.
   for (const { name } of effectPackages) {
-    if (declared.get(name) !== reference.version)
+    if (declared.get(name) !== reference.version) {
       throw new Error(`${manifestPath}: update the source pin to match the exact ${name} dependency (${reference.version})`);
-    if (locked.get(name) !== reference.version) throw new Error(`${lockPath}: root lockfile ${name} pin differs from ${reference.version}`);
+    }
+    if (locked.get(name) !== reference.version) {
+      throw new Error(`${lockPath}: root lockfile ${name} pin differs from ${reference.version}`);
+    }
     const key = `node_modules/${name}`;
     const installed = decodeValue(installedSchema, installedPackages.get(key), lockPath, `validate ${key}`);
-    if (installed.version !== reference.version) throw new Error(`${lockPath}: ${key} version differs from ${reference.version}`);
+    if (installed.version !== reference.version) {
+      throw new Error(`${lockPath}: ${key} version differs from ${reference.version}`);
+    }
   }
   return reference;
 };

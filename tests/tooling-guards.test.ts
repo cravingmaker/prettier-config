@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { Effect } from "effect";
 import { ESLint } from "eslint";
 import ts from "typescript";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { runCommand } from "./helpers/node-command.js";
 
@@ -23,11 +23,19 @@ const parseProject = (filename: string) => {
       },
     },
   );
-  if (!parsed) throw new Error(`Could not parse ${filename}`);
+  if (!parsed) {
+    throw new Error(`Could not parse ${filename}`);
+  }
   return parsed;
 };
 
+// eslint-disable-next-line max-lines-per-function -- This callback registers independent tooling regressions.
 describe("repository tooling guards", () => {
+  // Load the config and typed services once, outside each regression's assertion budget.
+  beforeAll(async () => {
+    await eslint.lintFiles(["tests/tooling-guards.test.ts"]);
+  }, 60_000);
+
   it("rejects focused tests through the ordinary local Vitest configuration", async () => {
     const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-focused-test-"));
     try {
@@ -41,7 +49,9 @@ describe("repository tooling guards", () => {
       );
       const commandEnvironment = Object.fromEntries(
         // eslint-disable-next-line n/no-process-env -- Prove local behavior with CI unset, preserving the command's normal environment.
-        Object.entries(process.env).filter(([name]) => name !== "CI"),
+        Object.entries(process.env).filter(([name]) => {
+          return name !== "CI";
+        }),
       );
       const error = await Effect.runPromise(
         runCommand({
@@ -54,7 +64,7 @@ describe("repository tooling guards", () => {
         }).pipe(Effect.flip),
       );
       expect(error).toMatchObject({ exitCode: 1, _tag: "CommandFailure" });
-      expect(error._tag === "CommandFailure" ? `${error.stdout ?? ""}\n${error.stderr ?? ""}` : undefined).toContain("Unexpected .only modifier");
+      expect(error._tag === "CommandFailure" ? `${error.stdout ?? ""}\n${error.stderr ?? ""}` : "").toContain("Unexpected .only modifier");
     } finally {
       await fs.rm(workspace, { force: true, recursive: true });
     }
@@ -74,9 +84,9 @@ describe("repository tooling guards", () => {
         filePath: "tests/tooling-guards.test.ts",
       });
       expect(
-        result?.messages.filter(
-          (message) => message.ruleId === "local/test-modes" || (message.ruleId?.startsWith("vitest/") ?? false) || message.ruleId === null,
-        ),
+        result?.messages.filter((message) => {
+          return message.ruleId === "local/test-modes" || (message.ruleId?.startsWith("vitest/") ?? false) || message.ruleId === null;
+        }),
       ).toEqual([]);
     },
     15_000,
@@ -218,14 +228,22 @@ describe("repository tooling guards", () => {
     const [result] = await eslint.lintText(source, {
       filePath: "tests/helpers/package-smoke.ts",
     });
-    expect(result?.messages.filter((message) => message.ruleId === "local/effect-stability")).toEqual([]);
+    expect(
+      result?.messages.filter((message) => {
+        return message.ruleId === "local/effect-stability";
+      }),
+    ).toEqual([]);
   });
 
   it("excludes raw fixtures and reference checkouts from tooling", async () => {
     expect(await eslint.isPathIgnored("repos/effect/example.ts")).toBe(true);
     expect(await eslint.isPathIgnored("tests/fixtures/example.js")).toBe(true);
     const parsed = parseProject(path.join(directory, "tsconfig.json"));
-    expect(parsed.fileNames.some((filename) => filename.includes("/repos/") || filename.includes("/tests/fixtures/"))).toBe(false);
+    expect(
+      parsed.fileNames.some((filename) => {
+        return filename.includes("/repos/") || filename.includes("/tests/fixtures/");
+      }),
+    ).toBe(false);
   });
 
   it("rejects an unobserved Effect through the configured language service", async () => {
@@ -250,7 +268,7 @@ describe("repository tooling guards", () => {
         }).pipe(Effect.flip),
       );
       expect(error).toMatchObject({ exitCode: 1, _tag: "CommandFailure" });
-      expect(error._tag === "CommandFailure" ? error.stdout : undefined).toContain("floatingEffect");
+      expect(error._tag === "CommandFailure" ? error.stdout : "").toContain("floatingEffect");
     } finally {
       await fs.rm(workspace, { force: true, recursive: true });
     }
@@ -263,11 +281,34 @@ describe("repository tooling guards", () => {
         'import fs from "node:fs/promises";\nfs.readFile("package.json");\nconst manifest = JSON.parse("{}");\nmanifest.version();\n',
         { filePath },
       );
-      const identifiers = results.flatMap((result) => result.messages.map((message) => message.ruleId));
+      const identifiers = results.flatMap((result) => {
+        return result.messages.map((message) => {
+          return message.ruleId;
+        });
+      });
       expect(identifiers).toContain("@typescript-eslint/no-floating-promises");
       expect(identifiers).toContain("@typescript-eslint/no-unsafe-member-access");
       expect(identifiers).toContain("@typescript-eslint/no-unsafe-call");
     },
+  );
+
+  it.each([
+    { filePath: "index.mjs", module: "buffer" },
+    { filePath: "index.mjs", module: "node:buffer" },
+    { filePath: "tests/helpers/node-command.ts", module: "buffer" },
+    { filePath: "tests/helpers/node-command.ts", module: "node:buffer" },
+  ])(
+    "keeps the shared Buffer import restriction in $filePath for $module",
+    async ({ filePath, module }) => {
+      const [result] = await eslint.lintText(`import { Buffer as NativeBytes } from "${module}"; void NativeBytes;`, { filePath });
+      const restrictions =
+        result?.messages.filter((message) => {
+          return message.ruleId === "no-restricted-imports";
+        }) ?? [];
+      expect(restrictions).toHaveLength(1);
+      expect(restrictions[0]?.message).toContain("Use Uint8Array instead.");
+    },
+    30_000,
   );
 
   it("includes newly added scripts in typechecking", async () => {
@@ -295,12 +336,19 @@ describe("repository tooling guards", () => {
     const host = ts.createCompilerHost(options);
     const program = ts.createProgram([filename], options, {
       ...host,
-      getSourceFile: (requested, languageVersion, onError, shouldCreateNewSourceFile) =>
-        requested === filename
+      getSourceFile: (requested, languageVersion, onError, shouldCreateNewSourceFile) => {
+        return requested === filename
           ? ts.createSourceFile(requested, source.replace("  plugins,\n", ""), languageVersion, true, ts.ScriptKind.JS)
-          : host.getSourceFile(requested, languageVersion, onError, shouldCreateNewSourceFile),
+          : host.getSourceFile(requested, languageVersion, onError, shouldCreateNewSourceFile);
+      },
     });
-    const diagnostics = ts.getPreEmitDiagnostics(program).filter((diagnostic) => diagnostic.file?.fileName === filename);
-    expect(diagnostics.some((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n").includes("plugins"))).toBe(true);
+    const diagnostics = ts.getPreEmitDiagnostics(program).filter((diagnostic) => {
+      return diagnostic.file?.fileName === filename;
+    });
+    expect(
+      diagnostics.some((diagnostic) => {
+        return ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n").includes("plugins");
+      }),
+    ).toBe(true);
   });
 });

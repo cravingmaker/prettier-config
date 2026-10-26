@@ -82,7 +82,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
-    "@cravingmaker/eslint-config": "0.1.0",
+    "@cravingmaker/eslint-config": "0.2.0",
     "@effect/language-service": "0.87.4",
     "@effect/platform-node-shared": "4.0.5",
     "@effect/vitest": "4.0.5",
@@ -114,6 +114,9 @@
     "prettier-plugin-tailwindcss": ">=0.8.1 <1"
   },
   "peerDependenciesMeta": {
+    "prettier": {
+      "optional": false
+    },
     "prettier-plugin-astro": {
       "optional": true
     },
