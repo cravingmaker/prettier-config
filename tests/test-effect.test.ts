@@ -20,7 +20,9 @@ describe("stable Effect integration with Vitest", () => {
     const pending = runEffect(
       { onTestFinished, signal: controller.signal },
       Effect.gen(function* () {
-        yield* Effect.acquireRelease(Deferred.succeed(acquired, true), () => release);
+        yield* Effect.acquireRelease(Deferred.succeed(acquired, true), () => {
+          return release;
+        });
         return yield* Effect.never;
       }),
     );
@@ -42,7 +44,9 @@ describe("stable Effect integration with Vitest", () => {
   });
 
   it("shares one workspace between runtimes and removes it after the last release", async () => {
-    const pack = vi.fn((workspace: string) => nodeFileSystem.writeFileString(`${workspace}/package.tgz`, "archive").pipe(Effect.orDie));
+    const pack = vi.fn((workspace: string) => {
+      return nodeFileSystem.writeFileString(`${workspace}/package.tgz`, "archive").pipe(Effect.orDie);
+    });
     const layer = Layer.effect(PackageSmoke, createPackageSmoke(pack));
     const parent = ManagedRuntime.make(layer);
     const child = ManagedRuntime.make(layer, { memoMap: parent.memoMap });

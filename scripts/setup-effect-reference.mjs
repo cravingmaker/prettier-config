@@ -27,14 +27,15 @@ const inspect = async (filename) => {
 };
 
 /** @param {readonly string[]} arguments_ @param {string} directory */
-const git = async (arguments_, directory) =>
-  execute("git", arguments_, {
+const git = async (arguments_, directory) => {
+  return execute("git", arguments_, {
     cwd: directory,
     encoding: "utf8",
     env: await foreignGitEnvironment(),
     maxBuffer: 1024 * 1024,
     timeout: 60_000,
   });
+};
 
 /** @param {string} directory @param {Awaited<ReturnType<typeof checkEffectReference>>} reference */
 const verify = async (directory, reference) => {

@@ -7,35 +7,25 @@
  * the exact shape of the mocked module's API. Adding dummy parameters solely to satisfy the rule
  * would misrepresent those APIs.
  *
- * functional/no-conditional-statements — disabled because tests intentionally use explicit
- * control flow for assertions, mocks, and failure paths.
+ * functional/no-conditional-statements — disabled because tests intentionally use explicit control flow for assertions, mocks, and failure paths.
  *
  * functional/no-expression-statements and functional/no-return-void — disabled because Vitest
  * APIs such as describe(), it(), expect(), and vi.* register behavior through side effects and
  * void-returning callbacks.
  *
- * functional/no-throw-statements — disabled because mocks and test guards intentionally throw to
- * reproduce Node resolution failures and fail fast on invalid test state.
+ * functional/no-throw-statements — disabled because mocks and test guards intentionally throw to reproduce Node resolution failures and fail fast on invalid test state.
  *
- * tests/format.test.ts, tests/helpers/package-smoke.ts, the source setup script,
- * and tests/consumers/*.mjs
+ * tests/format.test.ts, tests/helpers/package-smoke.ts, the source setup script, and tests/consumers/*.mjs
  *
- * security/detect-non-literal-fs-filename — disabled because these tests intentionally construct
- * filesystem paths from controlled fixture names and temporary directories. The paths are dynamic
- * by design but are not derived from untrusted input.
+ * security/detect-non-literal-fs-filename — disabled because these tests intentionally construct filesystem paths from controlled fixture names and temporary directories. The paths are dynamic by design but are not derived from untrusted input.
  *
  * Native asynchronous setup, Dependabot synchronization, and consumer programs
  *
- * functional/no-promise-reject — disabled for native async programs that reject
- * when setup or consumer invariants fail.
+ * functional/no-promise-reject — disabled for native async programs that reject when setup or consumer invariants fail.
  *
  * Effect harness and tests
  *
- * Effect services and schema errors use class-based factory APIs. Their Effect
- * parameters carry runtime internals, while service types combine
- * immutable data and operations. The harness overrides only the conflicting
- * functional rules. unicorn/throw-new-error mistakes Schema.TaggedError's
- * curried class factory for an Error constructor.
+ * Effect services and schema errors use class-based factory APIs. Their Effect parameters carry runtime internals, while service types combine immutable data and operations. The harness overrides only the conflicting functional rules. unicorn/throw-new-error mistakes Schema.TaggedError's curried class factory for an Error constructor.
  */
 
 import { createConfig } from "@cravingmaker/eslint-config";
@@ -47,7 +37,13 @@ import { testModes } from "./scripts/eslint-rules/test-modes.mjs";
 
 const baseConfig = await createConfig({
   ignores: ["tests/fixtures/**/*", "repos/**"],
-  tsTypeChecked: true,
+  packageJson: {
+    // Preserve the published package's existing export paths.
+    overrides: { "package-json/require-package-json-export": "off" },
+  },
+  // Svelte is installed for Prettier fixtures, which ESLint does not lint.
+  svelte: false,
+  typescript: { typeChecked: true },
 });
 
 const config = [
@@ -127,6 +123,8 @@ const config = [
         "error",
         {
           paths: [
+            { message: "Use Uint8Array instead.", name: "buffer" },
+            { message: "Use Uint8Array instead.", name: "node:buffer" },
             {
               importNames: ["NodeChildProcessSpawner"],
               message: "Use the native Node command adapter; Effect's process API is unstable.",
@@ -174,6 +172,15 @@ const config = [
       "functional/no-expression-statements": "off",
       "functional/no-return-void": "off",
       "functional/no-throw-statements": "off",
+    },
+  },
+  {
+    // Effect owns generator tracing; suites, Effects, and spies add one callback level.
+    files: ["tests/**/*.ts"],
+    name: "@cravingmaker/prettier-config/effect-test-callbacks",
+    rules: {
+      "func-names": ["error", "always", { generators: "never" }],
+      "max-nested-callbacks": ["warn", { max: 4 }],
     },
   },
   {
@@ -255,5 +262,4 @@ const config = [
   },
 ];
 
-// eslint-disable-next-line import-x/no-default-export -- ESLint configuration requires a default export
 export default config;

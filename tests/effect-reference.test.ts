@@ -15,16 +15,22 @@ import { foreignGitEnvironment } from "../scripts/git-environment.mjs";
 const directory = fileURLToPath(new URL("..", import.meta.url));
 const environment = await foreignGitEnvironment();
 const names = ["effect", "@effect/platform-node-shared", "@effect/vitest"] as const;
-const dependencies = Object.fromEntries(names.map((name) => [name, reference.version]));
+const dependencies = Object.fromEntries(
+  names.map((name) => {
+    return [name, reference.version];
+  }),
+);
 const lockfile = {
   lockfileVersion: 3,
   packages: Object.fromEntries<unknown>([
     ["", { devDependencies: dependencies }],
-    ...names.map((name) => [`node_modules/${name}`, { version: reference.version }] as const),
+    ...names.map((name) => {
+      return [`node_modules/${name}`, { version: reference.version }] as const;
+    }),
   ]),
 };
-const run = (root: string, arguments_: readonly string[], executable = process.execPath, environment_ = environment) =>
-  runCommand({
+const run = (root: string, arguments_: readonly string[], executable = process.execPath, environment_ = environment) => {
+  return runCommand({
     args: arguments_,
     cwd: root,
     env: environment_,
@@ -32,9 +38,12 @@ const run = (root: string, arguments_: readonly string[], executable = process.e
     phase: "reference fixture",
     timeoutMs: 30_000,
   });
+};
+
 const writeJson = async (root: string, filename: string, value: unknown) => {
   await fs.writeFile(path.join(root, filename), JSON.stringify(value));
 };
+
 const withProject = async (check: (root: string) => Promise<void>) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-reference-"));
   try {
@@ -45,10 +54,12 @@ const withProject = async (check: (root: string) => Promise<void>) => {
     await writeJson(root, "package.json", {
       devDependencies: dependencies,
       scripts: Object.fromEntries(
-        Object.entries(packageJson.scripts).map(([name, command]) => [
-          name,
-          ["effect:check-reference", "prepublishOnly", "validate", "validate:behavior", "validate:static"].includes(name) ? command : 'node -e ""',
-        ]),
+        Object.entries(packageJson.scripts).map(([name, command]) => {
+          return [
+            name,
+            ["effect:check-reference", "prepublishOnly", "validate", "validate:behavior", "validate:static"].includes(name) ? command : 'node -e ""',
+          ];
+        }),
       ),
       type: "module",
     });
@@ -58,10 +69,11 @@ const withProject = async (check: (root: string) => Promise<void>) => {
     await fs.rm(root, { force: true, recursive: true });
   }
 };
+
 const checkFailure = async (root: string, arguments_: readonly string[], message: string, executable?: string) => {
   const error = await Effect.runPromise(run(root, arguments_, executable).pipe(Effect.flip));
   expect(error).toMatchObject({ exitCode: 1, _tag: "CommandFailure" });
-  expect(error._tag === "CommandFailure" ? error.stderr : undefined).toContain(message);
+  expect(error._tag === "CommandFailure" ? error.stderr : "").toContain(message);
 };
 
 const defaultManifest = { name: "effect", version: reference.version };
@@ -107,6 +119,7 @@ const makeRepository = async (root: string, effectManifest: unknown = defaultMan
   return repository;
 };
 
+// eslint-disable-next-line max-lines-per-function -- This callback registers independent metadata cases.
 describe("Effect reference metadata", () => {
   it("checks consistent metadata offline without creating repos/", async () => {
     await withProject(async (root) => {
@@ -182,6 +195,7 @@ describe("Effect reference metadata", () => {
   });
 });
 
+// eslint-disable-next-line max-lines-per-function -- This callback registers independent source-checkout cases.
 describe("Effect reference setup in disposable repositories", () => {
   it("ignores an inherited hook's repository and index variables", async () => {
     await withProject(async (root) => {
@@ -275,7 +289,9 @@ describe("Effect reference setup in disposable repositories", () => {
       const target = path.join(root, "user-directory");
       await fs.mkdir(target);
       await fs.writeFile(path.join(target, "marker"), "keep");
-      if (location === "repos/effect") await fs.mkdir(path.join(root, "repos"));
+      if (location === "repos/effect") {
+        await fs.mkdir(path.join(root, "repos"));
+      }
       await fs.symlink(target, path.join(root, location), "junction");
       await checkFailure(root, ["scripts/setup-effect-reference.mjs"], location === "repos" ? "Expected a real directory" : "Unexpected content");
       expect(await fs.readFile(path.join(target, "marker"), "utf8")).toBe("keep");

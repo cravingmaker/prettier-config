@@ -26,7 +26,9 @@ const decodeValue = (schema, value, filename, phase) => {
  * @param {string} filename
  * @param {string} phase
  */
-const decodeJson = (schema, contents, filename, phase) => decodeValue(Schema.fromJsonString(schema), contents, filename, phase);
+const decodeJson = (schema, contents, filename, phase) => {
+  return decodeValue(Schema.fromJsonString(schema), contents, filename, phase);
+};
 
 const packageManifestSchema = Schema.Struct({
   name: Schema.String,

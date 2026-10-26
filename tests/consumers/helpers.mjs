@@ -46,7 +46,12 @@ const format = async (filename, source, parser) => {
 const verifyPluginPaths = async () => {
   const modules = await fs.realpath(path.join(consumerDirectory, "node_modules"));
   const require = createRequire(path.join(consumerDirectory, "package.json"));
-  const pluginPaths = [require.resolve("@prettier/plugin-oxc"), ...config.plugins.filter((plugin) => typeof plugin === "string")];
+  const pluginPaths = [
+    require.resolve("@prettier/plugin-oxc"),
+    ...config.plugins.filter((plugin) => {
+      return typeof plugin === "string";
+    }),
+  ];
   await Promise.all(
     pluginPaths.map(async (plugin) => {
       const pluginPath = await fs.realpath(plugin);

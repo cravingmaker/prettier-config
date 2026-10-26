@@ -30,18 +30,18 @@ class SmokeFileSystemError extends Schema.TaggedError<SmokeFileSystemError>()("S
   phase: Schema.String,
 }) {}
 
-const withFileContext = <A, E>(phase: string, filename: string, operation: Effect.Effect<A, E>) =>
-  operation.pipe(
-    Effect.mapError(
-      (cause) =>
-        new SmokeFileSystemError({
-          cause,
-          message: `${phase}: filesystem operation failed at ${filename}`,
-          path: filename,
-          phase,
-        }),
-    ),
+const withFileContext = <A, E>(phase: string, filename: string, operation: Effect.Effect<A, E>) => {
+  return operation.pipe(
+    Effect.mapError((cause) => {
+      return new SmokeFileSystemError({
+        cause,
+        message: `${phase}: filesystem operation failed at ${filename}`,
+        path: filename,
+        phase,
+      });
+    }),
   );
+};
 
 type SmokeHarness = {
   readonly checkInstalledPackageSymlink: (consumer: string) => Effect.Effect<boolean, SmokeFileSystemError>;
@@ -59,15 +59,19 @@ type SmokeHarness = {
 
 class PackageSmoke extends Context.Service<PackageSmoke, SmokeHarness>()("prettier-config/tests/PackageSmoke") {}
 
+// eslint-disable-next-line max-lines-per-function -- Acquisition, operations, and finalization share one scoped workspace.
 const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (pack?: (workspace: string) => Effect.Effect<void, SmokeError>) {
   const fs = nodeFileSystem;
   const scope = yield* Scope.fork(yield* Effect.scope);
   const run = runCommand;
 
+  // eslint-disable-next-line max-lines-per-function -- Keep all consumer operations inside the workspace scope and its acquisition error handler.
   return yield* Effect.gen(function* () {
     const workspace = yield* Effect.acquireRelease(
       withFileContext("allocate workspace", "temporary directory", fs.makeTempDirectory({ prefix: "prettier-config-package-" })),
-      (directory) => withFileContext("remove workspace", directory, fs.remove(directory, { force: true, recursive: true })).pipe(Effect.orDie),
+      (directory) => {
+        return withFileContext("remove workspace", directory, fs.remove(directory, { force: true, recursive: true })).pipe(Effect.orDie);
+      },
     );
     yield* pack
       ? pack(workspace)
@@ -79,9 +83,11 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (pack?: (
           timeoutMs: 30_000,
         });
     const files = yield* withFileContext("find tarball", workspace, fs.readDirectory(workspace));
-    const tarballs = files.filter((filename) => filename.endsWith(".tgz"));
+    const tarballs = files.filter((filename) => {
+      return filename.endsWith(".tgz");
+    });
     const [filename] = tarballs;
-    if (tarballs.length !== 1 || filename === undefined) {
+    if (tarballs.length !== 1 || typeof filename === "undefined") {
       return yield* new InvalidTarballCount({
         count: tarballs.length,
         message: `Expected exactly one packed tarball, found ${String(tarballs.length)} in ${workspace}`,
@@ -89,8 +95,8 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (pack?: (
       });
     }
     const tarball = path.join(workspace, filename);
-    const manifest = (consumer: string, name = path.basename(consumer)) =>
-      withFileContext(
+    const manifest = (consumer: string, name = path.basename(consumer)) => {
+      return withFileContext(
         "write consumer manifest",
         consumer,
         fs.writeFileString(
@@ -103,6 +109,8 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (pack?: (
           }),
         ),
       );
+    };
+
     const copyFixtures = Effect.fn("packageSmoke.copyFixtures")(function* (
       consumer: string,
       source: readonly string[],
@@ -110,12 +118,13 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (pack?: (
     ) {
       yield* Effect.forEach(
         filenames,
-        (file) =>
-          withFileContext(
+        (file) => {
+          return withFileContext(
             "copy fixture",
             path.join(consumer, file),
             fs.copyFile(path.join(projectDirectory, ...source, file), path.join(consumer, file)),
-          ),
+          );
+        },
         { concurrency: "unbounded", discard: true },
       );
     });
@@ -150,21 +159,30 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (pack?: (
         timeoutMs: 30_000,
       });
     });
-    const checkInstalledPackageSymlink = (consumer: string) =>
-      withFileContext(
+    const checkInstalledPackageSymlink = (consumer: string) => {
+      return withFileContext(
         "inspect installed package",
         consumer,
         Effect.tryPromise({
-          catch: (cause) =>
-            new SmokeFileSystemError({
+          catch: (cause) => {
+            return new SmokeFileSystemError({
               cause,
               message: `Could not inspect installed package at ${consumer}`,
               path: consumer,
               phase: "inspect installed package",
-            }),
-          try: async () => await nativeFs.lstat(path.join(consumer, "node_modules", packageJson.name)),
-        }).pipe(Effect.map((stat) => stat.isSymbolicLink())),
+            });
+          },
+          try: async () => {
+            return await nativeFs.lstat(path.join(consumer, "node_modules", packageJson.name));
+          },
+        }).pipe(
+          Effect.map((stat) => {
+            return stat.isSymbolicLink();
+          }),
+        ),
       );
+    };
+
     return PackageSmoke.of({
       checkInstalledPackageSymlink,
       copyFixtures,
@@ -176,7 +194,9 @@ const createPackageSmoke = Effect.fn("packageSmoke.acquire")(function* (pack?: (
     });
   }).pipe(
     Scope.provide(scope),
-    Effect.onExit((exit) => (Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void)),
+    Effect.onExit((exit) => {
+      return Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void;
+    }),
   );
 });
 

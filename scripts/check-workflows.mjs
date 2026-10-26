@@ -16,7 +16,9 @@ try {
   process.stdout.write(stdout);
   process.stderr.write(stderr);
 } catch (error) {
-  if (error instanceof Error && "stdout" in error && typeof error.stdout === "string") process.stdout.write(error.stdout);
+  if (error instanceof Error && "stdout" in error && typeof error.stdout === "string") {
+    process.stdout.write(error.stdout);
+  }
   process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
   process.exitCode = 1;
 }

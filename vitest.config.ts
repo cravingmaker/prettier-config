@@ -1,6 +1,5 @@
 import { configDefaults, defineConfig } from "vitest/config";
 
-// eslint-disable-next-line import-x/no-default-export -- Vitest loads its project configuration through the default export
 export default defineConfig({
   test: {
     // Focused tests fail locally as well as in CI, so a pre-push run cannot skip the suite.
@@ -19,20 +18,28 @@ export default defineConfig({
     // outside Vitest's import graph. Keep their affected tests in watch mode.
     watchTriggerPatterns: [
       {
-        pattern: /(?:^|\/)index\.mjs$/,
-        testsToRun: (_filename) => ["tests/config.test.ts", "tests/format.test.ts", "tests/package.smoke.test.ts", "tests/tooling-guards.test.ts"],
+        pattern: /(?:^|\/)index\.mjs$/u,
+        testsToRun: (_filename) => {
+          return ["tests/config.test.ts", "tests/format.test.ts", "tests/package.smoke.test.ts", "tests/tooling-guards.test.ts"];
+        },
       },
       {
-        pattern: /(?:^|\/)index\.d\.ts$/,
-        testsToRun: (_filename) => ["tests/package.smoke.test.ts", "tests/tooling-guards.test.ts"],
+        pattern: /(?:^|\/)index\.d\.ts$/u,
+        testsToRun: (_filename) => {
+          return ["tests/package.smoke.test.ts", "tests/tooling-guards.test.ts"];
+        },
       },
       {
-        pattern: /(?:^|\/)tests\/fixtures\//,
-        testsToRun: (_filename) => ["tests/format.test.ts", "tests/package.smoke.test.ts"],
+        pattern: /(?:^|\/)tests\/fixtures\//u,
+        testsToRun: (_filename) => {
+          return ["tests/format.test.ts", "tests/package.smoke.test.ts"];
+        },
       },
       {
-        pattern: /(?:^|\/)tests\/consumers\//,
-        testsToRun: (_filename) => "tests/package.smoke.test.ts",
+        pattern: /(?:^|\/)tests\/consumers\//u,
+        testsToRun: (_filename) => {
+          return "tests/package.smoke.test.ts";
+        },
       },
     ],
   },

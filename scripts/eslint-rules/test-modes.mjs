@@ -3,35 +3,66 @@ import { ESLintUtils } from "@typescript-eslint/utils";
 
 /** @type {import('@typescript-eslint/utils').TSESLint.RuleModule<'disabled' | 'focused', []>} */
 const testModes = {
+  // eslint-disable-next-line max-lines-per-function -- Test API recognition and diagnostics share the file's typed parser services.
   create(context) {
     const services = ESLintUtils.getParserServices(context);
     const checker = services.program.getTypeChecker();
     /** @param {ts.Expression} expression @returns {boolean} */
     const isTestApi = (expression) => {
       const type = checker.getTypeAtLocation(expression);
-      const isKnownTestApi = ["only", "skip", "each"].every((name) =>
-        type
+      const isKnownTestApi = ["only", "skip", "each"].every((name) => {
+        return type
           .getProperty(name)
           ?.getDeclarations()
-          ?.some((declaration) =>
-            /\/node_modules\/(?:@effect\/vitest\/|vitest\/|@vitest\/runner\/)/.test(declaration.getSourceFile().fileName.replaceAll("\\", "/")),
-          ),
-      );
-      return (
-        isKnownTestApi ||
-        ((ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression) || ts.isCallExpression(expression)) &&
-          isTestApi(expression.expression))
-      );
+          ?.some((declaration) => {
+            return /\/node_modules\/(?:@effect\/vitest\/|vitest\/|@vitest\/runner\/)/u.test(
+              declaration.getSourceFile().fileName.replaceAll("\\", "/"),
+            );
+          });
+      });
+      const hasTarget = ts.isPropertyAccessExpression(expression) || ts.isElementAccessExpression(expression) || ts.isCallExpression(expression);
+      return isKnownTestApi || (hasTarget && isTestApi(expression.expression));
     };
+
     /** @param {ts.Node} node @param {string} name */
     const report = (node, name) => {
       const mapped = services.tsNodeToESTreeNodeMap.get(node);
-      if (mapped)
+      if (mapped) {
         context.report({
           loc: mapped.loc,
           messageId: name === "only" ? "focused" : "disabled",
         });
+      }
     };
+
+    /** @param {ts.ObjectLiteralElementLike} option */
+    const checkOption = (option) => {
+      if (!ts.isPropertyAssignment(option) || option.initializer.kind === ts.SyntaxKind.FalseKeyword) {
+        return;
+      }
+      const key = option.name;
+      if ((ts.isIdentifier(key) || ts.isStringLiteralLike(key)) && ["only", "skip", "todo"].includes(key.text)) {
+        report(key, key.text);
+      }
+    };
+
+    /** @param {ts.CallExpression} node */
+    const checkOptions = (node) => {
+      if (!isTestApi(node.expression)) {
+        return;
+      }
+      // eslint-disable-next-line functional/no-loop-statements -- Visit test arguments for diagnostics without creating unused intermediate arrays.
+      for (const argument of node.arguments) {
+        if (!ts.isObjectLiteralExpression(argument)) {
+          continue;
+        }
+        // eslint-disable-next-line functional/no-loop-statements -- Check each option in source order, reporting every accidental mode.
+        for (const option of argument.properties) {
+          checkOption(option);
+        }
+      }
+    };
+
     /** @param {ts.Node} node */
     const visit = (node) => {
       if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)) {
@@ -40,23 +71,16 @@ const testModes = {
           (ts.isIdentifier(key) || ts.isStringLiteralLike(key)) &&
           ["only", "runIf", "skip", "skipIf", "todo"].includes(key.text) &&
           isTestApi(node.expression)
-        )
+        ) {
           report(key, key.text);
+        }
       }
-      if (ts.isCallExpression(node) && isTestApi(node.expression)) {
-        node.arguments
-          .filter((argument) => ts.isObjectLiteralExpression(argument))
-          .flatMap((argument) => argument.properties)
-          .filter((property) => ts.isPropertyAssignment(property))
-          .filter((property) => property.initializer.kind !== ts.SyntaxKind.FalseKeyword)
-          .map((property) => {
-            const key = property.name;
-            if ((ts.isIdentifier(key) || ts.isStringLiteralLike(key)) && ["only", "skip", "todo"].includes(key.text)) report(key, key.text);
-            return property;
-          });
+      if (ts.isCallExpression(node)) {
+        checkOptions(node);
       }
       ts.forEachChild(node, visit);
     };
+
     return {
       Program(ast) {
         visit(services.esTreeNodeToTSNodeMap.get(ast));

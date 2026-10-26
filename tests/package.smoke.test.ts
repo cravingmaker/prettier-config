@@ -31,6 +31,7 @@ const optionalConsumerLayer = Layer.effect(
   }),
 );
 
+// eslint-disable-next-line max-lines-per-function -- The suite registers consumers under one shared installation lifetime.
 describe(`Published Package (${peerScenario.name} peers, Prettier ${peerScenario.prettier})`, () => {
   const runtime = ManagedRuntime.make(packageSmokeLayer);
   beforeAll(async () => {

@@ -1,10 +1,13 @@
 import packageJson from "../../package.json" with { type: "json" };
 
 const minimumVersion = (range: string) => {
-  const version = /^>=(?<version>\d+\.\d+\.\d+)(?:\s|$)/.exec(range)?.groups?.version;
-  if (version === undefined) throw new Error(`Declare an explicit minimum peer version: ${range}`);
+  const version = /^>=(?<version>\d+\.\d+\.\d+)(?:\s|$)/u.exec(range)?.groups?.version;
+  if (typeof version === "undefined") {
+    throw new Error(`Declare an explicit minimum peer version: ${range}`);
+  }
   return version;
 };
+
 const currentPeers = {
   astro: packageJson.devDependencies["prettier-plugin-astro"],
   prettier: packageJson.devDependencies.prettier,
@@ -19,7 +22,9 @@ const minimumPeers = {
 };
 // eslint-disable-next-line n/no-process-env -- Select one declared compatibility scenario per suite/CI job.
 const scenarioName = process.env.PRETTIER_CONFIG_PEER_SCENARIO ?? "current";
-if (scenarioName !== "current" && scenarioName !== "minimum") throw new Error(`Unknown peer scenario: ${scenarioName}`);
+if (scenarioName !== "current" && scenarioName !== "minimum") {
+  throw new Error(`Unknown peer scenario: ${scenarioName}`);
+}
 const peers = scenarioName === "minimum" ? minimumPeers : currentPeers;
 const peerScenario = {
   name: scenarioName,
