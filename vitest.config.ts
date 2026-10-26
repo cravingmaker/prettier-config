@@ -9,6 +9,8 @@ export default defineConfig({
     // A test that asserts nothing would pass vacuously.
     expect: { requireAssertions: true },
     include: ["tests/**/*.test.ts"],
+    // Typed ESLint services and compiler subprocesses compete for memory when suites overlap.
+    maxWorkers: 1,
     // With `unstubEnvs` and `unstubGlobals`, each test starts with the real implementations,
     // environment variables, and globals. Vitest already clears the calls that mocks recorded.
     restoreMocks: true,

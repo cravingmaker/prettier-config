@@ -119,8 +119,9 @@ const makeRepository = async (root: string, effectManifest: unknown = defaultMan
   return repository;
 };
 
+// Reference cases allow their native commands' 30-second deadline and awaited cleanup.
 // eslint-disable-next-line max-lines-per-function -- This callback registers independent metadata cases.
-describe("Effect reference metadata", () => {
+describe("Effect reference metadata", { timeout: 40_000 }, () => {
   it("checks consistent metadata offline without creating repos/", async () => {
     await withProject(async (root) => {
       expect(await Effect.runPromise(run(root, ["scripts/check-effect-reference.mjs"]))).toContain(
@@ -196,7 +197,7 @@ describe("Effect reference metadata", () => {
 });
 
 // eslint-disable-next-line max-lines-per-function -- This callback registers independent source-checkout cases.
-describe("Effect reference setup in disposable repositories", () => {
+describe("Effect reference setup in disposable repositories", { timeout: 40_000 }, () => {
   it("ignores an inherited hook's repository and index variables", async () => {
     await withProject(async (root) => {
       const repository = await makeRepository(root);

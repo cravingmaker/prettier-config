@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { Effect } from "effect";
 import { ESLint } from "eslint";
 import ts from "typescript";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import { runCommand } from "./helpers/node-command.js";
 
@@ -31,6 +31,11 @@ const parseProject = (filename: string) => {
 
 // eslint-disable-next-line max-lines-per-function -- This callback registers independent tooling regressions.
 describe("repository tooling guards", () => {
+  // Load the config and typed services once, outside each regression's assertion budget.
+  beforeAll(async () => {
+    await eslint.lintFiles(["tests/tooling-guards.test.ts"]);
+  }, 60_000);
+
   it("rejects focused tests through the ordinary local Vitest configuration", async () => {
     const workspace = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-focused-test-"));
     try {
