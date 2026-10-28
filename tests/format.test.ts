@@ -11,6 +11,9 @@ const runtimeConfig = path.resolve(__dirname, "..", "index.mjs");
 const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-config-format-"));
 const configPath = path.join(temporaryDirectory, "prettier.config.mjs");
 
+// The files that keep each paragraph on one line.
+const markdownExtensions = new Set([".markdown", ".md", ".mdx"]);
+
 const prepareFixture = async (filename: string, fixtureFilename = filename) => {
   const sourcePath = path.join(fixturesDirectory, fixtureFilename);
   const filePath = path.join(temporaryDirectory, filename);
@@ -35,6 +38,7 @@ const testFixture = async (filename: string) => {
 
   const options = { ...resolvedConfig, filepath: filePath };
   const formatted = await prettier.format(content, options);
+  const isMarkdown = markdownExtensions.has(path.extname(filePath));
 
   expect(formatted).toBe(
     await prettier.format(content, {
@@ -44,6 +48,7 @@ const testFixture = async (filename: string) => {
       }),
       plugins: resolvedConfig?.plugins ?? [],
       printWidth: 150,
+      ...(isMarkdown && { proseWrap: "never" as const }),
       singleAttributePerLine: true,
     }),
   );
@@ -277,6 +282,21 @@ describe("Format Integration", () => {
     const formatted = await testFixture(filename);
 
     expect(formatted).toContain('const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };');
+  });
+
+  it.each(["prose.md", "prose.mdx"])("keeps each paragraph, list item, and quotation of %s on one line", async (filename) => {
+    const formatted = await testFixture(filename);
+
+    expect(formatted).toContain("\nA paragraph that was wrapped by hand across three lines.\n");
+    expect(formatted).toContain("\n- A list item that continues on a second line.\n");
+    expect(formatted).toContain("\n> A quotation that continues on a second line.\n");
+    // A GitHub alert needs its marker on a line of its own, which the empty quoted line keeps.
+    expect(formatted).toContain("\n> [!NOTE]\n>\n> An alert keeps its marker on a line of its own.\n");
+    expect(formatted).toContain("\nA hard line break\\\nstays.\n");
+  });
+
+  it("keeps the line breaks of a multi-line YAML value", async () => {
+    await expect(testFixture("multiline.yml")).resolves.toBe("condition: first == 'one' &&\n  second == 'two'\n");
   });
 
   it.each(["quotes.yaml", "quotes.yml"])("uses double quotes for quoted YAML values in %s", async (filename) => {

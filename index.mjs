@@ -63,6 +63,11 @@ const config = {
       files: ["**/*.{js,cjs,mjs,jsx}"],
       options: { parser: "oxc" },
     },
+    {
+      // One line per paragraph, wrapped by the editor: GitHub renders a line break inside a paragraph as a break in issues, pull requests, comments, and releases. YAML keeps its line breaks.
+      files: ["**/*.{md,markdown,mdx}"],
+      options: { proseWrap: "never" },
+    },
   ],
   plugins,
   printWidth: 150,
