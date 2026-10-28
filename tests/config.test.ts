@@ -29,7 +29,10 @@ describe("Prettier Config", () => {
       config.overrides.map((override) => {
         return override.options;
       }),
-    ).toEqual([{ parser: "oxc-ts" }, { parser: "oxc" }]);
+    ).toEqual([{ parser: "oxc-ts" }, { parser: "oxc" }, { proseWrap: "never" }]);
+    // Markdown only: YAML would join the lines of a multi-line value, such as a long workflow condition.
+    expect(config.overrides.at(-1)?.files).toEqual(["**/*.{md,markdown,mdx}"]);
+    expect(config).not.toHaveProperty("proseWrap");
   });
 
   it.each([

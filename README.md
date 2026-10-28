@@ -1,13 +1,10 @@
 # @cravingmaker/prettier-config
 
-[![npm version](https://img.shields.io/npm/v/%40cravingmaker%2Fprettier-config)](https://www.npmjs.com/package/@cravingmaker/prettier-config)
-[![CI](https://github.com/cravingmaker/prettier-config/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/cravingmaker/prettier-config/actions/workflows/ci.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/cravingmaker/prettier-config/badge)](https://scorecard.dev/viewer/?uri=github.com/cravingmaker/prettier-config)
-[![License: MIT](https://img.shields.io/npm/l/%40cravingmaker%2Fprettier-config)](https://github.com/cravingmaker/prettier-config/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/%40cravingmaker%2Fprettier-config)](https://www.npmjs.com/package/@cravingmaker/prettier-config) [![CI](https://github.com/cravingmaker/prettier-config/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/cravingmaker/prettier-config/actions/workflows/ci.yml) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/cravingmaker/prettier-config/badge)](https://scorecard.dev/viewer/?uri=github.com/cravingmaker/prettier-config) [![License: MIT](https://img.shields.io/npm/l/%40cravingmaker%2Fprettier-config)](https://github.com/cravingmaker/prettier-config/blob/main/LICENSE)
 
-Craving Maker's opinionated Prettier configuration. It keeps Prettier's defaults apart from two options, formats JavaScript and TypeScript with the Oxc parsers, and brings the plugins for `package.json`, TOML, and XML files.
+Craving Maker's opinionated Prettier configuration. It keeps Prettier's defaults apart from three options, formats JavaScript and TypeScript with the Oxc parsers, and brings the plugins for `package.json`, TOML, and XML files.
 
-- **Prettier's defaults, two changes.** `printWidth: 150` and `singleAttributePerLine: true`; every other option is Prettier's default.
+- **Prettier's defaults, three changes.** `printWidth: 150`, `singleAttributePerLine: true`, and one line per paragraph in Markdown; every other option is Prettier's default.
 - **Oxc for JavaScript and TypeScript.** The parsers of @prettier/plugin-oxc format JavaScript and TypeScript files.
 - **More formats included.** `package.json` field order, TOML, and XML work without another installation.
 - **Plugins when you install them.** The Astro, Svelte, and Tailwind CSS plugins load when the project installs them, with Tailwind last.
@@ -80,13 +77,13 @@ export default {
 
 The config sets these options and leaves every other option to Prettier's defaults, or to the defaults of each plugin:
 
-| Option                   | Value                                                                                               |
-| ------------------------ | --------------------------------------------------------------------------------------------------- |
-| `printWidth`             | `150`                                                                                               |
-| `singleAttributePerLine` | `true`                                                                                              |
-| `overrides`              | The `oxc-ts` parser for `**/*.{ts,cts,mts,tsx}`, and the `oxc` parser for `**/*.{js,cjs,mjs,jsx}`   |
-| `plugins`                | The bundled plugins below, then the [optional plugins](#optional-plugins) that the project installs |
-| `tailwindFunctions`      | `clsx`, `cn`, `cva`, `classNames`, `classnames`, and `tv`; see [Tailwind CSS](#tailwind-css)        |
+| Option | Value |
+| --- | --- |
+| `printWidth` | `150` |
+| `singleAttributePerLine` | `true` |
+| `overrides` | The `oxc-ts` parser for `**/*.{ts,cts,mts,tsx}`, the `oxc` parser for `**/*.{js,cjs,mjs,jsx}`, and `proseWrap: "never"` for `**/*.{md,markdown,mdx}` |
+| `plugins` | The bundled plugins below, then the [optional plugins](#optional-plugins) that the project installs |
+| `tailwindFunctions` | `clsx`, `cn`, `cva`, `classNames`, `classnames`, and `tv`; see [Tailwind CSS](#tailwind-css) |
 
 `printWidth` is a wrapping preference, not a hard limit, and a plugin such as the `package.json` formatter applies its own layout. The Oxc parsers do not support Flow syntax.
 
@@ -94,12 +91,24 @@ An `.editorconfig` file still sets the indentation and line endings, which the c
 
 These plugins are dependencies of the package, so they need no installation:
 
-| Plugin                                                                                   | Formats                                                     |
-| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| [@prettier/plugin-oxc](https://www.npmjs.com/package/@prettier/plugin-oxc)               | JavaScript and TypeScript, through the `overrides` above    |
+| Plugin | Formats |
+| --- | --- |
+| [@prettier/plugin-oxc](https://www.npmjs.com/package/@prettier/plugin-oxc) | JavaScript and TypeScript, through the `overrides` above |
 | [prettier-plugin-packagejson](https://www.npmjs.com/package/prettier-plugin-packagejson) | `package.json`, with its fields sorted by sort-package-json |
-| [prettier-plugin-toml](https://www.npmjs.com/package/prettier-plugin-toml)               | TOML files                                                  |
-| [@prettier/plugin-xml](https://www.npmjs.com/package/@prettier/plugin-xml)               | XML files                                                   |
+| [prettier-plugin-toml](https://www.npmjs.com/package/prettier-plugin-toml) | TOML files |
+| [@prettier/plugin-xml](https://www.npmjs.com/package/@prettier/plugin-xml) | XML files |
+
+### Markdown
+
+Markdown and MDX files keep each paragraph, list item, and quotation on one line, and the editor wraps it on screen. GitHub renders a line break inside a paragraph as a break in issues, pull requests, comments, and release notes, so text reads the same there as in a Markdown file, and an edit never reflows the lines around it. YAML keeps its line breaks, so a long workflow condition stays on several lines. A table that is wider than `printWidth` prints without column padding.
+
+Prettier joins the marker of a GitHub alert, such as `[!NOTE]`, with the line after it, and GitHub then shows a plain quotation. Follow the marker with an empty quoted line:
+
+```md
+> [!NOTE]
+>
+> The text of the note.
+```
 
 ## Config files
 

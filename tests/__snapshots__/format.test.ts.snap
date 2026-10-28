@@ -232,6 +232,48 @@ const options = { first: "one", second: "two", third: "three", fourth: "four", f
 "
 `;
 
+exports[`Format Integration > keeps each paragraph, list item, and quotation of prose.md on one line 1`] = `
+"# Prose
+
+A paragraph that was wrapped by hand across three lines.
+
+- A list item that continues on a second line.
+
+> A quotation that continues on a second line.
+
+> [!NOTE]
+>
+> An alert keeps its marker on a line of its own.
+
+A hard line break\\
+stays.
+"
+`;
+
+exports[`Format Integration > keeps each paragraph, list item, and quotation of prose.mdx on one line 1`] = `
+"# Prose
+
+A paragraph that was wrapped by hand across three lines.
+
+- A list item that continues on a second line.
+
+> A quotation that continues on a second line.
+
+> [!NOTE]
+>
+> An alert keeps its marker on a line of its own.
+
+A hard line break\\
+stays.
+"
+`;
+
+exports[`Format Integration > keeps the line breaks of a multi-line YAML value 1`] = `
+"condition: first == 'one' &&
+  second == 'two'
+"
+`;
+
 exports[`Format Integration > preserves TOML key order, comments, and multiline string contents 1`] = `
 "# Keep the deployment order
 zulu = "last alphabetically"  # Primary target
