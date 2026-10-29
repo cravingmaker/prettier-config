@@ -17,6 +17,8 @@ jobs:
     if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Deploys only from v* tags; the trusted publisher on npm requires this environment.
+    environment: npm
     permissions:
       contents: read
       id-token: write # Authenticate to npm with Trusted Publishing and sign provenance.
