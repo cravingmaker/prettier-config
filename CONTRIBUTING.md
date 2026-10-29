@@ -4,7 +4,7 @@ Please follow the [Code of Conduct](https://github.com/cravingmaker/.github/blob
 
 ## Setup
 
-Development requires Node.js 24.15.0 or newer. The published configuration supports Node.js 22.12.0 or newer.
+Development requires Node.js 24.15.0 or newer and npm 11.15.0 or newer, and `devEngines` makes npm stop on older versions. The published configuration supports Node.js 22.12.0 or newer.
 
 Use the contributor Node.js version pinned in [.nvmrc](.nvmrc). If you use nvm, run:
 
@@ -25,6 +25,8 @@ The repository disables installation scripts, so run `npm run prepare` explicitl
 See [README.md](README.md) for the runtime configuration and supported plugin versions.
 
 ## Making changes
+
+Use the [coding principles](CODING_PRINCIPLES.md) to choose code style, architecture, linter rules, formatter settings, and scripts. Apply the goals in their stated priority order when comparing approaches.
 
 Create a branch from the latest `main` and keep each pull request focused. Use a conventional pull request title, such as `fix: ...`, `test: ...`, or `docs: ...`. Describe the problem and resulting behavior, including before/after examples when formatter output changes.
 
@@ -56,7 +58,7 @@ Before opening a pull request, run:
 npm run validate
 ```
 
-This runs `validate:static` followed by `validate:behavior`: offline Effect pin checks, typechecking, Effect diagnostics, linting, unused-code analysis, formatting, pinned workflow lint, [package checks](#published-package-checks), tooling guards, runtime tests, and installed-consumer tests. `prepublishOnly` and the publishing workflow use the same complete entry point. Package smoke tests install the tarball and consumer tools in a temporary project, so they need npm registry access or cached dependencies.
+This runs `validate:static` followed by `validate:behavior`: offline Effect pin checks, typechecking, Effect diagnostics, linting, unused-code analysis, formatting, pinned workflow lint, [package checks](#published-package-checks), tooling guards, runtime tests, and installed-consumer tests. Before a release, `npm run release:check` runs the Effect pin check, a dependency security audit, the same validation, and a dry run of the tarball. `prepublishOnly` and the publishing workflow run it. Package smoke tests install the tarball and consumer tools in a temporary project, so they need npm registry access or cached dependencies.
 
 Package tests reuse npm-installed base and optional consumers from normal and external directories. `PRETTIER_CONFIG_CONSUMER_NODE` selects the runtime programs; installed type compilation stays on development Node. See the [consumer boundary](docs/architecture.md#installed-consumers) for fixtures, provenance, and cleanup requirements.
 
@@ -70,7 +72,7 @@ PRETTIER_CONFIG_PEER_SCENARIO=minimum npm run test:package
 
 CI runs behavioral and package coverage on Linux Node 22/24/26, consumers on Node 22.12.0, and minimum peers once on development Node. Process lifecycle tests also run on macOS through `npm run test:lifecycle`; Linux retains the same lifecycle suite. Windows execution remains unverified.
 
-CI runs repository static checks and tooling guards once on the development Node.js version in `.nvmrc`, beside version-sensitive behavior and installed consumers on Node 22/24/26. Each matrix job installs dependencies on development Node, runs `node --run test:runtime` on the newest release of its line, then restores development Node for the package harness and type compiler while consumer programs use the captured runtime executable. All jobs run in parallel. The `CI result` job fails unless every one of them succeeds, and it is the status that the repository rules require; Dependency Review runs as one of its jobs on pull requests. See the [CI ownership table](docs/architecture.md#ci-check-ownership) for the complete command map; `validate:static` and `validate:behavior` are composable CI entry points, and `npm run validate` remains the required final local check.
+CI runs repository static checks and tooling guards once on the development Node.js version in `.nvmrc`, beside version-sensitive behavior and installed consumers on Node 22/24/26. Each matrix job installs dependencies on development Node, runs `node --run test:runtime` on the newest release of its line, then restores development Node for the package harness and type compiler while consumer programs use the captured runtime executable. All jobs run in parallel. The `CI result` job fails unless every one of them succeeds, and it is the status that the repository rules require; "Dependency audit" runs `npm audit --audit-level=low` on the lockfile in its own job, so an advisory published after the last dependency change does not hide the other results. The `overrides` in `package.json` raise `deepmerge-ts` and `katex`, which @cravingmaker/eslint-config brings in, to their fixed versions, as eslint-config's README advises; consumers of this package do not install either. Dependency Review runs as one of its jobs on pull requests. See the [CI ownership table](docs/architecture.md#ci-check-ownership) for the complete command map; `validate:static` and `validate:behavior` are composable CI entry points, and `npm run validate` remains the required final local check.
 
 Vitest runs one test file at a time to limit peak memory when typed ESLint services and compiler subprocesses run in the combined suite. Test isolation, assertion guards, real-clock deadlines, and the complete test selection still apply.
 
@@ -221,7 +223,7 @@ Release Please maintains a release pull request from conventional squash commits
 
 Changes limited to `chore: ...`, `docs: ...`, or `test: ...` do not start a package release. Dependabot uses `fix(deps): ...` for production dependencies and `chore(deps-dev): ...` for development dependencies. Review formatting output changes from runtime plugin updates and mark breaking changes when needed.
 
-Review the proposed version and changelog before merging the release pull request. Include consumer-facing migration guidance for formatting changes, using `docs/releases/` when additional examples or instructions are needed. Keep each paragraph of the notes on one line, because the GitHub Release renders every line break. The bot updates `package.json`, `package-lock.json`, the release manifest, and `CHANGELOG.md`, then creates a `vX.Y.Z` tag and GitHub Release after the pull request is merged. The GitHub Release triggers the npm publishing workflow. It checks that the tag matches `package.json` and is reachable from `main`, and that the version is unpublished. It then verifies registry signatures, runs full validation, and publishes the packed tarball with Trusted Publishing.
+Review the proposed version and changelog before merging the release pull request. Include consumer-facing migration guidance for formatting changes, using `docs/releases/` when additional examples or instructions are needed. Keep each paragraph of the notes on one line, because the GitHub Release renders every line break. The bot updates `package.json`, `package-lock.json`, the release manifest, and `CHANGELOG.md`, then creates a `vX.Y.Z` tag and GitHub Release after the pull request is merged. The GitHub Release triggers the npm publishing workflow. It checks that the tag matches `package.json` and is reachable from `main`, and that the version is unpublished. It then verifies registry signatures, runs the release check, and publishes the packed tarball with Trusted Publishing.
 
 To retry release automation, run the **Release Please** workflow manually from the Actions tab with `main` selected. The release manifest records the latest released version; its initial 0.3.0 version and bootstrap commit mark the release that predates automation.
 

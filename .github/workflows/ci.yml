@@ -119,12 +119,14 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # Resolve the newest release of the line instead of an older cached runner copy.
+      # Resolve the newest release of the line instead of an older cached runner copy. The cache
+      # stays off: setting it up runs npm, and the npm of Node.js 22 fails the devEngines check.
       - name: Set up runtime Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node-version }}
           check-latest: true
+          package-manager-cache: false
 
       - name: Capture runtime executable
         id: runtime-node
@@ -166,10 +168,13 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      # The cache stays off: setting it up runs npm, and the npm of Node.js 22.12.0 fails the
+      # devEngines check.
       - name: Set up minimum runtime
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22.12.0
+          package-manager-cache: false
 
       - name: Capture minimum runtime executable
         id: minimum-node
@@ -185,6 +190,29 @@ jobs:
         env:
           PRETTIER_CONFIG_CONSUMER_NODE: ${{ steps.minimum-node.outputs.executable }}
         run: npm run test:package
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up development Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      # npm audit reads the lockfile, so nothing is installed. As its own job, an advisory that
+      # was published after the last dependency change fails CI without hiding other results.
+      - name: Audit dependencies
+        run: npm audit --audit-level=low
 
   dependency-review:
     name: Dependency Review
@@ -211,6 +239,7 @@ jobs:
       - macos-lifecycle
       - runtime
       - minimum-runtime
+      - audit
       - dependency-review
     runs-on: ubuntu-latest
     timeout-minutes: 5
