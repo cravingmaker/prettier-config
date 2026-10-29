@@ -27,8 +27,10 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./index.mjs"
-    }
+      "import": "./index.mjs",
+      "default": "./index.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "./index.d.ts",
   "files": [

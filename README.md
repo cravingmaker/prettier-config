@@ -29,7 +29,7 @@ Its companion, [@cravingmaker/eslint-config](https://github.com/cravingmaker/esl
 
 - Node.js 22.12.0 or later.
 - Prettier 3.9.8 or later, below 4.
-- ES modules. The package is ESM-only, so a config file that extends it is an ES module; see [Config files](#config-files).
+- ES modules. The package is ESM-only. A CommonJS config file loads it through `require()` and its `default`; see [Config files](#config-files).
 
 ## Installation
 
@@ -112,15 +112,15 @@ Prettier joins the marker of a GitHub alert, such as `[!NOTE]`, with the line af
 
 ## Config files
 
-The package is ESM-only, so the file that extends the config must be an ES module:
+The package is ESM-only. An ES module config file imports it, and a CommonJS one requires its `default`:
 
-| Config file                              | Requirement                                                             |
-| ---------------------------------------- | ----------------------------------------------------------------------- |
-| `.prettierrc.mjs`, `prettier.config.mjs` | None.                                                                   |
-| `.prettierrc.mts`, `prettier.config.mts` | Node.js 22.18.0 or later.                                               |
-| `.prettierrc.js`, `prettier.config.js`   | `"type": "module"` in your `package.json`.                              |
-| `.prettierrc.ts`, `prettier.config.ts`   | Node.js 22.18.0 or later and `"type": "module"` in your `package.json`. |
-| `.prettierrc.cjs`, `prettier.config.cjs` | Not supported. `require()` fails with `No "exports" main defined`.      |
+| Config file | Requirement |
+| --- | --- |
+| `.prettierrc.mjs`, `prettier.config.mjs` | None. |
+| `.prettierrc.mts`, `prettier.config.mts` | Node.js 22.18.0 or later. |
+| `.prettierrc.js`, `prettier.config.js` | `"type": "module"` in your `package.json`. |
+| `.prettierrc.ts`, `prettier.config.ts` | Node.js 22.18.0 or later and `"type": "module"` in your `package.json`. |
+| `.prettierrc.cjs`, `prettier.config.cjs` | `module.exports = require("@cravingmaker/prettier-config").default;`, because `require()` returns the module with its `default` export. Node.js 22.12 prints an `ExperimentalWarning` for it; 22.13 and later do not. |
 
 Without `"type": "module"`, Node.js still loads `.js` and `.ts` config files, but prints a `MODULE_TYPELESS_PACKAGE_JSON` warning on every run.
 

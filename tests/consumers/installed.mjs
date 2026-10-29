@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 import process from "node:process";
 
 import config from "@cravingmaker/prettier-config";
@@ -88,4 +89,10 @@ await Promise.all(
     assert.equal(await format(filename, source, parser), expected, filename);
   }),
 );
+const require = createRequire(import.meta.url);
+
+/* eslint-disable import-x/no-commonjs, @typescript-eslint/no-unsafe-member-access -- A CommonJS config file loads the package with require(), whose default is the config, and tools read its manifest. */
+assert.equal(require("@cravingmaker/prettier-config").default, config);
+assert.equal(require("@cravingmaker/prettier-config/package.json").name, "@cravingmaker/prettier-config");
+/* eslint-enable import-x/no-commonjs, @typescript-eslint/no-unsafe-member-access -- The rest of the program uses ES modules. */
 process.stdout.write("ok");
