@@ -26,6 +26,8 @@ See [README.md](README.md) for the runtime configuration and supported plugin ve
 
 ## Making changes
 
+Use the [coding principles](CODING_PRINCIPLES.md) to choose code style, architecture, linter rules, formatter settings, and scripts. Apply the goals in their stated priority order when comparing approaches.
+
 Create a branch from the latest `main` and keep each pull request focused. Use a conventional pull request title, such as `fix: ...`, `test: ...`, or `docs: ...`. Describe the problem and resulting behavior, including before/after examples when formatter output changes.
 
 Add relevant regression tests for behavior changes. Formatting fixtures live in `tests/fixtures/` and are excluded from linting and formatting checks. Review snapshot diffs and update snapshots only when the output change is intentional. For runtime or plugin changes, exercise packed consumers in `tests/package.smoke.test.ts` as well.
