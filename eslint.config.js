@@ -37,10 +37,6 @@ import { testModes } from "./scripts/eslint-rules/test-modes.mjs";
 
 const baseConfig = await createConfig({
   ignores: ["tests/fixtures/**/*", "repos/**"],
-  packageJson: {
-    // Preserve the published package's existing export paths.
-    overrides: { "package-json/require-package-json-export": "off" },
-  },
   // Svelte is installed for Prettier fixtures, which ESLint does not lint.
   svelte: false,
   typescript: { typeChecked: true },
