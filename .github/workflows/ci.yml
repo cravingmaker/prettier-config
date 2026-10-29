@@ -119,12 +119,14 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # Resolve the newest release of the line instead of an older cached runner copy.
+      # Resolve the newest release of the line instead of an older cached runner copy. The cache
+      # stays off: setting it up runs npm, and the npm of Node.js 22 fails the devEngines check.
       - name: Set up runtime Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ matrix.node-version }}
           check-latest: true
+          package-manager-cache: false
 
       - name: Capture runtime executable
         id: runtime-node
@@ -166,10 +168,13 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
+      # The cache stays off: setting it up runs npm, and the npm of Node.js 22.12.0 fails the
+      # devEngines check.
       - name: Set up minimum runtime
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22.12.0
+          package-manager-cache: false
 
       - name: Capture minimum runtime executable
         id: minimum-node

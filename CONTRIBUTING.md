@@ -4,7 +4,7 @@ Please follow the [Code of Conduct](https://github.com/cravingmaker/.github/blob
 
 ## Setup
 
-Development requires Node.js 24.15.0 or newer. The published configuration supports Node.js 22.12.0 or newer.
+Development requires Node.js 24.15.0 or newer and npm 11.15.0 or newer, and `devEngines` makes npm stop on older versions. The published configuration supports Node.js 22.12.0 or newer.
 
 Use the contributor Node.js version pinned in [.nvmrc](.nvmrc). If you use nvm, run:
 
