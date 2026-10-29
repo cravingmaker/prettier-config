@@ -108,7 +108,7 @@ Map each existing command to its job before removing duplicated execution. Keep 
 
 ## CI check ownership
 
-`npm run validate` composes `validate:static` and `validate:behavior`. The local command, `prepublishOnly`, and the publishing workflow retain every check. CI uses these smaller entry points to give repository static analysis one owner while retaining behavior on each supported runtime.
+`npm run validate` composes `validate:static` and `validate:behavior`. `npm run release:check` adds the Effect pin check, a dependency audit, and a dry run of the tarball, and `prepublishOnly` and the publishing workflow run it, so they retain every check. CI uses these smaller entry points to give repository static analysis one owner while retaining behavior on each supported runtime.
 
 | Commands/checks | CI owner | Coverage |
 | --- | --- | --- |

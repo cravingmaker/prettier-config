@@ -57,7 +57,9 @@ const withProject = async (check: (root: string) => Promise<void>) => {
         Object.entries(packageJson.scripts).map(([name, command]) => {
           return [
             name,
-            ["effect:check-reference", "prepublishOnly", "validate", "validate:behavior", "validate:static"].includes(name) ? command : 'node -e ""',
+            ["effect:check-reference", "prepublishOnly", "release:check", "validate", "validate:behavior", "validate:static"].includes(name)
+              ? command
+              : 'node -e ""',
           ];
         }),
       ),
@@ -133,7 +135,7 @@ describe("Effect reference metadata", { timeout: 40_000 }, () => {
     });
   });
 
-  it.each(["validate", "prepublishOnly"])("makes %s reject drift before its other checks", async (entry) => {
+  it.each(["validate", "prepublishOnly", "release:check"])("makes %s reject drift before its other checks", async (entry) => {
     await withProject(async (root) => {
       await writeJson(root, "scripts/effect-reference.json", {
         ...reference,
