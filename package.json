@@ -75,6 +75,12 @@
     ],
     "!(*.js|*.mjs|*.cjs|*.jsx|*.mjsx|*.ts|*.mts|*.tsx|*.mtsx|*.svelte|*.html|*.md|*.json|*.jsonc|*.json5)": "prettier --ignore-unknown --write"
   },
+  "overrides": {
+    "deepmerge-ts": "8.0.2",
+    "micromark-extension-math@3.1.0": {
+      "katex": "0.18.2"
+    }
+  },
   "dependencies": {
     "@prettier/plugin-oxc": "0.2.3",
     "@prettier/plugin-xml": "3.4.2",
