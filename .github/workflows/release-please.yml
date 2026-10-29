@@ -15,10 +15,12 @@ concurrency:
 jobs:
   release-please:
     name: Update release PR or publish GitHub Release
-    if: ${{ github.ref == 'refs/heads/main' }}
+    # Template repositories have no releases.
+    if: ${{ github.ref == 'refs/heads/main' && !github.event.repository.is_template }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
-
+    # The release app's token does the work, so the workflow token needs no permissions.
+    permissions: {}
     steps:
       - name: Create release bot token
         id: app-token

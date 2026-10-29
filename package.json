@@ -54,7 +54,8 @@
     "lint:unused": "knip",
     "lint:workflows": "node scripts/check-workflows.mjs",
     "prepare": "husky",
-    "prepublishOnly": "npm run validate",
+    "prepublishOnly": "npm run release:check",
+    "release:check": "npm run effect:check-reference && npm audit --audit-level=low && npm run validate && npm pack --dry-run --ignore-scripts",
     "setup:effect-reference": "node scripts/setup-effect-reference.mjs",
     "test": "vitest run --exclude tests/package.smoke.test.ts",
     "test:lifecycle": "vitest run tests/package-smoke-harness.test.ts",
@@ -75,6 +76,12 @@
       "prettier --ignore-unknown --write"
     ],
     "!(*.js|*.mjs|*.cjs|*.jsx|*.mjsx|*.ts|*.mts|*.tsx|*.mtsx|*.svelte|*.html|*.md|*.json|*.jsonc|*.json5)": "prettier --ignore-unknown --write"
+  },
+  "overrides": {
+    "deepmerge-ts": "8.0.2",
+    "micromark-extension-math@3.1.0": {
+      "katex": "0.18.2"
+    }
   },
   "dependencies": {
     "@prettier/plugin-oxc": "0.2.3",
@@ -133,6 +140,11 @@
     "node": ">=22.12.0"
   },
   "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": ">=11.15.0",
+      "onFail": "error"
+    },
     "runtime": {
       "name": "node",
       "version": ">=24.15.0",

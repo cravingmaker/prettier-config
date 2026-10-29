@@ -57,25 +57,12 @@ jobs:
             exit 1
           fi
 
-      - name: Verify publishing toolchain
+      # devEngines in package.json requires npm 11.15.0 or later, which trusted publishing needs,
+      # so npm ci stops on an older npm.
+      - name: Show publishing toolchain
         run: |
           node --version
           npm --version
-          node <<'NODE'
-          const { execFileSync } = require('node:child_process');
-
-          const version = execFileSync('npm', ['--version'], { encoding: 'utf8' }).trim();
-          const current = version.split('.').map(Number);
-          const minimum = [11, 5, 1];
-
-          for (let index = 0; index < minimum.length; index += 1) {
-            if (current[index] > minimum[index]) process.exit(0);
-            if (current[index] < minimum[index]) {
-              console.error(`npm >=11.5.1 is required for trusted publishing; found ${version}`);
-              process.exit(1);
-            }
-          }
-          NODE
 
       - name: Verify version is unpublished
         run: |
@@ -94,7 +81,7 @@ jobs:
         run: npm audit signatures
 
       - name: Verify release readiness
-        run: npm run validate
+        run: npm run release:check
 
       - name: Pack release artifact
         id: pack

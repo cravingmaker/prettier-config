@@ -108,7 +108,7 @@ Map each existing command to its job before removing duplicated execution. Keep 
 
 ## CI check ownership
 
-`npm run validate` composes `validate:static` and `validate:behavior`. The local command, `prepublishOnly`, and the publishing workflow retain every check. CI uses these smaller entry points to give repository static analysis one owner while retaining behavior on each supported runtime.
+`npm run validate` composes `validate:static` and `validate:behavior`. `npm run release:check` adds the Effect pin check, a dependency audit, and a dry run of the tarball, and `prepublishOnly` and the publishing workflow run it, so they retain every check. CI uses these smaller entry points to give repository static analysis one owner while retaining behavior on each supported runtime.
 
 | Commands/checks | CI owner | Coverage |
 | --- | --- | --- |
@@ -122,6 +122,7 @@ Map each existing command to its job before removing duplicated execution. Keep 
 | `test:package`, current peers | Node.js 22/24/26; Minimum Node.js 22.12.0 | Real npm consumers, custom stylesheets, public types, package contents |
 | `test:package`, minimum peers | Minimum peer versions, development Node | The same package assertions at declared lower bounds |
 | `test:lifecycle` | macOS lifecycle, development Node | Live-clock cleanup, process trees, interruption, deadlines, output limits, paths |
+| `npm audit --audit-level=low` | Dependency audit, development Node | Known vulnerabilities of the locked dependencies, including advisories published after the last change |
 | Dependency Review action | Dependency Review, pull requests | New dependencies with known vulnerabilities of any severity |
 | Every job above | CI result | The single required status |
 | zizmor workflow | zizmor analysis | Workflow and Dependabot configuration security, reported to code scanning |
