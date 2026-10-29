@@ -5,6 +5,21 @@ import { promisify } from "node:util";
 import { ensureActionlint, projectDirectory } from "./actionlint.mjs";
 
 const execute = promisify(execFile);
+
+/**
+ * Prints a failed command's findings, then the reason it failed.
+ *
+ * @param {unknown} error
+ */
+const report = (error) => {
+  const failure = typeof error === "object" && error !== null ? error : {};
+  if ("stdout" in failure && typeof failure.stdout === "string") {
+    process.stdout.write(failure.stdout);
+  }
+  const message = "message" in failure && typeof failure.message === "string" ? failure.message : String(error);
+  process.stderr.write(`${message}\n`);
+};
+
 try {
   const binary = await ensureActionlint();
   const { stderr, stdout } = await execute(binary, process.argv.slice(2), {
@@ -16,9 +31,6 @@ try {
   process.stdout.write(stdout);
   process.stderr.write(stderr);
 } catch (error) {
-  if (error instanceof Error && "stdout" in error && typeof error.stdout === "string") {
-    process.stdout.write(error.stdout);
-  }
-  process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+  report(error);
   process.exitCode = 1;
 }
