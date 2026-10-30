@@ -32,23 +32,15 @@ Create a branch from the latest `main` and keep each pull request focused. Use a
 
 Add relevant regression tests for behavior changes. Formatting fixtures live in `tests/fixtures/` and are excluded from linting and formatting checks. Review snapshot diffs and update snapshots only when the output change is intentional. For runtime or plugin changes, exercise packed consumers in `tests/package.smoke.test.ts` as well.
 
-Use the [architecture guide](docs/architecture.md) to find runtime, declaration, consumer, tooling, and native-process ownership. Its [change recipes](docs/architecture.md#change-recipes) name the smallest checks for plugin updates, formatter behavior, public types, subprocess lifecycle, dependency/reference updates, and CI changes. Owned executable JavaScript is linted with type information and checked by TypeScript; raw fixtures stay excluded.
+Use the [architecture guide](docs/architecture.md) to find runtime, declaration, consumer, tooling, and native-process ownership. Its [change recipes](docs/architecture.md#change-recipes) name the smallest checks for plugin updates, formatter behavior, public types, subprocess lifecycle, dependency updates, and CI changes. Owned executable JavaScript is linted with type information and checked by TypeScript; raw fixtures stay excluded.
 
 `tsconfig.json` sets the compiler contract of `@cravingmaker/eslint-config` (`strict`, `noImplicitReturns`, and `allowUnreachableCode: false`), because that config leaves those checks to the compiler in TypeScript files. It adds stricter checks, including `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, and `verbatimModuleSyntax`. Its `target` and `lib` describe Node.js 22.12, the minimum consumer runtime: ES2024 with iterator helpers, Set methods, and `Array.fromAsync`. The compiler therefore rejects APIs that this runtime lacks, such as `Promise.try`, in the published files and the tests alike.
 
-## Effect reference
+## Effect tooling
 
-Before writing Effect code, run:
+Use public stable APIs only: inspect both module and symbol annotations for unstable or experimental APIs, including examples.
 
-```bash
-npm run setup:effect-reference
-```
-
-Read `repos/effect/LLMS.md`, then consult the relevant pinned source, examples, and tests. Use public stable APIs only: inspect both module and symbol annotations for unstable or experimental APIs, including examples. Keep reference checkouts untouched and resolve imports through installed packages.
-
-The explicit setup verifies version, tag, commit, origin, and clean checkout contents. It refuses unexpected user content without deleting it. To update a pin, preserve the existing checkout by moving it aside first. See the [dependency recipe](docs/architecture.md#dependency-and-reference-updates) for the coordinated packages and offline consistency checks.
-
-Workspace Zed settings use local TypeScript through `vtsls` and hide `repos/` from scans and auto-imports. The Effect plugin supplies editor diagnostics; `npm run effect:check` runs them in the terminal because ordinary `tsc` does not run editor plugins. `local/effect-stability` checks installed declarations during linting, so normal validation works without a cloned reference.
+Workspace Zed settings use local TypeScript through `vtsls`. The Effect plugin supplies editor diagnostics; `npm run effect:check` runs them in the terminal because ordinary `tsc` does not run editor plugins. `local/effect-stability` checks installed declarations during linting.
 
 ## Validation
 
@@ -58,7 +50,7 @@ Before opening a pull request, run:
 npm run validate
 ```
 
-This runs `validate:static` followed by `validate:behavior`: offline Effect pin checks, typechecking, Effect diagnostics, linting, unused-code analysis, formatting, pinned workflow lint, [package checks](#published-package-checks), tooling guards, runtime tests, and installed-consumer tests. Before a release, `npm run release:check` runs the Effect pin check, a dependency security audit, the same validation, and a dry run of the tarball. `prepublishOnly` and the publishing workflow run it. Package smoke tests install the tarball and consumer tools in a temporary project, so they need npm registry access or cached dependencies.
+This runs `validate:static` followed by `validate:behavior`: typechecking, Effect diagnostics, linting, unused-code analysis, formatting, pinned workflow lint, [package checks](#published-package-checks), tooling guards, runtime tests, and installed-consumer tests. Before a release, `npm run release:check` runs a dependency security audit, the same validation, and a dry run of the tarball. `prepublishOnly` and the publishing workflow run it. Package smoke tests install the tarball and consumer tools in a temporary project, so they need npm registry access or cached dependencies.
 
 Package tests reuse npm-installed base and optional consumers from normal and external directories. `PRETTIER_CONFIG_CONSUMER_NODE` selects the runtime programs; installed type compilation stays on development Node. See the [consumer boundary](docs/architecture.md#installed-consumers) for fixtures, provenance, and cleanup requirements.
 
@@ -143,7 +135,7 @@ Open the URL printed in the terminal, normally <http://localhost:7777/>. The com
 
 Start it with `npm run lint:inspect` rather than `npx eslint --inspect-config`. ESLint's flag runs `npx @eslint/config-inspector@latest`, which can download a newer release than the version locked in `package-lock.json`.
 
-Enter a repository-relative path such as `index.mjs`, `tests/config.test.ts`, or `tests/consumers/installed.mjs` in the config page's filepath filter to inspect its matching config blocks and merged rules. Local blocks use the `@cravingmaker/prettier-config/` prefix. Raw fixtures under `tests/fixtures/` and dependency references under `repos/` remain ignored.
+Enter a repository-relative path such as `index.mjs`, `tests/config.test.ts`, or `tests/consumers/installed.mjs` in the config page's filepath filter to inspect its matching config blocks and merged rules. Local blocks use the `@cravingmaker/prettier-config/` prefix. Raw fixtures under `tests/fixtures/` remain ignored.
 
 The inspector updates when the config or its local imports change.
 
@@ -167,7 +159,7 @@ npm run lint:unused
 
 This check runs in `validate:static`, so full local validation, CI's static checks job, and publishing all require a clean result. Configuration hints also fail the check to keep exceptions current.
 
-[knip.json](knip.json) adds the consumer programs that are copied and launched outside the import graph as entry points. Their shared helpers remain ordinary project files, so unused helper exports are still reported. Raw formatter and installed-type fixtures under `tests/fixtures/` and read-only upstream references under `repos/` are outside the analysis. The two explicitly listed Effect packages remain installed for coordinated reference pins and declaration-based guard tests; they are not unused dependency cleanup candidates.
+[knip.json](knip.json) adds the consumer programs that are copied and launched outside the import graph as entry points. Their shared helpers remain ordinary project files, so unused helper exports are still reported. Raw formatter and installed-type fixtures under `tests/fixtures/` are outside the analysis. The two explicitly listed Effect packages remain installed for declaration-based guard tests; they are not unused dependency cleanup candidates.
 
 Use [Node Modules Inspector](https://github.com/antfu/node-modules-inspector) to explore the installed dependency tree, filter production and development dependencies, and inspect package sizes:
 

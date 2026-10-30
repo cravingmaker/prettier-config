@@ -15,13 +15,13 @@
  *
  * functional/no-throw-statements — disabled because mocks and test guards intentionally throw to reproduce Node resolution failures and fail fast on invalid test state.
  *
- * tests/format.test.ts, tests/helpers/package-smoke.ts, the source setup script, and tests/consumers/*.mjs
+ * tests/format.test.ts, tests/helpers/package-smoke.ts, and tests/consumers/*.mjs
  *
  * security/detect-non-literal-fs-filename — disabled because these tests intentionally construct filesystem paths from controlled fixture names and temporary directories. The paths are dynamic by design but are not derived from untrusted input.
  *
- * Native asynchronous setup, Dependabot synchronization, and consumer programs
+ * Native asynchronous tooling and consumer programs
  *
- * functional/no-promise-reject — disabled for native async programs that reject when setup or consumer invariants fail.
+ * functional/no-promise-reject — disabled for native async programs that reject when tooling or consumer invariants fail.
  *
  * Effect harness and tests
  *
@@ -36,7 +36,7 @@ import { effectStability } from "./scripts/eslint-rules/effect-stability.mjs";
 import { testModes } from "./scripts/eslint-rules/test-modes.mjs";
 
 const baseConfig = await createConfig({
-  ignores: ["tests/fixtures/**/*", "repos/**"],
+  ignores: ["tests/fixtures/**/*"],
   // Svelte is installed for Prettier fixtures, which ESLint does not lint.
   svelte: false,
   typescript: { typeChecked: true },
@@ -188,7 +188,7 @@ const config = [
   },
   {
     // Guard tests use controlled temporary projects and compiler filesystem hosts.
-    files: ["tests/tooling-guards.test.ts", "tests/effect-reference.test.ts", "tests/vitest-watch.test.ts", "tests/workflow-tool.test.ts"],
+    files: ["tests/tooling-guards.test.ts", "tests/vitest-watch.test.ts", "tests/workflow-tool.test.ts"],
     name: "@cravingmaker/prettier-config/tooling-test-filesystem",
     rules: {
       "security/detect-non-literal-fs-filename": "off",
@@ -224,7 +224,7 @@ const config = [
     },
   },
   {
-    files: ["scripts/setup-effect-reference.mjs", "scripts/effect-reference-metadata.mjs", "scripts/actionlint.mjs"],
+    files: ["scripts/actionlint.mjs"],
     name: "@cravingmaker/prettier-config/tooling-filesystem",
     rules: {
       "functional/no-promise-reject": "off",
@@ -238,14 +238,6 @@ const config = [
     rules: {
       "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",
-    },
-  },
-  {
-    // Trusted automation uses native promises and rejects invalid API data.
-    files: ["scripts/dependabot-effect-reference.mjs", "scripts/sync-dependabot-effect-reference.mjs"],
-    name: "@cravingmaker/prettier-config/automation-promises",
-    rules: {
-      "functional/no-promise-reject": "off",
     },
   },
   {
