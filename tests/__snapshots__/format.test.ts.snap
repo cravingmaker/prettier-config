@@ -1,48 +1,35 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Format Integration > 01. formats TypeScript correctly 1`] = `
-"export const greet = (name: string) => {
-  const message = \`Hello, \${name}!\`;
-  console.log(message);
-  return message;
-};
+exports[`formatting with the shared config > formats XML structure, attributes, namespaces, and comments 1`] = `
+"<?xml version='1.0' ?>
+<catalog
+  xmlns:app='urn:example'
+  z='last'
+  a='first'
+><app:item
+    title='say "hello"'
+    enabled='true'
+  /><!-- keep this comment --><empty /></catalog>
 "
 `;
 
-exports[`Format Integration > 02. formats JavaScript correctly 1`] = `
-"export const greet = (name) => {
-  const message = \`Hello, \${name}!\`;
-  console.log(message);
-  return message;
-};
-"
-`;
-
-exports[`Format Integration > 03. formats TSX correctly 1`] = `
-"interface Props {
-  name: string;
+exports[`formatting with the shared config > formats package.json 1`] = `
+"{
+  "name": "greeting-lib",
+  "version": "1.0.0",
+  "description": "A library for greetings",
+  "scripts": {
+    "test": "vitest"
+  },
+  "dependencies": {
+    "a-lib": "1.0.0",
+    "z-lib": "1.0.0"
+  }
 }
-
-export const Greeting = ({ name }: Props) => {
-  return (
-    <div className="greeting">
-      <h1>Hello, {name}!</h1>
-    </div>
-  );
-};
 "
 `;
 
-exports[`Format Integration > 04. formats JSX correctly 1`] = `
-"export const Greeting = ({ name }) => (
-  <div className="greeting">
-    <h1>Hello, {name}!</h1>
-  </div>
-);
-"
-`;
-
-exports[`Format Integration > 05. formats Astro correctly 1`] = `
+exports[`formatting with the shared config > formats sample.astro 1`] = `
 "---
 const { name = "World" } = Astro.props;
 ---
@@ -53,7 +40,109 @@ const { name = "World" } = Astro.props;
 "
 `;
 
-exports[`Format Integration > 06. formats Svelte correctly 1`] = `
+exports[`formatting with the shared config > formats sample.css 1`] = `
+".greeting {
+  color: "red";
+  font-family: "Inter", sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 20px 10px;
+}
+"
+`;
+
+exports[`formatting with the shared config > formats sample.html 1`] = `
+"<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Greeting Page</title>
+  </head>
+  <body>
+    <div class="greeting">
+      <h1>Hello, World!</h1>
+    </div>
+  </body>
+</html>
+"
+`;
+
+exports[`formatting with the shared config > formats sample.js 1`] = `
+"export const greet = (name) => {
+  const message = \`Hello, \${name}!\`;
+  console.log(message);
+  return message;
+};
+"
+`;
+
+exports[`formatting with the shared config > formats sample.json 1`] = `
+"{
+  "name": "greeting",
+  "nested": {
+    "enabled": true
+  }
+}
+"
+`;
+
+exports[`formatting with the shared config > formats sample.json5 1`] = `
+"{
+  name: "greeting",
+  nested: {
+    enabled: true,
+  },
+}
+"
+`;
+
+exports[`formatting with the shared config > formats sample.jsonc 1`] = `
+"{
+  // Configuration comment
+  "name": "greeting",
+  "nested": {
+    "enabled": true,
+  },
+}
+"
+`;
+
+exports[`formatting with the shared config > formats sample.jsx 1`] = `
+"export const Greeting = ({ name }) => (
+  <div className="greeting">
+    <h1>Hello, {name}!</h1>
+  </div>
+);
+"
+`;
+
+exports[`formatting with the shared config > formats sample.md 1`] = `
+"# Greeting Component
+
+This component displays a friendly greeting.
+
+## Usage
+
+\`\`\`tsx
+<Greeting name="World" />
+\`\`\`
+
+- Support **custom names**
+- Easy to _style_
+"
+`;
+
+exports[`formatting with the shared config > formats sample.mdx 1`] = `
+"# Greeting
+
+<Component
+  title="Hello"
+  items={[1, 2, 3]}
+/>
+"
+`;
+
+exports[`formatting with the shared config > formats sample.svelte 1`] = `
 "<script>
   export let name = "World";
 </script>
@@ -70,127 +159,7 @@ exports[`Format Integration > 06. formats Svelte correctly 1`] = `
 "
 `;
 
-exports[`Format Integration > 07. formats HTML correctly 1`] = `
-"<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Greeting Page</title>
-  </head>
-  <body>
-    <div class="greeting">
-      <h1>Hello, World!</h1>
-    </div>
-  </body>
-</html>
-"
-`;
-
-exports[`Format Integration > 08. formats CSS correctly 1`] = `
-".greeting {
-  color: "red";
-  font-family: "Inter", sans-serif;
-  display: flex;
-  justify-content: center;
-  padding: 20px 10px;
-}
-"
-`;
-
-exports[`Format Integration > 09. formats Markdown correctly 1`] = `
-"# Greeting Component
-
-This component displays a friendly greeting.
-
-## Usage
-
-\`\`\`tsx
-<Greeting name="World" />
-\`\`\`
-
-- Support **custom names**
-- Easy to _style_
-"
-`;
-
-exports[`Format Integration > 10. formats package.json correctly 1`] = `
-"{
-  "name": "greeting-lib",
-  "version": "1.0.0",
-  "description": "A library for greetings",
-  "scripts": {
-    "test": "vitest"
-  },
-  "dependencies": {
-    "a-lib": "1.0.0",
-    "z-lib": "1.0.0"
-  }
-}
-"
-`;
-
-exports[`Format Integration > 11. formats JSON with Prettier defaults 1`] = `
-"{
-  "name": "greeting",
-  "nested": {
-    "enabled": true
-  }
-}
-"
-`;
-
-exports[`Format Integration > 12. formats JSONC with Prettier defaults 1`] = `
-"{
-  // Configuration comment
-  "name": "greeting",
-  "nested": {
-    "enabled": true,
-  },
-}
-"
-`;
-
-exports[`Format Integration > 13. formats JSON5 with Prettier defaults 1`] = `
-"{
-  name: "greeting",
-  nested: {
-    enabled: true,
-  },
-}
-"
-`;
-
-exports[`Format Integration > 14. formats YAML with Prettier defaults 1`] = `
-"name: greeting
-nested:
-  enabled: true
-  items:
-    - one
-    - two
-"
-`;
-
-exports[`Format Integration > 15. formats YML with Prettier defaults 1`] = `
-"name: greeting
-nested:
-  enabled: true
-  items:
-    - one
-    - two
-"
-`;
-
-exports[`Format Integration > 16. formats MDX with Prettier defaults 1`] = `
-"# Greeting
-
-<Component
-  title="Hello"
-  items={[1, 2, 3]}
-/>
-"
-`;
-
-exports[`Format Integration > 17. formats TOML correctly 1`] = `
+exports[`formatting with the shared config > formats sample.toml 1`] = `
 "[package]
 name = "example"
 version = "1.0.0"
@@ -201,20 +170,51 @@ features = ["alpha", "beta", "gamma"]
 "
 `;
 
-exports[`Format Integration > formats XML structure, attributes, namespaces, and comments 1`] = `
-"<?xml version='1.0' ?>
-<catalog
-  xmlns:app='urn:example'
-  z='last'
-  a='first'
-><app:item
-    title='say "hello"'
-    enabled='true'
-  /><!-- keep this comment --><empty /></catalog>
+exports[`formatting with the shared config > formats sample.ts 1`] = `
+"export const greet = (name: string) => {
+  const message = \`Hello, \${name}!\`;
+  console.log(message);
+  return message;
+};
 "
 `;
 
-exports[`Format Integration > inherits the shared width and JavaScript quotes inside embedded.md 1`] = `
+exports[`formatting with the shared config > formats sample.tsx 1`] = `
+"interface Props {
+  name: string;
+}
+
+export const Greeting = ({ name }: Props) => {
+  return (
+    <div className="greeting">
+      <h1>Hello, {name}!</h1>
+    </div>
+  );
+};
+"
+`;
+
+exports[`formatting with the shared config > formats sample.yaml 1`] = `
+"name: greeting
+nested:
+  enabled: true
+  items:
+    - one
+    - two
+"
+`;
+
+exports[`formatting with the shared config > formats sample.yml 1`] = `
+"name: greeting
+nested:
+  enabled: true
+  items:
+    - one
+    - two
+"
+`;
+
+exports[`formatting with the shared config > inherits the shared width and JavaScript quotes inside embedded.md 1`] = `
 "# Embedded JavaScript
 
 \`\`\`js
@@ -223,7 +223,7 @@ const options = { first: "one", second: "two", third: "three", fourth: "four", f
 "
 `;
 
-exports[`Format Integration > inherits the shared width and JavaScript quotes inside embedded.mdx 1`] = `
+exports[`formatting with the shared config > inherits the shared width and JavaScript quotes inside embedded.mdx 1`] = `
 "# Embedded JavaScript
 
 \`\`\`js
@@ -232,7 +232,7 @@ const options = { first: "one", second: "two", third: "three", fourth: "four", f
 "
 `;
 
-exports[`Format Integration > keeps each paragraph, list item, and quotation of prose.md on one line 1`] = `
+exports[`formatting with the shared config > keeps each paragraph, list item, and quotation of prose.md on one line 1`] = `
 "# Prose
 
 A paragraph that was wrapped by hand across three lines.
@@ -250,7 +250,7 @@ stays.
 "
 `;
 
-exports[`Format Integration > keeps each paragraph, list item, and quotation of prose.mdx on one line 1`] = `
+exports[`formatting with the shared config > keeps each paragraph, list item, and quotation of prose.mdx on one line 1`] = `
 "# Prose
 
 A paragraph that was wrapped by hand across three lines.
@@ -268,13 +268,13 @@ stays.
 "
 `;
 
-exports[`Format Integration > keeps the line breaks of a multi-line YAML value 1`] = `
+exports[`formatting with the shared config > keeps the line breaks of a multi-line YAML value 1`] = `
 "condition: first == 'one' &&
   second == 'two'
 "
 `;
 
-exports[`Format Integration > preserves TOML key order, comments, and multiline string contents 1`] = `
+exports[`formatting with the shared config > preserves TOML key order, comments, and multiline string contents 1`] = `
 "# Keep the deployment order
 zulu = "last alphabetically"  # Primary target
 alpha = "first alphabetically"
@@ -291,13 +291,13 @@ C:\\work\\project
 "
 `;
 
-exports[`Format Integration > preserves XML mixed text, entities, CDATA, and explicit whitespace 1`] = `
+exports[`formatting with the shared config > preserves XML mixed text, entities, CDATA, and explicit whitespace 1`] = `
 "<document><p>Hello <b>world</b> ! &amp; goodbye.</p><raw xml:space='preserve'>  keep  this
   text </raw><script><![CDATA[if (a < b) { value = "x & y"; }]]></script></document>
 "
 `;
 
-exports[`Format Integration > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.css 1`] = `
+exports[`formatting with the shared config > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.css 1`] = `
 "/* Keep component styles */
 .button {
   @apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;
@@ -310,7 +310,7 @@ exports[`Format Integration > sorts Tailwind @apply utilities while preserving s
 "
 `;
 
-exports[`Format Integration > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.less 1`] = `
+exports[`formatting with the shared config > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.less 1`] = `
 "@accent: #2563eb;
 
 /* Keep component styles */
@@ -325,7 +325,7 @@ exports[`Format Integration > sorts Tailwind @apply utilities while preserving s
 "
 `;
 
-exports[`Format Integration > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.scss 1`] = `
+exports[`formatting with the shared config > sorts Tailwind @apply utilities while preserving stylesheet syntax in tailwind.scss 1`] = `
 "$accent: #2563eb;
 
 /* Keep component styles */
@@ -340,7 +340,7 @@ exports[`Format Integration > sorts Tailwind @apply utilities while preserving s
 "
 `;
 
-exports[`Format Integration > sorts Tailwind classes in Vue attributes, bindings, and scoped styles 1`] = `
+exports[`formatting with the shared config > sorts Tailwind classes in Vue attributes, bindings, and scoped styles 1`] = `
 "<template>
   <button
     id="save"
@@ -369,7 +369,7 @@ const active = true;
 "
 `;
 
-exports[`Format Integration > uses Prettier defaults while preserving package formatting for nested/package.json 1`] = `
+exports[`formatting with the shared config > uses Prettier defaults while preserving package formatting for package.json 1`] = `
 "{
   "name": "width-fixture",
   "version": "1.0.0",
@@ -383,7 +383,7 @@ exports[`Format Integration > uses Prettier defaults while preserving package fo
 "
 `;
 
-exports[`Format Integration > uses Prettier defaults while preserving package formatting for nested/package-lock.json 1`] = `
+exports[`formatting with the shared config > uses Prettier defaults while preserving package formatting for package-lock.json 1`] = `
 "{
   "name": "width-fixture",
   "lockfileVersion": 3,
@@ -403,41 +403,7 @@ exports[`Format Integration > uses Prettier defaults while preserving package fo
 "
 `;
 
-exports[`Format Integration > uses Prettier defaults while preserving package formatting for package.json 1`] = `
-"{
-  "name": "width-fixture",
-  "version": "1.0.0",
-  "keywords": [
-    "formatting-tools",
-    "configuration",
-    "developer-workflow",
-    "package-metadata"
-  ]
-}
-"
-`;
-
-exports[`Format Integration > uses Prettier defaults while preserving package formatting for package-lock.json 1`] = `
-"{
-  "name": "width-fixture",
-  "lockfileVersion": 3,
-  "packages": {
-    "": {
-      "name": "width-fixture",
-      "version": "1.0.0",
-      "keywords": [
-        "formatting-tools",
-        "configuration",
-        "developer-workflow",
-        "package-metadata"
-      ]
-    }
-  }
-}
-"
-`;
-
-exports[`Format Integration > uses Svelte shorthand only when the attribute matches its expression 1`] = `
+exports[`formatting with the shared config > uses Svelte shorthand only when the attribute matches its expression 1`] = `
 "<script>
   let title = "Hello";
   let enabled = true;
@@ -450,20 +416,20 @@ exports[`Format Integration > uses Svelte shorthand only when the attribute matc
 "
 `;
 
-exports[`Format Integration > uses default TOML quotes while preserving literal backslashes 1`] = `
+exports[`formatting with the shared config > uses default TOML quotes while preserving literal backslashes 1`] = `
 ""quoted key" = "hello"
 path = 'C:\\work\\project'
 "
 `;
 
-exports[`Format Integration > uses double quotes for quoted YAML values in quotes.yaml 1`] = `
+exports[`formatting with the shared config > uses double quotes for quoted YAML values in quotes.yaml 1`] = `
 "message: "status: ready"
 boolean_text: "true"
 path: 'C:\\work\\project'
 "
 `;
 
-exports[`Format Integration > uses double quotes for quoted YAML values in quotes.yml 1`] = `
+exports[`formatting with the shared config > uses double quotes for quoted YAML values in quotes.yml 1`] = `
 "message: "status: ready"
 boolean_text: "true"
 path: 'C:\\work\\project'

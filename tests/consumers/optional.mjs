@@ -9,41 +9,23 @@ import config from "@cravingmaker/prettier-config";
 import { consumerDirectory, format, verifyPluginPaths, verifyPrettierVersion } from "./helpers.mjs";
 
 verifyPrettierVersion();
-const astro = await format("example.astro", '---\nconst name="World"\n---\n<div class="p-4 flex">{name}</div>');
-const svelte = await format("example.svelte", '<script>let name="World"</script><div class="p-4 flex">{name}</div>');
-const require = createRequire(path.join(consumerDirectory, "package.json"));
-const configuredPlugins = (config.plugins ?? []).filter((plugin) => {
-  return typeof plugin === "string";
-});
 await verifyPluginPaths();
 
-if (!configuredPlugins.includes(require.resolve("prettier-plugin-astro"))) {
-  throw new Error("Astro plugin was not detected");
-}
+const require = createRequire(path.join(consumerDirectory, "package.json"));
+const plugins = config.plugins.filter((plugin) => {
+  return typeof plugin === "string";
+});
+assert.ok(plugins.includes(require.resolve("prettier-plugin-astro")), "Astro plugin was not detected");
+assert.ok(plugins.includes(require.resolve("prettier-plugin-svelte")), "Svelte plugin was not detected");
+assert.equal(plugins.at(-1), require.resolve("prettier-plugin-tailwindcss"), "Tailwind plugin was not loaded last");
 
-if (!configuredPlugins.includes(require.resolve("prettier-plugin-svelte"))) {
-  throw new Error("Svelte plugin was not detected");
-}
+const astro = await format("example.astro", '---\nconst name="World"\n---\n<div class="p-4 flex">{name}</div>');
+assert.ok(astro.includes('const name = "World";'), astro);
+assert.match(astro, /class=["']flex p-4["']/u);
 
-if (configuredPlugins.at(-1) !== require.resolve("prettier-plugin-tailwindcss")) {
-  throw new Error("Tailwind plugin was not loaded last");
-}
-
-if (!astro.includes('const name = "World";')) {
-  throw new Error("Astro parser did not format the script");
-}
-
-if (!svelte.includes('let name = "World";')) {
-  throw new Error("Svelte parser did not format the script");
-}
-
-if (!/class=["']flex p-4["']/u.test(svelte)) {
-  throw new Error(`Tailwind did not sort Svelte classes: ${svelte}`);
-}
-
-if (!/class=["']flex p-4["']/u.test(astro)) {
-  throw new Error(`Tailwind did not sort Astro classes: ${astro}`);
-}
+const svelte = await format("example.svelte", '<script>let name="World"</script><div class="p-4 flex">{name}</div>');
+assert.ok(svelte.includes('let name = "World";'), svelte);
+assert.match(svelte, /class=["']flex p-4["']/u);
 
 await Promise.all(
   ["clsx", "cn", "cva", "classNames", "classnames", "tv"].flatMap((name) => {
@@ -59,30 +41,26 @@ await Promise.all(
 );
 
 const vue = await format("tailwind.vue", await fs.readFile(path.join(consumerDirectory, "tailwind.vue"), "utf8"));
-const expectedVueFragments = [
+const vueFragments = [
   'class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"',
   "'px-6 py-3 text-lg font-bold'",
   "'bg-black text-white': active",
   'data-label="text-white bg-black"',
   "@apply flex rounded bg-blue-500 p-4 text-white;",
 ];
-if (
-  expectedVueFragments.some((fragment) => {
+assert.deepEqual(
+  vueFragments.filter((fragment) => {
     return !vue.includes(fragment);
-  })
-) {
-  throw new Error(`Tailwind did not sort Vue classes and scoped styles: ${vue}`);
-}
+  }),
+  [],
+  `Tailwind did not sort Vue classes and scoped styles: ${vue}`,
+);
 
 await Promise.all(
   ["tailwind.css", "tailwind.scss", "tailwind.less"].map(async (filename) => {
     const stylesheet = await format(filename, await fs.readFile(path.join(consumerDirectory, filename), "utf8"));
-    if (
-      !stylesheet.includes("@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;") ||
-      !stylesheet.includes("@apply flex items-center px-4 py-2 !important;")
-    ) {
-      throw new Error(`Tailwind did not sort @apply utilities in ${filename}: ${stylesheet}`);
-    }
+    assert.ok(stylesheet.includes("@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;"), stylesheet);
+    assert.ok(stylesheet.includes("@apply flex items-center px-4 py-2 !important;"), stylesheet);
   }),
 );
 

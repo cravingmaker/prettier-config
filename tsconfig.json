@@ -28,16 +28,7 @@
     "checkJs": true,
     "noEmit": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true,
-
-    "plugins": [
-      {
-        "diagnosticSeverity": {
-          "floatingEffect": "error"
-        },
-        "name": "@effect/language-service"
-      }
-    ]
+    "skipLibCheck": true
   },
   "exclude": ["node_modules", "tests/fixtures"],
   "include": [
