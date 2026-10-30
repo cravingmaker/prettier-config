@@ -90,7 +90,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "0.18.5",
     "@cravingmaker/eslint-config": "0.2.0",
-    "@effect/language-service": "0.87.4",
+    "@effect/language-service": "0.87.5",
     "@effect/platform-node-shared": "4.0.5",
     "@effect/vitest": "4.0.6",
     "@eslint/config-inspector": "3.5.0",
