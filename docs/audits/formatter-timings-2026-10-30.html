@@ -1,0 +1,177 @@
+<!doctype html>
+<!-- eslint-disable @html-eslint/require-open-graph-protocol -- This embedded audit chart has no published URL or social preview image. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    />
+    <title>Formatter check timings</title>
+    <style>
+      :root {
+        color: var(--foreground, CanvasText);
+        font-family: var(--font-sans, system-ui, sans-serif);
+      }
+      body {
+        margin: 0;
+      }
+      figure {
+        margin: 0 0 20px;
+      }
+      figcaption {
+        margin: 0 0 12px;
+        font-weight: 500;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) 64px;
+        align-items: center;
+        gap: 12px;
+        min-height: 34px;
+      }
+      .bar {
+        height: 10px;
+        background: var(--chart-1, Highlight);
+      }
+      .value {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .axis {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        color: var(--muted-foreground, GrayText);
+      }
+      .axis-label {
+        text-align: right;
+        margin-top: 6px;
+        color: var(--muted-foreground, GrayText);
+      }
+      .context {
+        color: var(--muted-foreground, GrayText);
+        margin: 0 0 16px;
+      }
+      .bar-92-4 {
+        width: 92.4%;
+      }
+      .bar-39-7 {
+        width: 39.7%;
+      }
+      .bar-6 {
+        width: 6%;
+      }
+      .bar-4-9 {
+        width: 4.9%;
+      }
+      .bar-22-5 {
+        width: 22.5%;
+      }
+      .bar-18-5 {
+        width: 18.5%;
+      }
+      .bar-5-6 {
+        width: 5.6%;
+      }
+      .bar-4-3 {
+        width: 4.3%;
+      }
+      .bar-61-1 {
+        width: 61.1%;
+      }
+      .bar-85-6 {
+        width: 85.6%;
+      }
+      .bar-41-5 {
+        width: 41.5%;
+      }
+    </style>
+    <meta
+      name="description"
+      content="Measured check times for Prettier, Oxfmt, and Bun across repository, one-file, and plugin workloads."
+    />
+  </head>
+  <body>
+    <main id="formatter-timings">
+      <p class="context">Median CLI check time · 7 runs · Apple M1 · lower is faster</p>
+      <figure aria-label="Repository check: Prettier 693 milliseconds, warm cached Prettier 298, Oxfmt 45, Bun 37">
+        <figcaption>Repository · 65 files</figcaption>
+        <div class="row">
+          <span>Prettier</span>
+          <span class="bar bar-92-4"></span>
+          <span class="value">693 ms</span>
+        </div>
+        <div class="row">
+          <span>Prettier, cached</span>
+          <span class="bar bar-39-7"></span>
+          <span class="value">298 ms</span>
+        </div>
+        <div class="row">
+          <span>Oxfmt</span>
+          <span class="bar bar-6"></span>
+          <span class="value">45 ms</span>
+        </div>
+        <div class="row">
+          <span>Bun + config</span>
+          <span class="bar bar-4-9"></span>
+          <span class="value">37 ms</span>
+        </div>
+      </figure>
+      <figure aria-label="One file check: Prettier 169 milliseconds, warm cached Prettier 139, Oxfmt 42, Bun 32">
+        <figcaption>Development process startup · one file</figcaption>
+        <div class="row">
+          <span>Prettier</span>
+          <span class="bar bar-22-5"></span>
+          <span class="value">169 ms</span>
+        </div>
+        <div class="row">
+          <span>Prettier, cached</span>
+          <span class="bar bar-18-5"></span>
+          <span class="value">139 ms</span>
+        </div>
+        <div class="row">
+          <span>Oxfmt</span>
+          <span class="bar bar-5-6"></span>
+          <span class="value">42 ms</span>
+        </div>
+        <div class="row">
+          <span>Bun + config</span>
+          <span class="bar bar-4-3"></span>
+          <span class="value">32 ms</span>
+        </div>
+      </figure>
+      <figure aria-label="Mixed plugin fixture check: Prettier 458 milliseconds, Oxfmt with Prettier fallback 642, Bun with Prettier fallback 311">
+        <figcaption>Plugin workload · 46 fixtures</figcaption>
+        <div class="row">
+          <span>Prettier</span>
+          <span class="bar bar-61-1"></span>
+          <span class="value">458 ms</span>
+        </div>
+        <div class="row">
+          <span>Oxfmt + Prettier</span>
+          <span class="bar bar-85-6"></span>
+          <span class="value">642 ms</span>
+        </div>
+        <div class="row">
+          <span>Bun + fallback</span>
+          <span class="bar bar-41-5"></span>
+          <span class="value">311 ms</span>
+        </div>
+      </figure>
+      <div
+        class="row"
+        aria-hidden="true"
+      >
+        <span></span>
+        <div class="axis"><span>0</span><span>750 ms</span></div>
+        <span></span>
+      </div>
+      <p class="axis-label">Shared scale · elapsed milliseconds per invocation</p>
+      <p class="context">
+        Warm filesystem and cache. Oxfmt's repository copy uses its own package order. Mixed-workload fallbacks retain Prettier. Source: local audit,
+        October 30, 2026.
+      </p>
+    </main>
+  </body>
+</html>
