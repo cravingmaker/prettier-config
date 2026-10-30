@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.4.0](https://github.com/cravingmaker/prettier-config/compare/v0.3.2...v0.4.0) (2026-10-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* Markdown and MDX files now keep each paragraph, list item, and quotation on one line. Version 0.3.2 kept their line breaks, so hard-wrapped Markdown reformats, and tables that are wider than `printWidth` lose their column padding. After upgrading, run `npx prettier --write .` and commit the result on its own. To keep the line breaks, export the config from `prettier.config.mjs` and add an override for `**/*.{md,markdown,mdx}` with `proseWrap: "preserve"`.
+* The config now sets `printWidth` to 150. Version 0.3.2 left it at Prettier's default of 80, so code and data files that wrapped at 80 columns reformat. After upgrading, run `npx prettier --write .` and commit the result on its own. To keep 80 columns, export the config from `prettier.config.mjs` and set `printWidth: 80` after `...config`.
+
+### Features
+
+* export package.json and a default condition ([#184](https://github.com/cravingmaker/prettier-config/issues/184)) ([d12e800](https://github.com/cravingmaker/prettier-config/commit/d12e8006d0573bd1978c30b116426b4f0ab46518))
+* keep Markdown prose on one line per paragraph ([#182](https://github.com/cravingmaker/prettier-config/issues/182)) ([368b3dd](https://github.com/cravingmaker/prettier-config/commit/368b3dd931adad6d35a5d685929286134049f187))
+* set print width to 150 ([#161](https://github.com/cravingmaker/prettier-config/issues/161)) ([f253f8d](https://github.com/cravingmaker/prettier-config/commit/f253f8d76e4a30c178d66cb13c99a1001ab13d86))
+* sort Tailwind classes in helper functions ([#145](https://github.com/cravingmaker/prettier-config/issues/145)) ([95ee667](https://github.com/cravingmaker/prettier-config/commit/95ee667c3b649a242685cd9e2f58355d11609f30))
+
+
+### Bug Fixes
+
+* validate stacked PRs and reject broken optional plugins ([#123](https://github.com/cravingmaker/prettier-config/issues/123)) ([41d84c7](https://github.com/cravingmaker/prettier-config/commit/41d84c7e23b4f47f1938681ac339111e276a5988))
+
 ## [0.3.2](https://github.com/cravingmaker/prettier-config/compare/v0.3.1...v0.3.2) (2026-10-06)
 
 
