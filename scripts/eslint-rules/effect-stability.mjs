@@ -65,7 +65,7 @@ const unsupportedModuleDocument = (declaration) => {
   );
 };
 
-/** @type {import('@typescript-eslint/utils').TSESLint.RuleModule<'api' | 'commonjs' | 'literal' | 'path' | 'reference', []>} */
+/** @type {import('@typescript-eslint/utils').TSESLint.RuleModule<'api' | 'commonjs' | 'literal' | 'path', []>} */
 const effectStability = {
   // eslint-disable-next-line max-lines-per-function -- The visitor shares one checker and reporting state across its typed handlers.
   create(context) {
@@ -75,7 +75,7 @@ const effectStability = {
     /** @type {Set<ts.Node>} */
     const reported = new Set();
 
-    /** @param {ts.Node} node @param {'api' | 'commonjs' | 'literal' | 'path' | 'reference'} messageId @param {string} api */
+    /** @param {ts.Node} node @param {'api' | 'commonjs' | 'literal' | 'path'} messageId @param {string} api */
     const report = (node, messageId, api) => {
       const mapped = services.tsNodeToESTreeNodeMap.get(node);
       if (!mapped || reported.has(node)) {
@@ -129,10 +129,6 @@ const effectStability = {
         return;
       }
       const name = target.text;
-      if (/(?:^|\/)repos(?:\/|$)/u.test(name.replaceAll("\\", "/"))) {
-        report(target, "reference", name);
-        return;
-      }
       if (isRestrictedPath(name)) {
         report(target, "path", name);
         return;
@@ -265,7 +261,7 @@ const effectStability = {
   defaultOptions: [],
   meta: {
     docs: {
-      description: "Require statically reviewable, public stable Effect APIs and installed-package imports.",
+      description: "Require statically reviewable, public stable Effect APIs.",
     },
     messages: {
       api: "{{api}} is annotated unstable or experimental. Use a public stable API; process execution belongs in tests/helpers/node-command.ts.",
@@ -273,7 +269,6 @@ const effectStability = {
       literal:
         "{{api}} must use a literal target so Effect API stability can be reviewed statically. Runtime indirection is not verified by this rule.",
       path: "{{api}} is not a supported stable Effect import. Use public stable APIs and the native Node command adapter.",
-      reference: "{{api}} imports a read-only source reference. Resolve application imports through installed packages instead of repos/.",
     },
     schema: [],
     type: "problem",

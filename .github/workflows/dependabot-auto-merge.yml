@@ -25,11 +25,8 @@ jobs:
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
       # Required status checks still gate the merge. Major updates, production
       # dependencies, and GitHub Actions updates are left for manual review.
-      # The effect-reference group is excluded because dependabot-effect-reference.yml
-      # must sync the source pin before it merges.
       - name: Enable auto-merge for development patch and minor updates
         if: >-
-          steps.metadata.outputs.dependency-group != 'effect-reference' &&
           steps.metadata.outputs.dependency-type == 'direct:development' &&
           (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
           steps.metadata.outputs.update-type == 'version-update:semver-minor')

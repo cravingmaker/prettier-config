@@ -11,7 +11,7 @@
 | Packed consumers | [package tests](../tests/package.smoke.test.ts), [programs](../tests/consumers/) | Real npm installations with consumer-local plugins and tools |
 | Resource lifetime | [package harness](../tests/helpers/package-smoke.ts) | Effect scopes release shared workspaces on success, failure, and interruption |
 | Native processes | [command adapter](../tests/helpers/node-command.ts) | Process events, bounded buffers, process-tree disposal, and typed failures |
-| Development tools | [scripts](../scripts/), [lint config](../eslint.config.js), [compiler config](../tsconfig.json) | Typed owned code, stable API restrictions, decoded external data |
+| Development tools | [scripts](../scripts/), [lint config](../eslint.config.js), [compiler config](../tsconfig.json) | Typed owned code and stable API restrictions |
 | CI and release | [workflows](../.github/workflows/), [package scripts](../package.json) | Required statuses and complete local/publishing validation |
 
 The runtime is a small synchronous configuration object. Publishing it directly avoids a build artifact that could drift from the tested source. Effect belongs in development resource handling; introducing it into this object would add an unnecessary runtime dependency and initialization boundary.
@@ -46,15 +46,11 @@ Linux CI covers Node 22/24/26 and consumer Node 22.12.0. Linux and macOS execute
 
 ## Effect and native process boundaries
 
-Before authoring Effect code, follow the [reference procedure](../CONTRIBUTING.md#effect-reference). The pin lives in [effect-reference.json](../scripts/effect-reference.json). `repos/` is read-only source material, excluded from lint, compilation, formatting, and packaging; never import it into application code.
+Use public stable APIs after consulting attached module and symbol annotations. An ordinary import path or an upstream example does not prove stability. The typed `local/effect-stability` rule follows aliases and attached installed declarations, rejects unsupported process/experimental imports, and checks static/re-export/dynamic-literal forms. It distinguishes decoded data from API namespaces and rejects nonliteral module loading and namespace access. CommonJS Effect loading loses symbol types and is rejected; use typed ESM. Arbitrary runtime indirection is not statically proven safe. `npm run effect:check` separately catches unobserved Effects.
 
-Use public stable APIs after consulting attached module and symbol annotations. An ordinary import path or an upstream example does not prove stability. The typed `local/effect-stability` rule follows aliases and attached installed declarations, rejects unsupported process/experimental imports and reference imports, and checks static/re-export/dynamic-literal forms. It distinguishes decoded data from API namespaces and rejects nonliteral module loading and namespace access. CommonJS Effect loading loses symbol types and is rejected; use typed ESM. Arbitrary runtime indirection is not statically proven safe. `npm run effect:check` separately catches unobserved Effects.
-
-The native command adapter is intentional: upstream Effect process modules and the corresponding platform spawner are unstable at the current pin. The filesystem, path, Node platform layers, and Vitest integration are also explicitly unstable in Effect 4.0.2. The harness uses native Node filesystem/path APIs and ordinary Vitest hooks instead. A stable `ManagedRuntime` shares layers and owns their disposal; test abort signals interrupt scoped effects and Vitest waits for their finalizers. The [native filesystem bridge](../tests/helpers/node-files.ts) waits for in-flight I/O before a scope removes its workspace. Effect owns acquisition, release, deadlines, and interruption. Native Node owns process listeners and mutable output buffers. Keep scoped finalizers awaited before returning an error or deleting a workspace. Preserve command/phase/cwd context, exit status, both output streams, UTF-8 decoding, and output limits.
+The native command adapter is intentional: upstream Effect process modules and the corresponding platform spawner are unstable in the installed version. The filesystem, path, Node platform layers, and Vitest integration are also explicitly unstable in Effect 4.0.2. The harness uses native Node filesystem/path APIs and ordinary Vitest hooks instead. A stable `ManagedRuntime` shares layers and owns their disposal; test abort signals interrupt scoped effects and Vitest waits for their finalizers. The [native filesystem bridge](../tests/helpers/node-files.ts) waits for in-flight I/O before a scope removes its workspace. Effect owns acquisition, release, deadlines, and interruption. Native Node owns process listeners and mutable output buffers. Keep scoped finalizers awaited before returning an error or deleting a workspace. Preserve command/phase/cwd context, exit status, both output streams, UTF-8 decoding, and output limits.
 
 POSIX commands run in process groups. Disposal must terminate descendants even after the leader exits, escalate after the grace period, and close streams before workspace cleanup. A signal-zero probe returning `EPERM` still indicates an existing group; Darwin can retain a zombie-only group until reaping completes. Denied group signals wait for reaping within the cleanup grace period, then preserve the permission error if the group still exists. The existing Windows adapter path remains; Windows execution is unverified. Real subprocess regressions run through ordinary Vitest tests and the live Effect runtime. Do not substitute a virtual test clock for operating-system process timing.
-
-Foreign Git commands clear Git's repository-specific environment variables, as specified in the [Git hook documentation](https://git-scm.com/docs/githooks). This prevents hook variables such as `GIT_DIR` and `GIT_INDEX_FILE` from selecting the caller's checkout while a fixture or reference setup operates elsewhere.
 
 ## Change recipes
 
@@ -81,7 +77,7 @@ Keep the runtime JSDoc contract and declarations consistent. Extend the installe
 
 ### Subprocess lifecycle
 
-Keep process mutation in the native adapter and lifetime/error composition in the Effect harness. Consult the pin before changing Effect APIs. Add a regression for the specific failure/deadline/interruption case. Run:
+Keep process mutation in the native adapter and lifetime/error composition in the Effect harness. Check installed declarations before changing Effect APIs. Add a regression for the specific failure/deadline/interruption case. Run:
 
 ```bash
 npx vitest run tests/package-smoke-harness.test.ts
@@ -92,15 +88,9 @@ npm run test:package
 
 Check real-clock cleanup and canonical paths on each configured CI platform.
 
-### Dependency and reference updates
+### Dependency updates
 
-Keep `effect`, `@effect/platform-node-shared`, and `@effect/vitest` on the same exact version, updating root lockfile declarations/records and the reference version, tag, and full commit together. Dependabot groups these packages; the independently versioned language service stays separate.
-
-The [Dependabot reference workflow](../.github/workflows/dependabot-effect-reference.yml) runs after CI completes on a grouped Effect PR, including a failed initial pin check. Its [updater](../scripts/dependabot-effect-reference.mjs) reads PR files as data using trusted default-branch tooling. It accepts only open, same-repository Dependabot Effect PRs targeting `main`, verifies matching manifest/lockfile pins, resolves the upstream tag to a commit, and verifies all three upstream packages. It changes only the reference JSON and requires the inspected PR head to remain current. A synchronized reference is a no-op. Existing Release Please App credentials create the commit with repository-scoped contents-write and pull-requests-read permissions so normal PR CI runs again. The workflow must be on `main` before it activates; rerun CI to synchronize an existing grouped PR. Manual dependency updates still require updating the source pin together.
-
-Preserve an old checkout by moving it aside yourself before setup; never reset or clean user content automatically.
-
-Run `npm run effect:check-reference` offline, then explicitly run `npm run setup:effect-reference` to verify the actual source commit and contents. Read the new `LLMS.md` and re-audit APIs before adopting them. Run `npx vitest run tests/effect-reference.test.ts tests/tooling-guards.test.ts` and `npm run effect:check`. Decode external JSON through the stable Schema helper in `scripts/manifest.mjs`, retaining file/phase context.
+Update exact dependency versions and root lockfile declarations/records together. After Effect updates, re-audit installed module and symbol annotations before adopting APIs. Run `npx vitest run tests/tooling-guards.test.ts` and `npm run effect:check`.
 
 ### CI changes
 
@@ -108,17 +98,17 @@ Map each existing command to its job before removing duplicated execution. Keep 
 
 ## CI check ownership
 
-`npm run validate` composes `validate:static` and `validate:behavior`. `npm run release:check` adds the Effect pin check, a dependency audit, and a dry run of the tarball, and `prepublishOnly` and the publishing workflow run it, so they retain every check. CI uses these smaller entry points to give repository static analysis one owner while retaining behavior on each supported runtime.
+`npm run validate` composes `validate:static` and `validate:behavior`. `npm run release:check` adds a dependency audit and a dry run of the tarball, and `prepublishOnly` and the publishing workflow run it, so they retain every check. CI uses these smaller entry points to give repository static analysis one owner while retaining behavior on each supported runtime.
 
 | Commands/checks | CI owner | Coverage |
 | --- | --- | --- |
 | `npm audit signatures` | Static checks, development Node | Registry signatures and provenance attestations of installed packages |
-| `effect:check-reference`, `typecheck`, `effect:check` | Static checks, development Node | Offline pins, required runtime shape, checked owned code, Effect diagnostics |
+| `typecheck`, `effect:check` | Static checks, development Node | Required runtime shape, checked owned code, Effect diagnostics |
 | `lint`, `format:check`, `lint:workflows` | Static checks, development Node | Typed rules, test/API guards, repository formatting, pinned actionlint |
 | `lint:unused` | Static checks, development Node | Knip unused files, exports, dependencies, and unresolved imports |
 | `lint:package`, `typecheck:package` | Static checks, development Node | Publint and ATTW's ESM package profile |
 | `test:tooling` | Static checks, development Node | Negative ESLint and compiler fixtures, focused-test guards |
-| `test:runtime` | Node.js 22/24/26 on Linux | Runtime behavior, native process lifecycle, reference and workflow tooling |
+| `test:runtime` | Node.js 22/24/26 on Linux | Runtime behavior, native process lifecycle, workflow tooling |
 | `test:package`, current peers | Node.js 22/24/26; Minimum Node.js 22.12.0 | Real npm consumers, custom stylesheets, public types, package contents |
 | `test:package`, minimum peers | Minimum peer versions, development Node | The same package assertions at declared lower bounds |
 | `test:lifecycle` | macOS lifecycle, development Node | Live-clock cleanup, process trees, interruption, deadlines, output limits, paths |

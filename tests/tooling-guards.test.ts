@@ -203,8 +203,6 @@ describe("repository tooling guards", () => {
     'import { ErrorReporter } from "effect"; void ErrorReporter.make;',
     'const target = "effect/Schema"; await import(target);',
     'import { Schema } from "effect"; const key = "String"; void Schema[key];',
-    'import { Schema } from "../repos/effect/packages/effect/src/index.ts"; void Schema;',
-    'await import("../repos/effect/packages/effect/src/Schema.ts");',
   ])(
     "rejects unsupported Effect access: %s",
     async (source) => {
@@ -235,13 +233,12 @@ describe("repository tooling guards", () => {
     ).toEqual([]);
   });
 
-  it("excludes raw fixtures and reference checkouts from tooling", async () => {
-    expect(await eslint.isPathIgnored("repos/effect/example.ts")).toBe(true);
+  it("excludes raw fixtures from tooling", async () => {
     expect(await eslint.isPathIgnored("tests/fixtures/example.js")).toBe(true);
     const parsed = parseProject(path.join(directory, "tsconfig.json"));
     expect(
       parsed.fileNames.some((filename) => {
-        return filename.includes("/repos/") || filename.includes("/tests/fixtures/");
+        return filename.includes("/tests/fixtures/");
       }),
     ).toBe(false);
   });
@@ -274,7 +271,7 @@ describe("repository tooling guards", () => {
     }
   }, 40_000);
 
-  it.each(["index.mjs", "eslint.config.js", "scripts/setup-effect-reference.mjs", "tests/consumers/helpers.mjs", "tests/consumers/installed.mjs"])(
+  it.each(["index.mjs", "eslint.config.js", "scripts/actionlint.mjs", "tests/consumers/helpers.mjs", "tests/consumers/installed.mjs"])(
     "rejects floating promises and unsafe parsed data in %s",
     async (filePath) => {
       const results = await eslint.lintText(

@@ -39,7 +39,7 @@
       }
     ]
   },
-  "exclude": ["node_modules", "tests/fixtures", "repos"],
+  "exclude": ["node_modules", "tests/fixtures"],
   "include": [
     "index.mjs",
     "index.d.ts",

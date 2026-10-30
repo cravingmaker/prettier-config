@@ -4,8 +4,8 @@ export default defineConfig({
   test: {
     // Focused tests fail locally as well as in CI, so a pre-push run cannot skip the suite.
     allowOnly: false,
-    // Raw formatter inputs and read-only upstream references are never tests.
-    exclude: [...configDefaults.exclude, "tests/fixtures/**", "repos/**"],
+    // Raw formatter inputs are never tests.
+    exclude: [...configDefaults.exclude, "tests/fixtures/**"],
     // A test that asserts nothing would pass vacuously.
     expect: { requireAssertions: true },
     include: ["tests/**/*.test.ts"],
