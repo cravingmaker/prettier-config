@@ -18,13 +18,6 @@ const execute = promisify(execFile);
 const timeout = 30_000;
 
 /**
- * @param {Uint8Array} bytes
- */
-const sha256 = (bytes) => {
-  return createHash("sha256").update(bytes).digest("hex");
-};
-
-/**
  * @param {unknown} error
  * @param {string} code
  */
@@ -32,49 +25,16 @@ const hasCode = (error, code) => {
   return typeof error === "object" && error !== null && "code" in error && error.code === code;
 };
 
-// Assertions throw synchronously; the asynchronous steps only compose them.
-
 /**
- * @returns {Release}
- */
-const pinnedRelease = () => {
-  const release = reference.releases.find((candidate) => {
-    return candidate.platform === process.platform && candidate.arch === process.arch;
-  });
-  if (!release) {
-    throw new Error(`The pinned workflow tool has no binary for ${process.platform}/${process.arch}`);
-  }
-  return release;
-};
-
-/**
+ * Throws `message` unless the SHA-256 digest of `bytes` is `expected`.
+ *
  * @param {Uint8Array} bytes
  * @param {string} expected
  * @param {string} message
  */
-const assertChecksum = (bytes, expected, message) => {
-  if (sha256(bytes) !== expected) {
+const verifyChecksum = (bytes, expected, message) => {
+  if (createHash("sha256").update(bytes).digest("hex") !== expected) {
     throw new Error(message);
-  }
-};
-
-/**
- * @param {Response} response
- * @param {string} url
- */
-const assertDownloaded = (response, url) => {
-  if (!response.ok) {
-    throw new Error(`Download pinned actionlint: HTTP ${String(response.status)} from ${url}`);
-  }
-};
-
-/**
- * @param {boolean} installed
- * @param {string} binary
- */
-const assertInstalled = (installed, binary) => {
-  if (!installed) {
-    throw new Error(`Installed actionlint is missing: ${binary}`);
   }
 };
 
@@ -82,15 +42,15 @@ const assertInstalled = (installed, binary) => {
  * Whether the cache holds the pinned binary. Other content fails instead of being replaced, because the cache may hold user files.
  *
  * @param {string} binary
- * @param {string} expected
+ * @param {Release} release
  * @returns {Promise<boolean>}
  */
-const isCached = async (binary, expected) => {
+const isCached = async (binary, release) => {
   try {
     const bytes = await fs.readFile(binary);
-    assertChecksum(
+    verifyChecksum(
       bytes,
-      expected,
+      release.binarySha256,
       `Cached actionlint does not match the pinned binary: ${binary}. Remove this cache directory and rerun lint:workflows.`,
     );
     return true;
@@ -98,9 +58,32 @@ const isCached = async (binary, expected) => {
     if (hasCode(error, "ENOENT")) {
       return false;
     }
-
     throw error;
   }
+};
+
+/**
+ * Downloads the pinned archive and extracts its binary into `directory`, verifying both.
+ *
+ * @param {string} directory
+ * @param {Release} release
+ * @returns {Promise<string>}
+ */
+const download = async (directory, release) => {
+  const url = `https://github.com/rhysd/actionlint/releases/download/v${reference.version}/${release.archive}`;
+  const response = await globalThis.fetch(url, { signal: globalThis.AbortSignal.timeout(timeout) });
+  if (!response.ok) {
+    throw new Error(`Download pinned actionlint: HTTP ${String(response.status)} from ${url}`);
+  }
+  const archive = new Uint8Array(await response.arrayBuffer());
+  verifyChecksum(archive, release.archiveSha256, `Pinned actionlint archive checksum mismatch: ${release.archive}`);
+  // Extract the verified archive from standard input, so downloaded data is never written to a file.
+  const extraction = execute("tar", ["-xzf", "-", "-C", directory, "actionlint"], { maxBuffer: 1024 * 1024, timeout });
+  extraction.child.stdin?.end(archive);
+  await extraction;
+  const extracted = path.join(directory, "actionlint");
+  verifyChecksum(await fs.readFile(extracted), release.binarySha256, `Pinned actionlint binary checksum mismatch: ${release.archive}`);
+  return extracted;
 };
 
 /**
@@ -111,7 +94,7 @@ const copyOnce = async (source, target) => {
   try {
     await fs.copyFile(source, target, constants.COPYFILE_EXCL);
   } catch (error) {
-    // A concurrent run installed the same verified binary first.
+    // A concurrent run installed the binary first; the caller verifies it.
     if (!hasCode(error, "EEXIST")) {
       throw error;
     }
@@ -119,29 +102,8 @@ const copyOnce = async (source, target) => {
 };
 
 /**
- * @param {string} staging
- * @param {Release} release
- */
-const downloadAndExtract = async (staging, release) => {
-  const url = `https://github.com/rhysd/actionlint/releases/download/v${reference.version}/${release.archive}`;
-  const response = await globalThis.fetch(url, {
-    signal: globalThis.AbortSignal.timeout(timeout),
-  });
-  assertDownloaded(response, url);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  assertChecksum(bytes, release.archiveSha256, `Pinned actionlint archive checksum mismatch: ${release.archive}`);
-  // Extract the verified archive from standard input, so downloaded data is never written to a file.
-  const extraction = execute("tar", ["-xzf", "-", "-C", staging, "actionlint"], { maxBuffer: 1024 * 1024, timeout });
-  extraction.child.stdin?.end(bytes);
-  await extraction;
-  const extracted = path.join(staging, "actionlint");
-
-  const extractedBytes = await fs.readFile(extracted);
-  assertChecksum(extractedBytes, release.binarySha256, `Pinned actionlint binary checksum mismatch: ${release.archive}`);
-  return extracted;
-};
-
-/**
+ * Installs the pinned binary at `binary` through a staging directory in `tools`.
+ *
  * @param {string} tools
  * @param {string} binary
  * @param {Release} release
@@ -150,8 +112,7 @@ const install = async (tools, binary, release) => {
   await fs.mkdir(tools, { recursive: true });
   const staging = await fs.mkdtemp(path.join(tools, ".actionlint-"));
   try {
-    const extracted = await downloadAndExtract(staging, release);
-
+    const extracted = await download(staging, release);
     await fs.mkdir(path.dirname(binary), { recursive: true });
     await copyOnce(extracted, binary);
   } finally {
@@ -166,14 +127,21 @@ const install = async (tools, binary, release) => {
  * @returns {Promise<string>}
  */
 const ensureActionlint = async (root = projectDirectory) => {
-  const release = pinnedRelease();
+  const release = reference.releases.find((candidate) => {
+    return candidate.platform === process.platform && candidate.arch === process.arch;
+  });
+  if (!release) {
+    throw new Error(`The pinned workflow tool has no binary for ${process.platform}/${process.arch}`);
+  }
   const tools = path.join(root, ".tools");
   const binary = path.join(tools, `actionlint-${reference.version}-${process.platform}-${process.arch}`, "actionlint");
-  if (await isCached(binary, release.binarySha256)) {
+  if (await isCached(binary, release)) {
     return binary;
   }
   await install(tools, binary, release);
-  assertInstalled(await isCached(binary, release.binarySha256), binary);
+  if (!(await isCached(binary, release))) {
+    throw new Error(`Installed actionlint is missing: ${binary}`);
+  }
   return binary;
 };
 

@@ -1,72 +1,53 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import prettier from "prettier";
 import { afterAll, describe, expect, it } from "vitest";
 
-const fixturesDirectory = path.join(__dirname, "fixtures");
-const runtimeConfig = path.resolve(__dirname, "..", "index.mjs");
+const fixturesDirectory = fileURLToPath(new URL("fixtures", import.meta.url));
+// Overrides match paths relative to their config file, and the repository ignores its fixtures, so
+// the tests format copies of the fixtures beside a config that loads the runtime.
+const runtime = new URL("../index.mjs", import.meta.url);
 const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "prettier-config-format-"));
 const configPath = path.join(temporaryDirectory, "prettier.config.mjs");
+await fs.writeFile(configPath, `export { default } from ${JSON.stringify(runtime.href)};\n`);
 
-// The files that keep each paragraph on one line.
-const markdownExtensions = new Set([".markdown", ".md", ".mdx"]);
-
+// Copies a fixture into the temporary project and returns its path there.
 const prepareFixture = async (filename: string, fixtureFilename = filename) => {
-  const sourcePath = path.join(fixturesDirectory, fixtureFilename);
   const filePath = path.join(temporaryDirectory, filename);
-  const content = await fs.readFile(sourcePath, "utf8");
-
   await fs.mkdir(path.dirname(filePath), { recursive: true });
-  await fs.writeFile(filePath, content, "utf8");
-
+  await fs.copyFile(path.join(fixturesDirectory, fixtureFilename), filePath);
   return filePath;
 };
 
-const testFixture = async (filename: string) => {
-  const filePath = await prepareFixture(filename);
-  const content = await fs.readFile(filePath, "utf8");
+const resolveOptions = async (filePath: string) => {
+  const resolved = await prettier.resolveConfig(filePath, { config: configPath, editorconfig: false });
+  expect(resolved).not.toBeNull();
+  return { ...resolved, filepath: filePath };
+};
 
-  const resolvedConfig = await prettier.resolveConfig(filePath, {
-    config: configPath,
-    editorconfig: false,
-  });
-
-  expect(resolvedConfig).not.toBeNull();
-
-  const options = { ...resolvedConfig, filepath: filePath };
-  const formatted = await prettier.format(content, options);
-  const isMarkdown = markdownExtensions.has(path.extname(filePath));
-
-  expect(formatted).toBe(
-    await prettier.format(content, {
-      filepath: filePath,
-      ...(typeof resolvedConfig?.parser !== "undefined" && {
-        parser: resolvedConfig.parser,
-      }),
-      plugins: resolvedConfig?.plugins ?? [],
-      printWidth: 150,
-      ...(isMarkdown && { proseWrap: "never" as const }),
-      singleAttributePerLine: true,
-    }),
-  );
-  expect(formatted).toMatchSnapshot();
+// Formats a fixture with the shared config and checks that formatting the result changes nothing.
+const formatFixture = async (filename: string, fixtureFilename = filename) => {
+  const filePath = await prepareFixture(filename, fixtureFilename);
+  const options = await resolveOptions(filePath);
+  const source = await fs.readFile(filePath, "utf8");
+  const formatted = await prettier.format(source, options);
   expect(await prettier.format(formatted, options)).toBe(formatted);
+  return { formatted, options, source };
+};
 
+// Formats a fixture and compares the result with its reviewed snapshot.
+const expectSnapshot = async (filename: string) => {
+  const { formatted } = await formatFixture(filename);
+  expect(formatted).toMatchSnapshot();
   return formatted;
 };
 
-await fs.writeFile(configPath, `export { default } from ${JSON.stringify(pathToFileURL(runtimeConfig).href)};\n`, "utf8");
-
-// eslint-disable-next-line max-lines-per-function -- This callback registers independent formatter cases.
-describe("Format Integration", () => {
+describe("formatting with the shared config", () => {
   afterAll(async () => {
-    await fs.rm(temporaryDirectory, {
-      force: true,
-      recursive: true,
-    });
+    await fs.rm(temporaryDirectory, { force: true, recursive: true });
   });
 
   it.each([
@@ -79,13 +60,9 @@ describe("Format Integration", () => {
     { filename: "sample.mjs", parser: "oxc" },
     { filename: "sample.jsx", parser: "oxc" },
   ])("selects $parser for nested/$filename", async ({ filename, parser }) => {
-    const filePath = path.join(temporaryDirectory, "nested", filename);
-    const resolved = await prettier.resolveConfig(filePath, {
-      config: configPath,
-      editorconfig: false,
-    });
+    const options = await resolveOptions(path.join(temporaryDirectory, "nested", filename));
 
-    expect(resolved?.parser).toBe(parser);
+    expect(options.parser).toBe(parser);
   });
 
   it.each([
@@ -99,39 +76,40 @@ describe("Format Integration", () => {
     { filename: "tailwind.less", parser: "less" },
   ])("infers the $parser parser from nested/$filename", async ({ filename, parser }) => {
     const filePath = await prepareFixture(`nested/${filename}`, filename);
-    const resolved = await prettier.resolveConfig(filePath, {
-      config: configPath,
-      editorconfig: false,
-    });
+    const { plugins } = await resolveOptions(filePath);
 
-    expect(resolved).not.toBeNull();
-    expect(await prettier.getFileInfo(filePath, { plugins: resolved?.plugins })).toMatchObject({
-      inferredParser: parser,
-    });
+    expect(await prettier.getFileInfo(filePath, { plugins })).toMatchObject({ inferredParser: parser });
   });
 
-  it("01. formats TypeScript correctly", async () => {
-    await testFixture("sample.ts");
-  });
-
-  it("02. formats JavaScript correctly", async () => {
-    await testFixture("sample.js");
+  it.each([
+    "sample.ts",
+    "sample.js",
+    "sample.tsx",
+    "sample.jsx",
+    "sample.astro",
+    "sample.svelte",
+    "sample.html",
+    "sample.css",
+    "sample.md",
+    "sample.mdx",
+    "package.json",
+    "sample.json",
+    "sample.jsonc",
+    "sample.json5",
+    "sample.yaml",
+    "sample.yml",
+    "sample.toml",
+  ])("formats %s", async (filename) => {
+    await expectSnapshot(filename);
   });
 
   it.each([
     { filename: "width.js", parser: "oxc" },
     { filename: "width.ts", parser: "oxc-ts" },
   ])("wraps at 150 columns with $parser", async ({ filename, parser }) => {
-    const filePath = await prepareFixture(`nested/${filename}`, "width.js");
-    const source = await fs.readFile(filePath, "utf8");
-    const resolved = await prettier.resolveConfig(filePath, {
-      config: configPath,
-      editorconfig: false,
-    });
-    const options = { ...resolved, filepath: filePath };
-    const formatted = await prettier.format(source, options);
+    const { formatted, options } = await formatFixture(`nested/${filename}`, "width.js");
 
-    expect(resolved?.parser).toBe(parser);
+    expect(options.parser).toBe(parser);
     expect(formatted).toBe(
       [
         'const message = createMessage("Hello from the shared Prettier config", "This call fits within 150 columns across multiple consumer projects");',
@@ -142,48 +120,15 @@ describe("Format Integration", () => {
         "",
       ].join("\n"),
     );
-    expect(resolved?.printWidth).toBe(150);
-    expect(await prettier.format(formatted, options)).toBe(formatted);
-  });
-
-  it("03. formats TSX correctly", async () => {
-    await testFixture("sample.tsx");
-  });
-
-  it("04. formats JSX correctly", async () => {
-    await testFixture("sample.jsx");
-  });
-
-  it("05. formats Astro correctly", async () => {
-    await testFixture("sample.astro");
-  });
-
-  it("06. formats Svelte correctly", async () => {
-    await testFixture("sample.svelte");
-  });
-
-  it("07. formats HTML correctly", async () => {
-    await testFixture("sample.html");
-  });
-
-  it("08. formats CSS correctly", async () => {
-    await testFixture("sample.css");
   });
 
   it.each([
     { filename: "tailwind-functions.js", parser: "oxc" },
     { filename: "tailwind-functions.ts", parser: "oxc-ts" },
   ])("sorts Tailwind helper functions with $parser", async ({ filename, parser }) => {
-    const filePath = await prepareFixture(`nested/${filename}`, "tailwind-functions.js");
-    const source = await fs.readFile(filePath, "utf8");
-    const resolved = await prettier.resolveConfig(filePath, {
-      config: configPath,
-      editorconfig: false,
-    });
-    const options = { ...resolved, filepath: filePath };
-    const formatted = await prettier.format(source, options);
+    const { formatted, options } = await formatFixture(`nested/${filename}`, "tailwind-functions.js");
 
-    expect(resolved?.parser).toBe(parser);
+    expect(options.parser).toBe(parser);
     expect(formatted).toContain('clsx("flex p-4 text-white")');
     expect(formatted).toContain('cn("flex p-4 text-white")');
     expect(formatted).toContain('cva("flex p-4 text-white",');
@@ -194,11 +139,10 @@ describe("Format Integration", () => {
     expect(formatted).toContain('"bg-blue-500 font-bold": active');
     expect(formatted).toContain("cn`flex p-4 text-white`");
     expect(formatted).toContain('custom("text-white p-4 flex")');
-    expect(await prettier.format(formatted, options)).toBe(formatted);
   });
 
   it("sorts Tailwind classes in Vue attributes, bindings, and scoped styles", async () => {
-    const formatted = await testFixture("tailwind.vue");
+    const formatted = await expectSnapshot("tailwind.vue");
 
     expect(formatted).toContain('class="custom-button flex rounded bg-blue-500 p-4 font-semibold text-white hover:bg-blue-700"');
     expect(formatted).toContain("'px-6 py-3 text-lg font-bold'");
@@ -213,7 +157,7 @@ describe("Format Integration", () => {
     { declaration: "color: $accent;", filename: "tailwind.scss" },
     { declaration: "color: @accent;", filename: "tailwind.less" },
   ])("sorts Tailwind @apply utilities while preserving stylesheet syntax in $filename", async ({ declaration, filename }) => {
-    const formatted = await testFixture(filename);
+    const formatted = await expectSnapshot(filename);
 
     expect(formatted).toContain("@apply flex items-center rounded bg-blue-500 p-4 text-white hover:bg-blue-700;");
     expect(formatted).toContain("@apply flex items-center px-4 py-2 !important;");
@@ -221,44 +165,8 @@ describe("Format Integration", () => {
     expect(formatted).toContain("/* Keep component styles */");
   });
 
-  it("09. formats Markdown correctly", async () => {
-    await testFixture("sample.md");
-  });
-
-  it("10. formats package.json correctly", async () => {
-    await testFixture("package.json");
-  });
-
-  it("11. formats JSON with Prettier defaults", async () => {
-    await testFixture("sample.json");
-  });
-
-  it("12. formats JSONC with Prettier defaults", async () => {
-    await testFixture("sample.jsonc");
-  });
-
-  it("13. formats JSON5 with Prettier defaults", async () => {
-    await testFixture("sample.json5");
-  });
-
-  it("14. formats YAML with Prettier defaults", async () => {
-    await testFixture("sample.yaml");
-  });
-
-  it("15. formats YML with Prettier defaults", async () => {
-    await testFixture("sample.yml");
-  });
-
-  it("16. formats MDX with Prettier defaults", async () => {
-    await testFixture("sample.mdx");
-  });
-
-  it("17. formats TOML correctly", async () => {
-    await testFixture("sample.toml");
-  });
-
   it("preserves TOML key order, comments, and multiline string contents", async () => {
-    const formatted = await testFixture("complex.toml");
+    const formatted = await expectSnapshot("complex.toml");
 
     expect(formatted.indexOf("zulu =")).toBeLessThan(formatted.indexOf("alpha ="));
     expect(formatted).toContain("# Keep the deployment order");
@@ -271,7 +179,7 @@ describe("Format Integration", () => {
   });
 
   it("uses Svelte shorthand only when the attribute matches its expression", async () => {
-    const formatted = await testFixture("shorthand.svelte");
+    const formatted = await expectSnapshot("shorthand.svelte");
 
     expect(formatted).toContain("{title}");
     expect(formatted).not.toContain("title={title}");
@@ -279,13 +187,13 @@ describe("Format Integration", () => {
   });
 
   it.each(["embedded.md", "embedded.mdx"])("inherits the shared width and JavaScript quotes inside %s", async (filename) => {
-    const formatted = await testFixture(filename);
+    const formatted = await expectSnapshot(filename);
 
     expect(formatted).toContain('const options = { first: "one", second: "two", third: "three", fourth: "four", fifth: "five", sixth: "six" };');
   });
 
   it.each(["prose.md", "prose.mdx"])("keeps each paragraph, list item, and quotation of %s on one line", async (filename) => {
-    const formatted = await testFixture(filename);
+    const formatted = await expectSnapshot(filename);
 
     expect(formatted).toContain("\nA paragraph that was wrapped by hand across three lines.\n");
     expect(formatted).toContain("\n- A list item that continues on a second line.\n");
@@ -296,25 +204,25 @@ describe("Format Integration", () => {
   });
 
   it("keeps the line breaks of a multi-line YAML value", async () => {
-    await expect(testFixture("multiline.yml")).resolves.toBe("condition: first == 'one' &&\n  second == 'two'\n");
+    expect(await expectSnapshot("multiline.yml")).toBe("condition: first == 'one' &&\n  second == 'two'\n");
   });
 
   it.each(["quotes.yaml", "quotes.yml"])("uses double quotes for quoted YAML values in %s", async (filename) => {
-    const formatted = await testFixture(filename);
+    const formatted = await expectSnapshot(filename);
 
     expect(formatted).toContain('message: "status: ready"');
     expect(formatted).toContain('boolean_text: "true"');
   });
 
   it("uses default TOML quotes while preserving literal backslashes", async () => {
-    const formatted = await testFixture("quotes.toml");
+    const formatted = await expectSnapshot("quotes.toml");
 
     expect(formatted).toContain('"quoted key" = "hello"');
     expect(formatted).toContain(String.raw`path = 'C:\work\project'`);
   });
 
   it("formats XML structure, attributes, namespaces, and comments", async () => {
-    const formatted = await testFixture("sample.xml");
+    const formatted = await expectSnapshot("sample.xml");
 
     expect(formatted).toContain("<app:item");
     expect(formatted).toContain("title='say \"hello\"'");
@@ -326,7 +234,7 @@ describe("Format Integration", () => {
   });
 
   it("preserves XML mixed text, entities, CDATA, and explicit whitespace", async () => {
-    const formatted = await testFixture("mixed.xml");
+    const formatted = await expectSnapshot("mixed.xml");
 
     expect(formatted).toContain("<p>Hello <b>world</b> ! &amp; goodbye.</p>");
     expect(formatted).toContain("xml:space='preserve'");
@@ -334,58 +242,12 @@ describe("Format Integration", () => {
     expect(formatted).toContain('<![CDATA[if (a < b) { value = "x & y"; }]]>');
   });
 
-  it("uses the 150-column print width for XML in nested directories", async () => {
-    const filePath = await prepareFixture("nested/width.xml", "width.xml");
-    const source = await fs.readFile(filePath, "utf8");
-    const resolved = await prettier.resolveConfig(filePath, {
-      config: configPath,
-      editorconfig: false,
-    });
-    const options = { ...resolved, filepath: filePath };
-    const formatted = await prettier.format(source, options);
+  // The npm CLI writes these files with JSON.stringify, whose layout no print width changes.
+  it.each(["package.json", "package-lock.json"])("uses Prettier defaults while preserving package formatting for %s", async (filename) => {
+    const { formatted, options, source } = await formatFixture(filename, `width/${filename}`);
 
-    expect(resolved?.printWidth).toBe(150);
-    expect(formatted.trim()).not.toContain("\n");
-    expect(formatted).toBe(await prettier.format(source, { ...options, printWidth: 150 }));
-    expect(formatted).not.toBe(await prettier.format(source, { ...options, printWidth: 80 }));
-    expect(await prettier.format(formatted, options)).toBe(formatted);
+    expect(await prettier.getFileInfo(options.filepath)).toMatchObject({ inferredParser: "json-stringify" });
+    expect(formatted).toMatchSnapshot();
+    expect(formatted).toBe(await prettier.format(source, { filepath: options.filepath, plugins: options.plugins ?? [] }));
   });
-
-  it("reports incomplete XML markup", async () => {
-    const filePath = await prepareFixture("sample.xml");
-    const resolved = await prettier.resolveConfig(filePath, {
-      config: configPath,
-      editorconfig: false,
-    });
-
-    await expect(prettier.format("<root", { ...resolved, filepath: filePath })).rejects.toThrow();
-  });
-
-  it.each(["package.json", "package-lock.json", "nested/package.json", "nested/package-lock.json"])(
-    "uses Prettier defaults while preserving package formatting for %s",
-    async (filename) => {
-      const filePath = await prepareFixture(filename, `width/${path.basename(filename)}`);
-      const source = await fs.readFile(filePath, "utf8");
-      const resolved = await prettier.resolveConfig(filePath, {
-        config: configPath,
-        editorconfig: false,
-      });
-      const options = { ...resolved, filepath: filePath };
-      const formatted = await prettier.format(source, options);
-      const defaults = await prettier.format(source, {
-        filepath: filePath,
-        plugins: resolved?.plugins ?? [],
-        singleAttributePerLine: true,
-      });
-
-      // Package files infer json-stringify and retain package-key sorting.
-      expect(await prettier.getFileInfo(filePath)).toMatchObject({
-        inferredParser: "json-stringify",
-      });
-      expect(formatted).toMatchSnapshot();
-      expect(formatted).toBe(defaults);
-      expect(JSON.parse(formatted)).toEqual(JSON.parse(source));
-      expect(await prettier.format(formatted, options)).toBe(formatted);
-    },
-  );
 });

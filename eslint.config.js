@@ -1,7 +1,7 @@
 /**
- * Test-only rule overrides
+ * Repository rule overrides
  *
- * All TypeScript files under tests/ and JavaScript consumer programs under tests/consumers/
+ * Tests: all TypeScript files under tests/ and the consumer programs under tests/consumers/
  *
  * functional/functional-parameters — disabled because vi.doMock() factory functions must match
  * the exact shape of the mocked module's API. Adding dummy parameters solely to satisfy the rule
@@ -15,25 +15,16 @@
  *
  * functional/no-throw-statements — disabled because mocks and test guards intentionally throw to reproduce Node resolution failures and fail fast on invalid test state.
  *
- * tests/format.test.ts, tests/helpers/package-smoke.ts, and tests/consumers/*.mjs
+ * Tests, consumer programs, and scripts
  *
- * security/detect-non-literal-fs-filename — disabled because these tests intentionally construct filesystem paths from controlled fixture names and temporary directories. The paths are dynamic by design but are not derived from untrusted input.
+ * functional/no-promise-reject — disabled because these asynchronous programs reject when a tool or consumer invariant fails.
  *
- * Native asynchronous tooling and consumer programs
- *
- * functional/no-promise-reject — disabled for native async programs that reject when tooling or consumer invariants fail.
- *
- * Effect harness and tests
- *
- * Effect services and schema errors use class-based factory APIs. Their Effect parameters carry runtime internals, while service types combine immutable data and operations. The harness overrides only the conflicting functional rules. unicorn/throw-new-error mistakes Schema.TaggedError's curried class factory for an Error constructor.
+ * security/detect-non-literal-fs-filename — disabled because these programs build filesystem paths from fixed fixture names and the temporary or cache directories that they own. The paths are dynamic by design but are not derived from untrusted input.
  */
 
 import { createConfig } from "@cravingmaker/eslint-config";
 import tseslint from "typescript-eslint";
 import plugin from "@vitest/eslint-plugin";
-
-import { effectStability } from "./scripts/eslint-rules/effect-stability.mjs";
-import { testModes } from "./scripts/eslint-rules/test-modes.mjs";
 
 const baseConfig = await createConfig({
   ignores: ["tests/fixtures/**/*"],
@@ -106,58 +97,36 @@ const config = [
     },
   },
   {
-    files: ["**/*.{js,mjs,ts}"],
-    name: "@cravingmaker/prettier-config/effect-stability",
-    plugins: {
-      local: {
-        rules: { "effect-stability": effectStability, "test-modes": testModes },
-      },
-    },
-    rules: {
-      "local/effect-stability": "error",
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            { message: "Use Uint8Array instead.", name: "buffer" },
-            { message: "Use Uint8Array instead.", name: "node:buffer" },
-            {
-              importNames: ["NodeChildProcessSpawner"],
-              message: "Use the native Node command adapter; Effect's process API is unstable.",
-              name: "@effect/platform-node-shared",
-            },
-          ],
-          patterns: [
-            {
-              group: [
-                "effect/process",
-                "effect/process/**",
-                "effect/unstable",
-                "effect/unstable/**",
-                "@effect/experimental",
-                "@effect/experimental/**",
-                "@effect/platform-node-shared/NodeChildProcessSpawner",
-              ],
-              message: "Use public, stable Effect APIs only; process execution belongs in the native Node adapter.",
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
+    // Focused tests also fail at run time (`allowOnly: false`). Skipped, pending, and conditional
+    // tests need a local rule exception that explains why their coverage is disabled.
     files: ["tests/**/*.test.ts"],
     name: "@cravingmaker/prettier-config/vitest",
     plugins: { vitest: plugin },
     rules: {
-      "local/test-modes": "error",
+      "no-restricted-properties": [
+        "error",
+        ...["describe", "it", "test"].flatMap((object) => {
+          return ["runIf", "skipIf"].map((property) => {
+            return { message: "Conditional tests need a local rule exception that explains why their coverage is disabled.", object, property };
+          });
+        }),
+      ],
       "vitest/no-disabled-tests": "error",
       "vitest/no-focused-tests": ["error", { fixable: false }],
       "vitest/require-awaited-expect-poll": "error",
       "vitest/valid-expect": "error",
       "vitest/valid-expect-in-promise": "error",
+      "vitest/warn-todo": "error",
     },
-    settings: { vitest: { vitestImports: ["@effect/vitest"] } },
+  },
+  {
+    // Test registration groups and fixture tables describe the test hierarchy rather than runtime complexity.
+    files: ["tests/**/*.test.ts"],
+    name: "@cravingmaker/prettier-config/test-structure",
+    rules: {
+      "max-lines-per-function": "off",
+      "max-nested-callbacks": "off",
+    },
   },
   {
     files: ["tests/**/*.ts", "tests/consumers/**/*.mjs"],
@@ -171,78 +140,8 @@ const config = [
     },
   },
   {
-    // Effect owns generator tracing; suites, Effects, and spies add one callback level.
-    files: ["tests/**/*.ts"],
-    name: "@cravingmaker/prettier-config/effect-test-callbacks",
-    rules: {
-      "func-names": ["error", "always", { generators: "never" }],
-      "max-nested-callbacks": ["warn", { max: 4 }],
-    },
-  },
-  {
-    files: ["tests/format.test.ts"],
-    name: "@cravingmaker/prettier-config/format-test-filesystem",
-    rules: {
-      "security/detect-non-literal-fs-filename": "off",
-    },
-  },
-  {
-    // Guard tests use controlled temporary projects and compiler filesystem hosts.
-    files: ["tests/tooling-guards.test.ts", "tests/vitest-watch.test.ts", "tests/workflow-tool.test.ts"],
-    name: "@cravingmaker/prettier-config/tooling-test-filesystem",
-    rules: {
-      "security/detect-non-literal-fs-filename": "off",
-    },
-  },
-  {
-    files: ["tests/helpers/package-smoke.ts", "tests/helpers/node-command.ts", "tests/package.smoke.test.ts"],
-    name: "@cravingmaker/prettier-config/effect-classes",
-    rules: {
-      "functional/no-class-inheritance": "off",
-      "functional/no-classes": "off",
-    },
-  },
-  {
-    files: ["tests/helpers/package-smoke.ts", "tests/helpers/node-command.ts", "tests/helpers/test-effect.ts"],
-    name: "@cravingmaker/prettier-config/effect-services",
-    rules: {
-      "functional/no-mixed-types": "off",
-      "functional/prefer-immutable-types": "off",
-      "security/detect-non-literal-fs-filename": "off",
-      "unicorn/throw-new-error": "off",
-    },
-  },
-  {
-    // Node event listeners maintain process state and bounded output buffers.
-    files: ["tests/helpers/node-command.ts"],
-    name: "@cravingmaker/prettier-config/native-process-state",
-    rules: {
-      "functional/immutable-data": "off",
-      "functional/no-let": "off",
-      "functional/no-loop-statements": "off",
-      "functional/no-promise-reject": "off",
-    },
-  },
-  {
-    files: ["scripts/actionlint.mjs"],
-    name: "@cravingmaker/prettier-config/tooling-filesystem",
-    rules: {
-      "functional/no-promise-reject": "off",
-      "security/detect-non-literal-fs-filename": "off",
-    },
-  },
-  {
-    // The native filesystem bridge rejects genuine Node I/O failures.
-    files: ["tests/helpers/node-files.ts"],
-    name: "@cravingmaker/prettier-config/native-filesystem",
-    rules: {
-      "functional/no-promise-reject": "off",
-      "security/detect-non-literal-fs-filename": "off",
-    },
-  },
-  {
-    files: ["tests/consumers/**/*.mjs"],
-    name: "@cravingmaker/prettier-config/consumer-filesystem",
+    files: ["tests/**/*.ts", "tests/consumers/**/*.mjs", "scripts/**/*.mjs"],
+    name: "@cravingmaker/prettier-config/tests-and-scripts",
     rules: {
       "functional/no-promise-reject": "off",
       "security/detect-non-literal-fs-filename": "off",
