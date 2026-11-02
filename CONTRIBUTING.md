@@ -22,6 +22,8 @@ npm run prepare
 
 The repository disables installation scripts, so run `npm run prepare` explicitly once per checkout to activate Husky hooks.
 
+The workspace settings for Zed in `.zed/settings.json` select the repository's TypeScript, so the editor reports what `npm run typecheck` reports.
+
 See [README.md](README.md) for the runtime configuration and supported plugin versions.
 
 ## Making changes
@@ -30,17 +32,11 @@ Use the [coding principles](CODING_PRINCIPLES.md) to choose code style, architec
 
 Create a branch from the latest `main` and keep each pull request focused. Use a conventional pull request title, such as `fix: ...`, `test: ...`, or `docs: ...`. Describe the problem and resulting behavior, including before/after examples when formatter output changes.
 
-Add relevant regression tests for behavior changes. Formatting fixtures live in `tests/fixtures/` and are excluded from linting and formatting checks. Review snapshot diffs and update snapshots only when the output change is intentional. For runtime or plugin changes, exercise packed consumers in `tests/package.smoke.test.ts` as well.
+Add relevant regression tests for behavior changes. Formatting fixtures live in `tests/fixtures/` and are excluded from linting and formatting checks. Review snapshot diffs and update snapshots only when the output change is intentional. For runtime or plugin changes, exercise packed consumers in `tests/package.test.ts` as well. Test this package's configuration and contracts; Prettier, its plugins, and the repository's tools have tests of their own.
 
-Use the [architecture guide](docs/architecture.md) to find runtime, declaration, consumer, tooling, and native-process ownership. Its [change recipes](docs/architecture.md#change-recipes) name the smallest checks for plugin updates, formatter behavior, public types, subprocess lifecycle, dependency updates, and CI changes. Owned executable JavaScript is linted with type information and checked by TypeScript; raw fixtures stay excluded.
+Use the [architecture guide](docs/architecture.md) to find runtime, declaration, consumer, and tooling ownership. Its [change recipes](docs/architecture.md#change-recipes) name the smallest checks for plugin updates, formatter behavior, public types, dependency updates, and CI changes. Owned executable JavaScript is linted with type information and checked by TypeScript; raw fixtures stay excluded.
 
 `tsconfig.json` sets the compiler contract of `@cravingmaker/eslint-config` (`strict`, `noImplicitReturns`, and `allowUnreachableCode: false`), because that config leaves those checks to the compiler in TypeScript files. It adds stricter checks, including `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, and `verbatimModuleSyntax`. Its `target` and `lib` describe Node.js 22.12, the minimum consumer runtime: ES2024 with iterator helpers, Set methods, and `Array.fromAsync`. The compiler therefore rejects APIs that this runtime lacks, such as `Promise.try`, in the published files and the tests alike.
-
-## Effect tooling
-
-Use public stable APIs only: inspect both module and symbol annotations for unstable or experimental APIs, including examples.
-
-Workspace Zed settings use local TypeScript through `vtsls`. The Effect plugin supplies editor diagnostics; `npm run effect:check` runs them in the terminal because ordinary `tsc` does not run editor plugins. `local/effect-stability` checks installed declarations during linting.
 
 ## Validation
 
@@ -50,9 +46,9 @@ Before opening a pull request, run:
 npm run validate
 ```
 
-This runs `validate:static` followed by `validate:behavior`: typechecking, Effect diagnostics, linting, unused-code analysis, formatting, pinned workflow lint, [package checks](#published-package-checks), tooling guards, runtime tests, and installed-consumer tests. Before a release, `npm run release:check` runs a dependency security audit, the same validation, and a dry run of the tarball. `prepublishOnly` and the publishing workflow run it. Package smoke tests install the tarball and consumer tools in a temporary project, so they need npm registry access or cached dependencies.
+This runs `validate:static` followed by `validate:behavior`: typechecking, linting, unused-code analysis, formatting, pinned workflow lint, [package checks](#published-package-checks), workflow tool tests, runtime tests, and installed-consumer tests. Before a release, `npm run release:check` runs a dependency security audit, the same validation, and a dry run of the tarball. `prepublishOnly` and the publishing workflow run it. Package tests install the tarball and consumer tools in temporary projects, so they need npm registry access or cached dependencies.
 
-Package tests reuse npm-installed base and optional consumers from normal and external directories. `PRETTIER_CONFIG_CONSUMER_NODE` selects the runtime programs; installed type compilation stays on development Node. See the [consumer boundary](docs/architecture.md#installed-consumers) for fixtures, provenance, and cleanup requirements.
+Package tests install the tarball once into a base consumer and once into a consumer with the optional plugins, and run each consumer program from its project and from another directory. `PRETTIER_CONFIG_CONSUMER_NODE` selects the runtime programs; installed type compilation stays on development Node. See the [consumer boundary](docs/architecture.md#installed-consumers) for fixtures, provenance, and cleanup requirements.
 
 The default peer scenario uses the exact development versions. To exercise the declared lower bounds for Prettier and all three optional plugins, run:
 
@@ -62,24 +58,22 @@ PRETTIER_CONFIG_PEER_SCENARIO=minimum npm run test:package
 
 `tests/helpers/peer-scenarios.ts` derives these bounds from `peerDependencies` and rejects unsupported scenario names or missing explicit minima. Consumer programs verify the installed Prettier version. The optional project explicitly installs Svelte and Tailwind CSS 4.1.14 for its checked stylesheet configuration; its custom theme/utility changes sorting from both working directories. The scenario and consumer-runtime variables can be combined.
 
-CI runs behavioral and package coverage on Linux Node 22/24/26, consumers on Node 22.12.0, and minimum peers once on development Node. Process lifecycle tests also run on macOS through `npm run test:lifecycle`; Linux retains the same lifecycle suite. Windows execution remains unverified.
+CI runs the runtime tests and installed consumers on Linux with Node.js 22.12.0 and the newest 22, 24, and 26 releases, and minimum peers once on development Node. CI does not run on macOS or Windows.
 
-CI runs repository static checks and tooling guards once on the development Node.js version in `.nvmrc`, beside version-sensitive behavior and installed consumers on Node 22/24/26. Each matrix job installs dependencies on development Node, runs `node --run test:runtime` on the newest release of its line, then restores development Node for the package harness and type compiler while consumer programs use the captured runtime executable. All jobs run in parallel. The `CI result` job fails unless every one of them succeeds, and it is the status that the repository rules require; "Dependency audit" runs `npm audit --audit-level=low` on the lockfile in its own job, so an advisory published after the last dependency change does not hide the other results. The `overrides` in `package.json` raise `deepmerge-ts` and `katex`, which @cravingmaker/eslint-config brings in, to their fixed versions, as eslint-config's README advises; consumers of this package do not install either. Dependency Review runs as one of its jobs on pull requests. See the [CI ownership table](docs/architecture.md#ci-check-ownership) for the complete command map; `validate:static` and `validate:behavior` are composable CI entry points, and `npm run validate` remains the required final local check.
+CI runs repository static checks and workflow tool tests once on the development Node.js version in `.nvmrc`, beside version-sensitive behavior and installed consumers on each supported Node.js. Each matrix job installs dependencies on development Node, runs `node --run test:runtime` on its Node.js, then restores development Node for npm and the type compiler while consumer programs use the captured runtime executable. All jobs run in parallel. The `CI result` job fails unless every one of them succeeds, and it is the status that the repository rules require; "Dependency audit" runs `npm audit --audit-level=low` on the lockfile in its own job, so an advisory published after the last dependency change does not hide the other results. The `overrides` in `package.json` raise `deepmerge-ts` and `katex`, which @cravingmaker/eslint-config brings in, to their fixed versions, as eslint-config's README advises; consumers of this package do not install either. Dependency Review runs as one of its jobs on pull requests. See the [CI ownership table](docs/architecture.md#ci-check-ownership) for the complete command map; `validate:static` and `validate:behavior` are composable CI entry points, and `npm run validate` remains the required final local check.
 
-Vitest runs one test file at a time to limit peak memory when typed ESLint services and compiler subprocesses run in the combined suite. Test isolation, assertion guards, real-clock deadlines, and the complete test selection still apply.
-
-`npm test` and `npm run test:ui` retain all regular tests. `test:runtime` excludes the ESLint-backed tooling guards, and `test:tooling` selects those guards on the development runtime. Full validation runs both suites through its static and behavior phases.
+`npm test` and `npm run test:ui` run every test except the installed consumers. `test:runtime` runs the configuration and formatting tests, which CI repeats on each supported Node.js; `test:tooling` runs the workflow tool tests once, on development Node. Full validation runs both through its static and behavior phases.
 
 To run only a file or named case during development, use, for example:
 
 ```bash
-npx vitest run tests/package-smoke-harness.test.ts
+npx vitest run tests/format.test.ts
 npx vitest run tests/config.test.ts -t "optional"
 ```
 
 Finish with `npm run validate` and `git diff --check`. Treat local results and remote CI separately. The `CI result` status must succeed before a PR is ready for review.
 
-Focused tests fail locally as well as in CI (`allowOnly: false`), and every test needs at least one assertion (`expect.requireAssertions`). Before each test, Vitest restores spies, stubbed environment variables, and stubbed globals (`restoreMocks`, `unstubEnvs`, and `unstubGlobals`), so no test depends on what an earlier test replaced. ESLint checks ordinary tests, aliases, `.each`, Effect testers, and layer-provided helpers. Skipped, pending, or conditional tests require a local rule exception explaining why coverage is intentionally disabled; do not disable these guards for a file or suite. Use explicit file/name filters during development.
+Focused tests fail locally as well as in CI (`allowOnly: false`), and every test needs at least one assertion (`expect.requireAssertions`). Before each test, Vitest restores spies, stubbed environment variables, and stubbed globals (`restoreMocks`, `unstubEnvs`, and `unstubGlobals`), so no test depends on what an earlier test replaced. ESLint rejects focused, skipped, pending (`todo`), and conditional (`skipIf` and `runIf`) tests. A skipped, pending, or conditional test requires a local rule exception explaining why its coverage is intentionally disabled; do not disable these guards for a file or suite. Use explicit file/name filters during development.
 
 Check workflow semantics locally with:
 
@@ -119,7 +113,7 @@ File and test-name filters also work with the UI:
 npm run test:ui -- tests/format.test.ts -t "TypeScript"
 ```
 
-The watch mappings in `vitest.config.ts` rerun affected tests when runtime files, public declarations, raw fixtures, or consumer programs change. These inputs are read through the filesystem or subprocesses rather than ordinary test imports. The regular UI continues to exclude package tests, and the package UI stays limited to installed consumers. Verify mapping changes with `npx vitest run tests/vitest-watch.test.ts`.
+The watch mappings in `vitest.config.ts` rerun affected tests when runtime files, public declarations, raw fixtures, consumer programs, or the workflow check change. These inputs are read through the filesystem or child processes rather than ordinary test imports. The regular UI continues to exclude package tests, and the package UI stays limited to installed consumers.
 
 Review snapshot changes before accepting them. Keep `vitest` and `@vitest/ui` on the same exact version; Dependabot groups their updates. The UI is a development tool; finish with `npm run validate` and `git diff --check`. CI and publishing continue to use the existing complete validation commands.
 
@@ -159,7 +153,7 @@ npm run lint:unused
 
 This check runs in `validate:static`, so full local validation, CI's static checks job, and publishing all require a clean result. Configuration hints also fail the check to keep exceptions current.
 
-[knip.json](knip.json) adds the consumer programs that are copied and launched outside the import graph as entry points. Their shared helpers remain ordinary project files, so unused helper exports are still reported. Raw formatter and installed-type fixtures under `tests/fixtures/` are outside the analysis. The two explicitly listed Effect packages remain installed for declaration-based guard tests; they are not unused dependency cleanup candidates.
+[knip.json](knip.json) adds the consumer programs that are copied and launched outside the import graph as entry points. Their shared helpers remain ordinary project files, so unused helper exports are still reported. Raw formatter and installed-type fixtures under `tests/fixtures/` are outside the analysis.
 
 Use [Node Modules Inspector](https://github.com/antfu/node-modules-inspector) to explore the installed dependency tree, filter production and development dependencies, and inspect package sizes:
 

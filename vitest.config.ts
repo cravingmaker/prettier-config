@@ -9,38 +9,42 @@ export default defineConfig({
     // A test that asserts nothing would pass vacuously.
     expect: { requireAssertions: true },
     include: ["tests/**/*.test.ts"],
-    // Typed ESLint services and compiler subprocesses compete for memory when suites overlap.
-    maxWorkers: 1,
     // With `unstubEnvs` and `unstubGlobals`, each test starts with the real implementations,
     // environment variables, and globals. Vitest already clears the calls that mocks recorded.
     restoreMocks: true,
     unstubEnvs: true,
     unstubGlobals: true,
-    // Files read through Prettier, the compiler, or consumer subprocesses are
+    // Files read through Prettier, the compiler, or child processes are
     // outside Vitest's import graph. Keep their affected tests in watch mode.
     watchTriggerPatterns: [
       {
         pattern: /(?:^|\/)index\.mjs$/u,
         testsToRun: (_filename) => {
-          return ["tests/config.test.ts", "tests/format.test.ts", "tests/package.smoke.test.ts", "tests/tooling-guards.test.ts"];
+          return ["tests/config.test.ts", "tests/format.test.ts", "tests/package.test.ts"];
         },
       },
       {
         pattern: /(?:^|\/)index\.d\.ts$/u,
         testsToRun: (_filename) => {
-          return ["tests/package.smoke.test.ts", "tests/tooling-guards.test.ts"];
+          return ["tests/package.test.ts"];
         },
       },
       {
         pattern: /(?:^|\/)tests\/fixtures\//u,
         testsToRun: (_filename) => {
-          return ["tests/format.test.ts", "tests/package.smoke.test.ts"];
+          return ["tests/format.test.ts", "tests/package.test.ts"];
         },
       },
       {
         pattern: /(?:^|\/)tests\/consumers\//u,
         testsToRun: (_filename) => {
-          return "tests/package.smoke.test.ts";
+          return ["tests/package.test.ts"];
+        },
+      },
+      {
+        pattern: /(?:^|\/)scripts\/check-workflows\.mjs$/u,
+        testsToRun: (_filename) => {
+          return ["tests/workflow-tool.test.ts"];
         },
       },
     ],

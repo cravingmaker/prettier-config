@@ -67,30 +67,6 @@ jobs:
       - name: Test minimum peers and custom stylesheets
         run: npm run test:package
 
-  macos-lifecycle:
-    name: macOS lifecycle
-    runs-on: macos-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Set up development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      - name: Test native process lifecycle and paths
-        run: npm run test:lifecycle
-
   runtime:
     name: Node.js ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -100,7 +76,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The minimum supported release, then the newest release of each supported line.
         node-version:
+          - 22.12.0
           - 22
           - 24
           - 26
@@ -119,7 +97,7 @@ jobs:
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
-      # Resolve the newest release of the line instead of an older cached runner copy. The cache
+      # Resolve the newest release of a line instead of an older cached runner copy. The cache
       # stays off: setting it up runs npm, and the npm of Node.js 22 fails the devEngines check.
       - name: Set up runtime Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -141,54 +119,10 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      # npm and TypeScript run on development Node.js; the consumer programs run on the runtime.
       - name: Test npm-installed consumers
         env:
           PRETTIER_CONFIG_CONSUMER_NODE: ${{ steps.runtime-node.outputs.executable }}
-        run: npm run test:package
-
-  minimum-runtime:
-    name: Minimum Node.js 22.12.0
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      # Development tools require newer Node.js versions than the runtime config.
-      - name: Set up development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci --ignore-scripts
-
-      # The cache stays off: setting it up runs npm, and the npm of Node.js 22.12.0 fails the
-      # devEngines check.
-      - name: Set up minimum runtime
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 22.12.0
-          package-manager-cache: false
-
-      - name: Capture minimum runtime executable
-        id: minimum-node
-        run: echo "executable=$(node --print process.execPath)" >> "$GITHUB_OUTPUT"
-
-      - name: Restore development Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version-file: .nvmrc
-
-      # Pack and run the test harness on development Node; execute consumers on the minimum.
-      - name: Test packed package on minimum runtime
-        env:
-          PRETTIER_CONFIG_CONSUMER_NODE: ${{ steps.minimum-node.outputs.executable }}
         run: npm run test:package
 
   audit:
@@ -236,9 +170,7 @@ jobs:
     needs:
       - static
       - minimum-peers
-      - macos-lifecycle
       - runtime
-      - minimum-runtime
       - audit
       - dependency-review
     runs-on: ubuntu-latest
