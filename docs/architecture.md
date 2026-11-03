@@ -93,7 +93,7 @@ Map each existing command to its job before removing duplicated execution. Keep 
 | `test:runtime` | Node.js 22.12.0, 22, 24, and 26 on Linux | Configuration, parser selection, plugin resolution, and formatting |
 | `test:package`, current peers | Node.js 22.12.0, 22, 24, and 26 on Linux | Real npm consumers, custom stylesheets, public types, package contents |
 | `test:package`, minimum peers | Minimum peer versions, development Node | The same package assertions at declared lower bounds |
-| `npm audit --audit-level=low` | Dependency audit, development Node | Known vulnerabilities of the locked dependencies, including advisories published after the last change |
+| `audit` | Dependency audit, development Node | Strict production audit, then every locked dependency with documented expiring development exceptions; CI and publishing share this policy |
 | Dependency Review action | Dependency Review, pull requests | New dependencies with known vulnerabilities of any severity |
 | Every job above | CI result | The single required status |
 | zizmor workflow | zizmor analysis | Workflow and Dependabot configuration security, reported to code scanning |
