@@ -11,6 +11,7 @@
 | Packed consumers | [package tests](../tests/package.test.ts), [programs](../tests/consumers/) | Real npm installations with consumer-local plugins and tools, in a workspace that is removed after the tests or a failed setup |
 | Commands | [command runner](../tests/helpers/command.ts) | Deadlines, abort signals, and failures that report the command, its directory, and its output |
 | Development tools | [scripts](../scripts/), [lint config](../eslint.config.js), [compiler config](../tsconfig.json) | Typed owned code and the pinned workflow linter |
+| Dependency audit policy | [audit config](../audit-ci.json), [package scripts](../package.json) | Unfiltered production audit followed by every dependency type, with documented expiring development advisory exceptions |
 | CI and release | [workflows](../.github/workflows/), [package scripts](../package.json) | Required statuses and complete local/publishing validation |
 
 The runtime is a small synchronous configuration object. Publishing it directly avoids a build artifact that could drift from the tested source.
@@ -72,7 +73,11 @@ Keep the runtime JSDoc contract and declarations consistent. Extend the installe
 
 ### Dependency updates
 
-Update exact dependency versions and root lockfile declarations/records together. Review the release notes of tools that change linting, type checking, or test behavior, and run `npm run validate`.
+Update exact dependency versions and root lockfile declarations/records together. Review the release notes of tools that change linting, type checking, or test behavior, reassess any audit exceptions affected by the update, and run `npm run audit` and `npm run validate`.
+
+### Dependency audit policy
+
+Keep `npm run audit` as the shared entry point for CI and publishing. Preserve the unfiltered production check and explicit inclusion of every dependency type in [audit-ci.json](../audit-ci.json), including when `NODE_ENV=production` or npm omission settings are set. Document each advisory exception's scope, rationale, expiry, and removal condition in the [contributor guide](../CONTRIBUTING.md#dependency-audit). Verify that unrelated advisories, production use of an excepted dependency, an expired exception for a present advisory, and registry failures still fail. The allowlist does not apply to Dependency Review or registry signature verification.
 
 ### CI changes
 
@@ -80,7 +85,7 @@ Map each existing command to its job before removing duplicated execution. Keep 
 
 ## CI check ownership
 
-`npm run validate` composes `validate:static` and `validate:behavior`. `npm run release:check` adds a dependency audit and a dry run of the tarball, and `prepublishOnly` and the publishing workflow run it, so they retain every check. CI uses these smaller entry points to give repository static analysis one owner while retaining behavior on each supported runtime.
+`npm run validate` composes `validate:static` and `validate:behavior`; it does not run the dependency audit. `npm run release:check` adds `npm run audit` and a dry run of the tarball, and `prepublishOnly` and the publishing workflow run it. The shared audit command enforces the [documented exception policy](../CONTRIBUTING.md#dependency-audit). CI uses these smaller entry points to give repository static analysis one owner while retaining behavior on each supported runtime.
 
 | Commands/checks | CI owner | Coverage |
 | --- | --- | --- |
@@ -94,7 +99,7 @@ Map each existing command to its job before removing duplicated execution. Keep 
 | `test:package`, current peers | Node.js 22.12.0, 22, 24, and 26 on Linux | Real npm consumers, custom stylesheets, public types, package contents |
 | `test:package`, minimum peers | Minimum peer versions, development Node | The same package assertions at declared lower bounds |
 | `audit` | Dependency audit, development Node | Strict production audit, then every locked dependency with documented expiring development exceptions; CI and publishing share this policy |
-| Dependency Review action | Dependency Review, pull requests | New dependencies with known vulnerabilities of any severity |
+| Dependency Review action | Dependency Review, pull requests | New dependencies with known vulnerabilities of any severity; independent of the audit allowlist |
 | Every job above | CI result | The single required status |
 | zizmor workflow | zizmor analysis | Workflow and Dependabot configuration security, reported to code scanning |
 | CodeQL default setup | Repository-managed CodeQL analysis | Extended Actions and JavaScript/TypeScript queries |

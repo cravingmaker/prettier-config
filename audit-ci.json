@@ -5,10 +5,11 @@
       "GHSA-g3hv-75wg-m249": {
         "active": true,
         "expiry": "2026-12-03T00:00:00Z",
-        "notes": "Development-only minimatch: the installed ESLint tooling uses optimizationLevel 1, while this advisory requires >=2. Version 11 removes makeRe, which eslint-plugin-import-x imports. Remove when a compatible fix is available; see CONTRIBUTING.md#dependency-audit."
+        "notes": "Temporary acceptance of this advisory throughout the development tree; the separate production audit has no exceptions. The inspected ESLint callers use optimizationLevel 1, while this advisory requires >=2. Version 11 removes makeRe, which eslint-plugin-import-x imports. Reassess when tooling or pattern options change, and remove when a compatible fix is available; see CONTRIBUTING.md#dependency-audit."
       }
     }
   ],
+  "extra-args": ["--include=prod", "--include=dev", "--include=optional", "--include=peer"],
   "low": true,
   "package-manager": "npm",
   "pass-enoaudit": false,

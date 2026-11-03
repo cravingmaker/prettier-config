@@ -9,6 +9,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before making changes.
 - `tests/consumers/` contains checked executable npm-consumer programs; `tests/fixtures/` contains raw inputs and the intentional installed-type fixture.
 - `tests/package.test.ts` packs the package and installs it into temporary consumer projects; `tests/helpers/command.ts` runs their commands. Keep the workspace removed after a failed setup, a deadline on every command, and the test's abort signal on every command that a test runs.
 - `scripts/` contains checked development tools. `.github/workflows/` owns CI and publishing checks.
+- `npm run audit` shares the CI and publishing dependency policy: an unfiltered production audit, then the full graph using `audit-ci.json`. Keep all dependency types included and record a rationale and expiry for each advisory exception; see [Dependency audit](CONTRIBUTING.md#dependency-audit).
 - Consumers support Node 22.12.0; development tools require Node >=24.15.0. Run type tools on the development runtime and select consumer Node separately.
 
 Markdown keeps each paragraph and list item on one line, as `proseWrap: "never"` formats it. Write pull request bodies and release notes the same way, because GitHub renders their line breaks.
