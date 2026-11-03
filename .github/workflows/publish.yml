@@ -82,6 +82,8 @@ jobs:
       - name: Verify registry signatures and provenance
         run: npm audit signatures
 
+      # release:check runs the same dependency audit policy as CI, then full validation.
+      # A documented development advisory exception can pass this gate without a dependency patch.
       - name: Verify release readiness
         run: npm run release:check
 

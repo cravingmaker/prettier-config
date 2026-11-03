@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/IBM/audit-ci/v7.1.0/docs/schema.json",
+  "allowlist": [
+    {
+      "GHSA-g3hv-75wg-m249": {
+        "active": true,
+        "expiry": "2026-12-03T00:00:00Z",
+        "notes": "Temporary acceptance of this advisory throughout the development tree; the separate production audit has no exceptions. The inspected ESLint callers use optimizationLevel 1, while this advisory requires >=2. Version 11 removes makeRe, which eslint-plugin-import-x imports. Reassess when tooling or pattern options change, and remove when a compatible fix is available; see CONTRIBUTING.md#dependency-audit."
+      }
+    }
+  ],
+  "extra-args": ["--include=prod", "--include=dev", "--include=optional", "--include=peer"],
+  "low": true,
+  "package-manager": "npm",
+  "pass-enoaudit": false,
+  "report-type": "summary"
+}
