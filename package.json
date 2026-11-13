@@ -96,7 +96,7 @@
     "audit-ci": "7.1.0",
     "eslint": "10.13.0",
     "husky": "9.1.7",
-    "knip": "6.42.1",
+    "knip": "6.44.0",
     "lint-staged": "17.6.0",
     "node-modules-inspector": "2.7.0",
     "prettier": "3.9.10",
